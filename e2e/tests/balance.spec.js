@@ -1,7 +1,7 @@
 // Joga partidas completas automaticamente e coleta métricas por onda para
 // embasar rebalanceamento. Gera reports/balance.json e reports/balance.md.
 import { test, expect } from "@playwright/test";
-import { boot, snap, api, step, writeJSON, writeText } from "./helpers.js";
+import { boot, api, writeJSON, writeText } from "./helpers.js";
 
 test.describe.configure({ mode: "serial" });
 test.beforeEach(({}, testInfo) => {
@@ -15,69 +15,62 @@ const STRATEGIES = {
   "mixed":     [["soul", 0], ["frost", 3], ["doom", 4], ["blast", 5], ["soul", 1]],
 };
 
+// Toda a partida roda DENTRO do browser (um único evaluate), sem round-trip
+// de IPC por passo — isso a torna ~instantânea e estável no CI.
 async function playMatch(page, loadout) {
-  await page.evaluate(() => window.__OVERHEAD.setSpeed(0));
-  const mainType = loadout[0][0]; // tipo preferido para expandir
-  // monta o loadout inicial (o que couber nas almas)
-  for (const [type, node] of loadout) await api(page, "build", type, node);
+  return page.evaluate((loadout) => {
+    const O = window.__OVERHEAD;
+    O.reset();
+    O.setSpeed(0); // só o nosso stepping controla o tempo
+    const mainType = loadout[0][0];
+    for (const [type, node] of loadout) O.build(type, node);
+    const nodeCount = O.nodeCount();
 
-  const nodeCount = await api(page, "nodeCount");
-
-  // Gasta as almas disponíveis: primeiro constrói torres novas em nós livres,
-  // depois sobe o nível das existentes — repete até não conseguir mais nada.
-  async function spendSouls() {
-    let acted = true;
-    while (acted) {
-      acted = false;
-      const free = await api(page, "freeNodes");
-      if (free.length && (await api(page, "build", mainType, free[0]))) { acted = true; continue; }
-      for (let n = 0; n < nodeCount; n++) {
-        if (await api(page, "upgradeAt", n)) { acted = true; break; }
+    // Gasta as almas: primeiro constrói em nós livres, depois sobe níveis.
+    const spend = () => {
+      let acted = true;
+      while (acted) {
+        acted = false;
+        const free = O.freeNodes();
+        if (free.length && O.build(mainType, free[0])) { acted = true; continue; }
+        for (let n = 0; n < nodeCount; n++) { if (O.upgradeAt(n)) { acted = true; break; } }
       }
+    };
+
+    const perWave = [];
+    let guard = 0;
+    let prevLives = O.snapshot().lives;
+
+    while (guard++ < 20000) {
+      const s = O.snapshot();
+      if (s.gameOver) break;
+      if (!s.running) { spend(); O.startWave(); prevLives = O.snapshot().lives; }
+
+      O.step(0.5);
+
+      const a = O.snapshot();
+      if (!a.running && a.wave > perWave.length && a.wave > 0) {
+        perWave.push({
+          wave: a.wave,
+          livesLeft: a.lives,
+          leaked: Math.max(0, prevLives - a.lives),
+          souls: a.souls,
+          score: a.score,
+          towers: a.towers.length,
+          avgTowerLevel: a.towers.length
+            ? +(a.towers.reduce((acc, t) => acc + t.level, 0) / a.towers.length).toFixed(2)
+            : 0,
+        });
+      }
+      if (a.gameOver) break;
     }
-  }
 
-  const perWave = [];
-  let guard = 0;
-  let prevLives = (await snap(page)).lives;
-
-  while (guard++ < 6000) {
-    const s = await snap(page);
-    if (s.gameOver) break;
-
-    // fora de onda: gasta sobra (build + upgrade) e inicia a próxima
-    if (!s.running) {
-      await spendSouls();
-      await api(page, "startWave");
-      prevLives = (await snap(page)).lives;
-    }
-
-    await step(page, 0.5);
-
-    const after = await snap(page);
-    // registra ao fim de cada onda (quando para de rodar e há histórico novo)
-    if (!after.running && after.wave > perWave.length && after.wave > 0) {
-      perWave.push({
-        wave: after.wave,
-        livesLeft: after.lives,
-        leaked: Math.max(0, prevLives - after.lives),
-        souls: after.souls,
-        score: after.score,
-        towers: after.towers.length,
-        avgTowerLevel: after.towers.length
-          ? +(after.towers.reduce((a, t) => a + t.level, 0) / after.towers.length).toFixed(2)
-          : 0,
-      });
-    }
-    if (after.gameOver) break;
-  }
-
-  const final = await snap(page);
-  return { final, perWave };
+    return { final: O.snapshot(), perWave };
+  }, loadout);
 }
 
 test("coleta dados de balanceamento de várias estratégias", async ({ page }, testInfo) => {
-  test.setTimeout(180_000);
+  test.setTimeout(120_000);
   const results = {};
   for (const [name, loadout] of Object.entries(STRATEGIES)) {
     await boot(page);
