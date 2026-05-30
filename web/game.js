@@ -127,6 +127,7 @@
       gameOver: false,
       won: false,
       speed: 1,
+      time: 0,             // relógio de jogo (s), avança com dt — base dos timers de efeito
       enemies: [],
       towers: [],
       projectiles: [],
@@ -389,12 +390,12 @@
     // Efeito gélido (slow)
     if (type && type.slow) {
       e.slowFactor = Math.min(e.slowFactor, 1 - type.slow);
-      e.slowUntil = Math.max(e.slowUntil, performance.now() / 1000 + type.slowDur);
+      e.slowUntil = Math.max(e.slowUntil, state.time + type.slowDur);
     }
     // Queimadura (burn DoT)
     if (type && type.burn) {
       e.burn = type.burn;
-      e.burnUntil = performance.now() / 1000 + type.burnDur;
+      e.burnUntil = state.time + type.burnDur;
     }
     if (e.hp <= 0) killEnemy(e, type);
   }
@@ -443,9 +444,10 @@
   // ===================================================================
   //  UPDATE
   // ===================================================================
-  function update(dt) {
-    if (state.paused || state.gameOver) return;
-    const now = performance.now() / 1000;
+  function update(dt, force) {
+    if ((state.paused && !force) || state.gameOver) return;
+    state.time += dt;
+    const now = state.time;
 
     // --- spawn da onda ---
     if (state.running) {
@@ -680,7 +682,7 @@
         ctx.beginPath(); ctx.arc(e.x, e.y, e.radius + 3, 0, Math.PI * 2); ctx.stroke();
       }
       // efeito burn
-      if (e.burnUntil > performance.now() / 1000) {
+      if (e.burnUntil > state.time) {
         ctx.strokeStyle = "#ff9f6b"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(e.x, e.y, e.radius + 5, 0, Math.PI * 2); ctx.stroke();
       }
@@ -1032,6 +1034,67 @@
   if (window.visualViewport) window.visualViewport.addEventListener("resize", resize);
   // Reescala algumas vezes após o load para pegar o layout já estabilizado
   [0, 60, 200, 500].forEach(d => setTimeout(resize, d));
+
+  // ===================================================================
+  //  DEBUG / TEST API — usado pelos testes e2e. Não altera o jogo normal;
+  //  apenas expõe hooks de leitura e controle determinístico.
+  // ===================================================================
+  window.__OVERHEAD = {
+    version: 1,
+    config: () => JSON.parse(JSON.stringify(CONFIG)),
+    towerTypes: () => TOWER_TYPES.map(t => ({ id: t.id, name: t.name, cost: t.cost })),
+    nodeCount: () => NODES.length,
+    nodes: () => NODES.map((n, i) => ({ i, x: n.x, y: n.y, taken: !!n.taken })),
+    freeNodes: () => NODES.map((n, i) => (n.taken ? -1 : i)).filter(i => i >= 0),
+
+    // controle de partida
+    reset: () => {
+      newGame();
+      for (const n of NODES) n.taken = false;
+      document.getElementById("overlay").classList.remove("show");
+      document.getElementById("save-row").hidden = true;
+      updateTowerButtons(); updateHUD();
+    },
+    startWave: () => startWave(),
+    setSpeed: (n) => { state.speed = n; },
+
+    // constrói toro `typeId` no nó `nodeIndex`; retorna true se construiu
+    build: (typeId, nodeIndex) => {
+      const t = towerType(typeId), node = NODES[nodeIndex];
+      if (!t || !node || node.taken) return false;
+      const before = state.towers.length;
+      state.selectedType = t; tryBuild(node); state.selectedType = null;
+      return state.towers.length > before;
+    },
+    sellAt: (nodeIndex) => {
+      const tw = state.towers.find(t => t.node === NODES[nodeIndex]);
+      if (!tw) return false; sellTower(tw); return true;
+    },
+    upgradeAt: (nodeIndex) => {
+      const tw = state.towers.find(t => t.node === NODES[nodeIndex]);
+      if (!tw) return false;
+      const lvl = tw.level; state.selectedTower = tw; upgradeTower(tw);
+      return tw.level > lvl;
+    },
+
+    // avança a simulação `seconds` em passos fixos de `dt` (sem depender do rAF)
+    step: (seconds, dt = 1 / 60) => {
+      const n = Math.max(1, Math.round(seconds / dt));
+      for (let i = 0; i < n; i++) update(dt, true);
+    },
+
+    snapshot: () => ({
+      time: +state.time.toFixed(2),
+      souls: Math.floor(state.souls), lives: state.lives, wave: state.wave,
+      score: state.score, running: state.running, gameOver: state.gameOver,
+      won: state.won, betweenTimer: +state.betweenTimer.toFixed(2),
+      enemies: state.enemies.length, queued: state.spawnQueue.length,
+      projectiles: state.projectiles.length,
+      slowed: state.enemies.filter(e => e.slowFactor < 1).length,
+      burning: state.enemies.filter(e => e.burnUntil > state.time).length,
+      towers: state.towers.map(t => ({ type: t.type.id, level: t.level })),
+    }),
+  };
 
   // start
   refreshShop();
