@@ -145,6 +145,14 @@ html, body {
 }
 #shop button.ghost:hover { background: rgba(255,107,129,0.1); }
 
+#shop button.upgrade {
+  margin-top: 0;
+  background: linear-gradient(90deg, var(--good), #3fb85a);
+  color: #06250f;
+  font-size: 14px;
+}
+#shop button.upgrade:disabled { background: #2a3550; color: var(--muted); }
+
 .hint { font-size: 11px; color: var(--muted); line-height: 1.4; margin-top: 4px; }
 
 /* ---------- Overlay ---------- */
@@ -193,3 +201,52 @@ html, body {
 }
 #overlay-btn:hover { transform: scale(1.04); }
 .credits { color: var(--muted); font-size: 11px; margin-top: 22px; line-height: 1.5; }
+
+/* ---------- Save row + Leaderboard ---------- */
+#save-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+#name-input {
+  background: var(--panel-2);
+  border: 1px solid rgba(110,231,255,0.3);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 9px 12px;
+  font-size: 15px;
+  width: 160px;
+  outline: none;
+}
+#name-input:focus { border-color: var(--accent); }
+#save-btn {
+  background: var(--good);
+  color: #06250f;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+#save-btn:hover { filter: brightness(1.1); }
+
+#leaderboard { margin-bottom: 18px; }
+#leaderboard h3 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+#leaderboard table { width: 100%; border-collapse: collapse; font-size: 14px; }
+#leaderboard td {
+  padding: 4px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: var(--text);
+}
+#leaderboard td:first-child { color: var(--muted); width: 24px; text-align: right; }
+#leaderboard .lb-name { text-align: left; font-weight: 600; }
+#leaderboard .lb-score { text-align: right; color: var(--score); font-weight: 700; }
+#leaderboard tr.hl td { background: rgba(110,231,255,0.12); }
+#leaderboard .lb-empty { color: var(--muted); font-size: 13px; font-style: italic; }

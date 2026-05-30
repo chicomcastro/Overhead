@@ -27,6 +27,7 @@
         <span id="score">0</span>
       </div>
       <div class="stat grow" id="wave-status">Prepare suas defesas…</div>
+      <button id="sound-btn" title="Ligar/desligar som">🔊</button>
       <button id="speed-btn" title="Velocidade do jogo">1×</button>
       <button id="pause-btn" title="Pausar">❚❚</button>
     </header>
@@ -39,9 +40,10 @@
       <aside id="shop">
         <h2>Esferas</h2>
         <div id="shop-list"></div>
+        <button id="upgrade-btn" class="upgrade" hidden>⬆ Melhorar torre</button>
         <button id="sell-btn" class="ghost" hidden>Vender torre selecionada</button>
         <button id="start-btn">▶ Iniciar onda</button>
-        <p class="hint">Selecione uma esfera e clique num <b>nó</b> azul para construir. Clique numa torre para ver o alcance e vendê-la.</p>
+        <p class="hint">Selecione uma esfera (<b>1–4</b>) e clique num <b>nó</b> azul para construir. Clique numa torre para ver alcance, <b>melhorar</b> (U) ou vender.</p>
       </aside>
     </div>
 
@@ -53,6 +55,11 @@
         <p id="overlay-msg">Defenda a Torre Mestra das ondas de almas perdidas.<br />
           Construa esferas, derrote os inimigos e sobreviva.</p>
         <div id="overlay-stats"></div>
+        <div id="save-row" hidden>
+          <input id="name-input" maxlength="14" placeholder="Seu nome" autocomplete="off" />
+          <button id="save-btn">Salvar pontuação</button>
+        </div>
+        <div id="leaderboard"></div>
         <button id="overlay-btn">Jogar</button>
         <p class="credits">Remake web do jogo original feito em Unity por chicomcastro &amp; equipe.</p>
       </div>

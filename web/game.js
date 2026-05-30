@@ -24,15 +24,21 @@
   //  CONFIG — espelha as constantes do WaveSpawner / SoulsCounter Unity
   // ===================================================================
   const CONFIG = {
-    initialSouls: 30,
+    initialSouls: 40,
     initialLives: 20,
-    baseHP: 60,            // baseHPConst
-    baseSpeed: 55,         // px/s (baseSpeedConst escalado p/ tela)
-    hpWaveConst: 1.18,     // HPWaveConst
+    baseHP: 58,            // baseHPConst
+    baseSpeed: 54,         // px/s (baseSpeedConst escalado p/ tela)
+    hpWaveConst: 1.20,     // HPWaveConst
     speedWaveConst: 1.05,  // SpeedWaveConst
     timeBetweenWaves: 6,   // s
     spawnDelay: 0.6,       // s entre inimigos
     totalWaves: 20,
+    // ----- Upgrades (skill tree do original, simplificado por torre) -----
+    maxLevel: 3,           // nível 1 (base) -> 3
+    upgradeCostMul: 1.6,   // custo do próx. nível = base * mul^nível
+    lvlDamageMul: 1.4,     // +40% dano por nível
+    lvlRangeMul: 1.12,     // +12% alcance por nível
+    lvlCooldownMul: 0.88,  // -12% recarga por nível
   };
 
   // ----- Caminho que os inimigos percorrem (waypoints em world space) -----
@@ -143,6 +149,12 @@
 
   function towerType(id) { return TOWER_TYPES.find(t => t.id === id); }
 
+  // ----- Stats efetivos por torre (escalam com o nível de upgrade) -----
+  function effDamage(tw)   { return tw.type.damage   * Math.pow(CONFIG.lvlDamageMul,   tw.level - 1); }
+  function effRange(tw)    { return tw.type.range    * Math.pow(CONFIG.lvlRangeMul,    tw.level - 1); }
+  function effCooldown(tw) { return tw.type.cooldown * Math.pow(CONFIG.lvlCooldownMul, tw.level - 1); }
+  function upgradeCost(tw) { return Math.round(tw.type.cost * Math.pow(CONFIG.upgradeCostMul, tw.level)); }
+
   function spawnFloater(x, y, text, color, size = 18) {
     state.floaters.push({ x, y, text, color, size, life: 0.8, vy: -38 });
   }
@@ -158,6 +170,88 @@
   }
 
   // ===================================================================
+  //  SOM — efeitos sintetizados via Web Audio (sem arquivos externos)
+  // ===================================================================
+  const Sound = (() => {
+    let ctx = null, master = null, enabled = true;
+    function init() {
+      if (ctx) return;
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        ctx = new AC();
+        master = ctx.createGain();
+        master.gain.value = 0.22;
+        master.connect(ctx.destination);
+      } catch (e) { enabled = false; }
+    }
+    function resume() { if (ctx && ctx.state === "suspended") ctx.resume(); }
+    function tone({ freq = 440, freq2 = null, type = "sine", dur = 0.12, vol = 0.5, delay = 0 }) {
+      if (!ctx) return;
+      const t0 = ctx.currentTime + delay;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      if (freq2) osc.frequency.exponentialRampToValueAtTime(Math.max(1, freq2), t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g); g.connect(master);
+      osc.start(t0); osc.stop(t0 + dur + 0.02);
+    }
+    const SFX = {
+      shoot_soul:  () => tone({ freq: 660, freq2: 900, type: "triangle", dur: 0.07, vol: 0.16 }),
+      shoot_frost: () => tone({ freq: 520, freq2: 720, type: "sine",     dur: 0.10, vol: 0.15 }),
+      shoot_doom:  () => tone({ freq: 200, freq2: 90,  type: "sawtooth", dur: 0.16, vol: 0.20 }),
+      shoot_blast: () => tone({ freq: 300, freq2: 150, type: "square",   dur: 0.12, vol: 0.16 }),
+      kill:        () => tone({ freq: 880, freq2: 1320, type: "sine",    dur: 0.10, vol: 0.20 }),
+      boss_die:    () => { tone({ freq: 120, freq2: 40, type: "sawtooth", dur: 0.5, vol: 0.3 });
+                           tone({ freq: 300, freq2: 600, type: "triangle", dur: 0.3, vol: 0.2, delay: 0.05 }); },
+      fatal:       () => tone({ freq: 140, freq2: 1200, type: "square",  dur: 0.18, vol: 0.24 }),
+      build:       () => tone({ freq: 440, freq2: 660, type: "triangle", dur: 0.12, vol: 0.24 }),
+      upgrade:     () => { tone({ freq: 523, type: "sine", dur: 0.10, vol: 0.22 });
+                           tone({ freq: 784, type: "sine", dur: 0.12, vol: 0.22, delay: 0.08 }); },
+      sell:        () => tone({ freq: 400, freq2: 200, type: "triangle", dur: 0.14, vol: 0.18 }),
+      wave:        () => { tone({ freq: 330, type: "sawtooth", dur: 0.18, vol: 0.18 });
+                           tone({ freq: 494, type: "sawtooth", dur: 0.22, vol: 0.18, delay: 0.12 }); },
+      leak:        () => tone({ freq: 200, freq2: 80, type: "sawtooth",  dur: 0.30, vol: 0.26 }),
+      lose:        () => tone({ freq: 300, freq2: 55, type: "sawtooth",  dur: 0.80, vol: 0.32 }),
+      win:         () => [523, 659, 784, 1047].forEach((f, i) =>
+                           tone({ freq: f, type: "triangle", dur: 0.25, vol: 0.24, delay: i * 0.13 })),
+    };
+    return {
+      init, resume,
+      play(name) { if (!enabled || !ctx) return; const f = SFX[name]; if (f) { resume(); f(); } },
+      toggle() { enabled = !enabled; return enabled; },
+      isEnabled() { return enabled; },
+    };
+  })();
+
+  // ===================================================================
+  //  LEADERBOARD — top 10 local (localStorage)
+  // ===================================================================
+  const Leaderboard = (() => {
+    const KEY = "overhead_scores_v1";
+    function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
+    function save(list) { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {} }
+    function top() { return load().sort((a, b) => b.score - a.score).slice(0, 10); }
+    function add(name, score, wave, won) {
+      const list = load();
+      const entry = { name: (name || "Anônimo").trim().slice(0, 14) || "Anônimo", score, wave, won, date: Date.now() };
+      list.push(entry);
+      list.sort((a, b) => b.score - a.score);
+      save(list.slice(0, 10));
+      return entry;
+    }
+    function qualifies(score) {
+      if (score <= 0) return false;
+      const l = top();
+      return l.length < 10 || score > l[l.length - 1].score;
+    }
+    return { add, top, qualifies };
+  })();
+
+  // ===================================================================
   //  ONDAS
   // ===================================================================
   function startWave() {
@@ -168,6 +262,7 @@
     state.betweenTimer = 0;
     state.spawnQueue = buildWave(state.wave);
     state.spawnTimer = 0;
+    Sound.play("wave");
     updateHUD();
   }
 
@@ -205,11 +300,12 @@
     state.souls -= type.cost;
     node.taken = true;
     state.towers.push({
-      type, node, x: node.x, y: node.y,
+      type, node, x: node.x, y: node.y, level: 1,
       cooldown: 0, angle: -Math.PI / 2, target: null,
       invested: type.cost,
     });
     spawnParticles(node.x, node.y, type.color, 12);
+    Sound.play("build");
     updateHUD();
     refreshShop();
   }
@@ -221,7 +317,26 @@
     state.towers = state.towers.filter(t => t !== tower);
     state.selectedTower = null;
     spawnFloater(tower.x, tower.y, "+" + refund, "#b388ff");
-    document.getElementById("sell-btn").hidden = true;
+    Sound.play("sell");
+    updateTowerButtons();
+    updateHUD();
+    refreshShop();
+  }
+
+  function upgradeTower(tower) {
+    if (tower.level >= CONFIG.maxLevel) return;
+    const cost = upgradeCost(tower);
+    if (state.souls < cost) {
+      spawnFloater(tower.x, tower.y, "Almas insuficientes!", "#ff6b81", 15);
+      return;
+    }
+    state.souls -= cost;
+    tower.level++;
+    tower.invested += cost;
+    spawnParticles(tower.x, tower.y, tower.type.color, 16, 120);
+    spawnFloater(tower.x, tower.y - 24, "Nível " + tower.level + "!", tower.type.color, 18);
+    Sound.play("upgrade");
+    updateTowerButtons();
     updateHUD();
     refreshShop();
   }
@@ -232,13 +347,14 @@
   function towerFire(tower, dt) {
     tower.cooldown -= dt;
 
+    const range = effRange(tower);
     // (re)seleciona alvo: inimigo mais avançado dentro do alcance
-    if (!tower.target || tower.target.dead || dist(tower, tower.target) > tower.type.range) {
+    if (!tower.target || tower.target.dead || dist(tower, tower.target) > range) {
       tower.target = null;
       let best = -1;
       for (const e of state.enemies) {
         if (e.dead) continue;
-        if (dist(tower, e) <= tower.type.range) {
+        if (dist(tower, e) <= range) {
           const prog = e.wp + (1 - dist(e, PATH[e.wp]) / 1000);
           if (prog > best) { best = prog; tower.target = e; }
         }
@@ -249,7 +365,7 @@
       const tgt = tower.target;
       tower.angle = Math.atan2(tgt.y - tower.y, tgt.x - tower.x);
       if (tower.cooldown <= 0) {
-        tower.cooldown = tower.type.cooldown;
+        tower.cooldown = effCooldown(tower);
         fireProjectile(tower, tgt);
       }
     }
@@ -259,8 +375,10 @@
     const t = tower.type;
     state.projectiles.push({
       x: tower.x, y: tower.y, target, type: t,
+      damage: effDamage(tower),
       speed: t.projSpeed, dead: false,
     });
+    Sound.play("shoot_" + t.id);
   }
 
   function damageEnemy(e, amount, type) {
@@ -296,6 +414,7 @@
       spawnFloater(e.x, e.y, "+" + reward, "#b388ff", 14);
     }
     spawnParticles(e.x, e.y, e.def.color, 14, 130);
+    Sound.play(e.type === "boss" ? "boss_die" : "kill");
     updateHUD();
   }
 
@@ -306,16 +425,17 @@
     // Golpe fatal (fatal hit)
     if (p.type.fatal && Math.random() < p.type.fatal) {
       spawnFloater(t.x, t.y - t.radius, "FATAL!", "#ffd166", 20);
+      Sound.play("fatal");
       t.hp = 0; killEnemy(t, p.type);
     } else if (p.type.splash) {
       // Dano em área
       for (const e of state.enemies) {
         if (e.dead) continue;
-        if (dist(e, t) <= p.type.splash) damageEnemy(e, p.type.damage, p.type);
+        if (dist(e, t) <= p.type.splash) damageEnemy(e, p.damage, p.type);
       }
       spawnParticles(t.x, t.y, p.type.color, 16, 160);
     } else {
-      damageEnemy(t, p.type.damage, p.type);
+      damageEnemy(t, p.damage, p.type);
     }
     p.dead = true;
   }
@@ -374,6 +494,7 @@
           state.lives--;
           spawnParticles(CORE.x, CORE.y, "#ff6b81", 18, 160);
           spawnFloater(CORE.x, CORE.y - 40, "-1 ♥", "#ff6b81", 22);
+          Sound.play("leak");
           if (state.lives <= 0) { state.lives = 0; loseGame(); }
           updateHUD();
         }
@@ -507,7 +628,7 @@
 
       if (selected) {
         ctx.beginPath();
-        ctx.arc(tw.x, tw.y, t.range, 0, Math.PI * 2);
+        ctx.arc(tw.x, tw.y, effRange(tw), 0, Math.PI * 2);
         ctx.fillStyle = t.color + "14";
         ctx.fill();
         ctx.strokeStyle = t.color + "88";
@@ -518,6 +639,13 @@
       ctx.beginPath(); ctx.arc(tw.x, tw.y, 18, 0, Math.PI * 2);
       ctx.fillStyle = "#1d2740"; ctx.fill();
       ctx.lineWidth = 2; ctx.strokeStyle = t.color; ctx.stroke();
+
+      // indicador de nível (pips)
+      for (let i = 0; i < tw.level; i++) {
+        ctx.beginPath();
+        ctx.arc(tw.x - 6 + i * 6, tw.y + 22, 2.4, 0, Math.PI * 2);
+        ctx.fillStyle = t.color; ctx.fill();
+      }
 
       // canhão apontando p/ alvo
       ctx.save();
@@ -638,6 +766,7 @@
   canvas.addEventListener("mouseleave", () => { mouse.world = null; });
 
   canvas.addEventListener("click", (ev) => {
+    Sound.init(); Sound.resume();
     const w = toWorld(ev);
 
     // modo construção
@@ -651,14 +780,11 @@
     if (tw) {
       state.selectedTower = tw;
       state.selectedType = null;
-      refreshShop();
-      const sb = document.getElementById("sell-btn");
-      sb.hidden = false;
-      sb.textContent = `Vender (${Math.round(tw.invested * 0.6)} ✦)`;
     } else {
       state.selectedTower = null;
-      document.getElementById("sell-btn").hidden = true;
     }
+    updateTowerButtons();
+    refreshShop();
   });
 
   // botão direito cancela seleção
@@ -666,9 +792,28 @@
     ev.preventDefault();
     state.selectedType = null;
     state.selectedTower = null;
-    document.getElementById("sell-btn").hidden = true;
+    updateTowerButtons();
     refreshShop();
   });
+
+  // Mostra/atualiza os botões de vender e melhorar a torre selecionada
+  function updateTowerButtons() {
+    const sb = document.getElementById("sell-btn");
+    const ub = document.getElementById("upgrade-btn");
+    const tw = state.selectedTower;
+    if (!tw) { sb.hidden = true; ub.hidden = true; return; }
+    sb.hidden = false;
+    sb.textContent = `Vender (+${Math.round(tw.invested * 0.6)} ✦)`;
+    ub.hidden = false;
+    if (tw.level >= CONFIG.maxLevel) {
+      ub.disabled = true;
+      ub.textContent = "Nível máximo";
+    } else {
+      const c = upgradeCost(tw);
+      ub.disabled = state.souls < c;
+      ub.textContent = `⬆ Melhorar p/ Nv.${tw.level + 1} (${c} ✦)`;
+    }
+  }
 
   // ===================================================================
   //  UI
@@ -688,6 +833,7 @@
     const startBtn = document.getElementById("start-btn");
     startBtn.disabled = state.running || state.gameOver;
     startBtn.textContent = state.betweenTimer > 0 ? "▶ Pular espera" : "▶ Iniciar onda";
+    if (state.selectedTower) updateTowerButtons();
     refreshShop();
   }
 
@@ -721,7 +867,7 @@
       card.addEventListener("click", () => {
         state.selectedType = (state.selectedType === t) ? null : t;
         state.selectedTower = null;
-        document.getElementById("sell-btn").hidden = true;
+        updateTowerButtons();
         refreshShop();
       });
       list.appendChild(card);
@@ -731,26 +877,62 @@
   // ===================================================================
   //  FIM DE JOGO
   // ===================================================================
+  let pendingScore = null; // { score, wave, won } aguardando salvar no leaderboard
+
   function loseGame() {
     state.gameOver = true; state.won = false; state.running = false;
+    Sound.play("lose");
     showOverlay("Fim de jogo", `A Torre Mestra caiu na onda ${state.wave}.`,
-      `Pontuação: ${state.score}`);
+      `Pontuação: ${state.score}`, true);
   }
   function winGame() {
     if (state.gameOver) return;
     state.gameOver = true; state.won = true; state.running = false;
+    Sound.play("win");
     showOverlay("Vitória!", `Você sobreviveu a todas as ${CONFIG.totalWaves} ondas!`,
-      `Pontuação final: ${state.score}`);
+      `Pontuação final: ${state.score}`, true);
   }
 
-  function showOverlay(title, msg, stats) {
+  function showOverlay(title, msg, stats, isResult) {
     const ov = document.getElementById("overlay");
     ov.querySelector("h1").textContent = title;
     document.getElementById("overlay-msg").innerHTML = msg;
     document.getElementById("overlay-stats").textContent = stats || "";
-    document.getElementById("overlay-btn").textContent = "Jogar novamente";
+    document.getElementById("overlay-btn").textContent = isResult ? "Jogar novamente" : "Jogar";
+
+    // fila para salvar pontuação, se qualificar
+    const saveRow = document.getElementById("save-row");
+    if (isResult && Leaderboard.qualifies(state.score)) {
+      pendingScore = { score: state.score, wave: state.wave, won: state.won };
+      saveRow.hidden = false;
+    } else {
+      pendingScore = null;
+      saveRow.hidden = true;
+    }
+    renderLeaderboard();
     ov.classList.add("show");
     updateHUD();
+  }
+
+  function renderLeaderboard(highlightDate) {
+    const el = document.getElementById("leaderboard");
+    const list = Leaderboard.top();
+    if (list.length === 0) {
+      el.innerHTML = `<div class="lb-empty">Sem pontuações ainda — seja o primeiro!</div>`;
+      return;
+    }
+    let rows = "";
+    list.forEach((e, i) => {
+      const hl = e.date === highlightDate ? " class=\"hl\"" : "";
+      rows += `<tr${hl}><td>${i + 1}</td><td class="lb-name">${escapeHTML(e.name)}</td>` +
+              `<td>${e.won ? "🏆" : "Onda " + e.wave}</td><td class="lb-score">${e.score}</td></tr>`;
+    });
+    el.innerHTML = `<h3>🏅 Melhores pontuações</h3><table>${rows}</table>`;
+  }
+
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
   // ===================================================================
@@ -765,6 +947,10 @@
     if (state.selectedTower) sellTower(state.selectedTower);
   });
 
+  document.getElementById("upgrade-btn").addEventListener("click", () => {
+    if (state.selectedTower) upgradeTower(state.selectedTower);
+  });
+
   document.getElementById("pause-btn").addEventListener("click", () => {
     state.paused = !state.paused;
     document.getElementById("pause-btn").textContent = state.paused ? "▶" : "❚❚";
@@ -775,11 +961,30 @@
     document.getElementById("speed-btn").textContent = state.speed + "×";
   });
 
+  document.getElementById("sound-btn").addEventListener("click", () => {
+    Sound.init();
+    const on = Sound.toggle();
+    document.getElementById("sound-btn").textContent = on ? "🔊" : "🔇";
+  });
+
+  document.getElementById("save-btn").addEventListener("click", () => {
+    if (!pendingScore) return;
+    const name = document.getElementById("name-input").value;
+    const entry = Leaderboard.add(name, pendingScore.score, pendingScore.wave, pendingScore.won);
+    pendingScore = null;
+    document.getElementById("save-row").hidden = true;
+    renderLeaderboard(entry.date);
+    Sound.play("upgrade");
+  });
+
   document.getElementById("overlay-btn").addEventListener("click", () => {
+    Sound.init();
     newGame();
     for (const n of NODES) n.taken = false;
+    pendingScore = null;
+    document.getElementById("save-row").hidden = true;
     document.getElementById("overlay").classList.remove("show");
-    document.getElementById("sell-btn").hidden = true;
+    updateTowerButtons();
     document.getElementById("pause-btn").textContent = "❚❚";
     document.getElementById("speed-btn").textContent = "1×";
     updateHUD();
@@ -789,10 +994,11 @@
   window.addEventListener("keydown", (e) => {
     if (e.key === " ") { e.preventDefault(); document.getElementById("start-btn").click(); }
     if (e.key === "p" || e.key === "P") document.getElementById("pause-btn").click();
-    if (e.key === "Escape") { state.selectedType = null; state.selectedTower = null; document.getElementById("sell-btn").hidden = true; refreshShop(); }
+    if (e.key === "u" || e.key === "U") { if (state.selectedTower) upgradeTower(state.selectedTower); }
+    if (e.key === "Escape") { state.selectedType = null; state.selectedTower = null; updateTowerButtons(); refreshShop(); }
     if (e.key >= "1" && e.key <= "4") {
       const t = TOWER_TYPES[+e.key - 1];
-      if (t) { state.selectedType = (state.selectedType === t) ? null : t; state.selectedTower = null; refreshShop(); }
+      if (t) { state.selectedType = (state.selectedType === t) ? null : t; state.selectedTower = null; updateTowerButtons(); refreshShop(); }
     }
   });
 
@@ -815,6 +1021,7 @@
   refreshShop();
   updateHUD();
   resize();
+  renderLeaderboard();
   requestAnimationFrame(loop);
 
   // mostra menu inicial
