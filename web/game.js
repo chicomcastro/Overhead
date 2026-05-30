@@ -796,6 +796,16 @@
     refreshShop();
   });
 
+  // ----- Toque (mobile): mostra preview e evita rolagem/zoom -----
+  canvas.addEventListener("touchstart", (ev) => {
+    if (ev.touches.length) mouse.world = toWorld(ev.touches[0]);
+    ev.preventDefault();
+  }, { passive: false });
+  canvas.addEventListener("touchmove", (ev) => {
+    if (ev.touches.length) mouse.world = toWorld(ev.touches[0]);
+    ev.preventDefault();
+  }, { passive: false });
+
   // Mostra/atualiza os botões de vender e melhorar a torre selecionada
   function updateTowerButtons() {
     const sb = document.getElementById("sell-btn");
@@ -1005,17 +1015,23 @@
   // ===================================================================
   //  RESIZE / INIT
   // ===================================================================
+  // Mede o #playfield (preenche o espaço restante em qualquer layout:
+  // loja à direita no desktop, ou loja embaixo no mobile) e escala o canvas.
   function resize() {
-    const stage = document.getElementById("stage");
-    const shopW = document.getElementById("shop").offsetWidth;
-    const availW = stage.clientWidth - shopW;
-    const availH = stage.clientHeight;
+    const pf = document.getElementById("playfield");
+    const availW = pf.clientWidth;
+    const availH = pf.clientHeight;
+    if (availW <= 0 || availH <= 0) return;
     const scale = Math.min(availW / W, availH / H);
     canvas.width = W; canvas.height = H;
-    canvas.style.width = W * scale + "px";
-    canvas.style.height = H * scale + "px";
+    canvas.style.width = Math.floor(W * scale) + "px";
+    canvas.style.height = Math.floor(H * scale) + "px";
   }
   window.addEventListener("resize", resize);
+  window.addEventListener("orientationchange", () => setTimeout(resize, 250));
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", resize);
+  // Reescala algumas vezes após o load para pegar o layout já estabilizado
+  [0, 60, 200, 500].forEach(d => setTimeout(resize, d));
 
   // start
   refreshShop();
