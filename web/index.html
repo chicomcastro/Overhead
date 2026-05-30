@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overhead — Web Edition</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game">
+    <!-- Top HUD -->
+    <header id="hud">
+      <div class="stat" title="Almas — moeda para construir torres">
+        <span class="stat-icon souls">✦</span>
+        <span id="souls">30</span>
+      </div>
+      <div class="stat" title="Vidas da Torre Mestra">
+        <span class="stat-icon lives">♥</span>
+        <span id="lives">20</span>
+      </div>
+      <div class="stat" title="Onda atual">
+        <span class="stat-icon wave">⛌</span>
+        <span>Onda <span id="wave">0</span></span>
+      </div>
+      <div class="stat" title="Pontuação">
+        <span class="stat-icon score">★</span>
+        <span id="score">0</span>
+      </div>
+      <div class="stat grow" id="wave-status">Prepare suas defesas…</div>
+      <button id="speed-btn" title="Velocidade do jogo">1×</button>
+      <button id="pause-btn" title="Pausar">❚❚</button>
+    </header>
+
+    <!-- Playfield -->
+    <div id="stage">
+      <canvas id="canvas"></canvas>
+
+      <!-- Tower shop -->
+      <aside id="shop">
+        <h2>Esferas</h2>
+        <div id="shop-list"></div>
+        <button id="sell-btn" class="ghost" hidden>Vender torre selecionada</button>
+        <button id="start-btn">▶ Iniciar onda</button>
+        <p class="hint">Selecione uma esfera e clique num <b>nó</b> azul para construir. Clique numa torre para ver o alcance e vendê-la.</p>
+      </aside>
+    </div>
+
+    <!-- Overlay (menu / game over) -->
+    <div id="overlay" class="show">
+      <div class="panel">
+        <h1>OVERHEAD</h1>
+        <p class="subtitle">Tower Defense — Web Edition</p>
+        <p id="overlay-msg">Defenda a Torre Mestra das ondas de almas perdidas.<br />
+          Construa esferas, derrote os inimigos e sobreviva.</p>
+        <div id="overlay-stats"></div>
+        <button id="overlay-btn">Jogar</button>
+        <p class="credits">Remake web do jogo original feito em Unity por chicomcastro &amp; equipe.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
