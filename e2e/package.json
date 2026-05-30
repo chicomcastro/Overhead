@@ -1,0 +1,13 @@
+{
+  "name": "overhead-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "description": "End-to-end gameplay tests for the Overhead web version",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}

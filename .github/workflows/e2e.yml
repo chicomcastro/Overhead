@@ -1,0 +1,65 @@
+name: E2E gameplay tests
+
+# Roda os testes e2e (Playwright) que jogam o jogo de verdade, em cada PR/push
+# que toque o jogo ou os testes. Publica evidência visual + dados de
+# balanceamento como artifacts e joga o relatório no summary do job.
+
+on:
+  pull_request:
+    paths:
+      - "web/**"
+      - "e2e/**"
+      - ".github/workflows/e2e.yml"
+  push:
+    branches: [master]
+    paths:
+      - "web/**"
+      - "e2e/**"
+      - ".github/workflows/e2e.yml"
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: e2e
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Install Chromium (+ system deps)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e tests
+        run: npx playwright test
+
+      - name: Balance report → job summary
+        if: always()
+        run: |
+          if [ -f reports/balance.md ]; then
+            cat reports/balance.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Nenhum relatório de balanceamento gerado." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload evidence (screenshots + balance + report)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-evidence
+          path: |
+            e2e/reports
+            e2e/playwright-report
+          retention-days: 30
+          if-no-files-found: ignore
