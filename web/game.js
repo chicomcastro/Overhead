@@ -28,13 +28,13 @@
     initialLives: 20,
     baseHP: 58,            // baseHPConst
     baseSpeed: 54,         // px/s (baseSpeedConst escalado p/ tela)
-    hpWaveConst: 1.20,     // HPWaveConst
+    hpWaveConst: 1.16,     // HPWaveConst — rampa de HP por onda (suavizada)
     speedWaveConst: 1.05,  // SpeedWaveConst
     timeBetweenWaves: 6,   // s
     spawnDelay: 0.6,       // s entre inimigos
     totalWaves: 20,
     // ----- Upgrades (skill tree do original, simplificado por torre) -----
-    maxLevel: 3,           // nível 1 (base) -> 3
+    maxLevel: 4,           // nível 1 (base) -> 4; também serve de ralo de almas
     upgradeCostMul: 1.6,   // custo do próx. nível = base * mul^nível
     lvlDamageMul: 1.4,     // +40% dano por nível
     lvlRangeMul: 1.12,     // +12% alcance por nível
