@@ -303,6 +303,49 @@ html, body {
 #leaderboard tr.hl td { background: rgba(110,231,255,0.12); }
 #leaderboard .lb-empty { color: var(--muted); font-size: 13px; font-style: italic; }
 
+/* ---------- Melhorias globais (loja) ---------- */
+#globals {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.gl-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+}
+.global-btn {
+  margin-top: 0 !important;
+  background: var(--panel-2) !important;
+  color: var(--text) !important;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.global-btn:hover { background: #27345a !important; }
+.global-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* ---------- Menu: modo infinito + recorde ---------- */
+#endless-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 14px;
+  cursor: pointer;
+  font-size: 14px;
+}
+#endless-row input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+#endless-row small { color: var(--muted); }
+#best { color: var(--score); font-weight: 700; margin-bottom: 12px; min-height: 0; }
+
 /* =====================================================================
  * MOBILE / telas estreitas — empilha o layout e torna a loja uma barra
  * horizontal rolável no rodapé, com cartões compactos.

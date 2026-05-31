@@ -39,6 +39,9 @@
     lvlDamageMul: 1.4,     // +40% dano por nível
     lvlRangeMul: 1.12,     // +12% alcance por nível
     lvlCooldownMul: 0.88,  // -12% recarga por nível
+    // ----- Melhorias globais (ralo de almas do endgame, sem teto) -----
+    globalDmgStep: 0.06,   // +6% dano por nível de Foco Arcano
+    globalRngStep: 0.05,   // +5% alcance por nível de Lentes Rúnicas
   };
 
   // ----- Caminho que os inimigos percorrem (waypoints em world space) -----
@@ -95,6 +98,10 @@
     grunt: { name: "Alma", hpMul: 1.0, speedMul: 1.0, reward: 4, color: "#cdd6f4", radius: 13 },
     fast:  { name: "Espectro", hpMul: 0.6, speedMul: 1.7, reward: 5, color: "#a6e3a1", radius: 11 },
     tank:  { name: "Carrasco", hpMul: 3.2, speedMul: 0.6, reward: 9, color: "#f38ba8", radius: 19 },
+    // Voa em linha reta até o núcleo, ignorando o caminho.
+    flyer: { name: "Alma Alada", hpMul: 0.85, speedMul: 1.15, reward: 6, color: "#89dceb", radius: 12, flying: true },
+    // Cura inimigos próximos periodicamente.
+    healer:{ name: "Sacerdote", hpMul: 1.7, speedMul: 0.8, reward: 8, color: "#94e2d5", radius: 15, heal: 22, healRange: 95, healInterval: 1.1 },
     boss:  { name: "Ceifador", hpMul: 14, speedMul: 0.5, reward: 40, color: "#f9e2af", radius: 26 },
   };
 
@@ -106,6 +113,8 @@
       let t = "grunt";
       if (n >= 3 && i % 4 === 0) t = "fast";
       if (n >= 5 && i % 6 === 0) t = "tank";
+      if (n >= 4 && i % 7 === 3) t = "flyer";   // voadores a partir da onda 4
+      if (n >= 7 && i % 9 === 4) t = "healer";  // curandeiros a partir da onda 7
       list.push(t);
     }
     if (n % 5 === 0) list.push("boss"); // chefe a cada 5 ondas
@@ -128,6 +137,8 @@
       won: false,
       speed: 1,
       time: 0,             // relógio de jogo (s), avança com dt — base dos timers de efeito
+      endless: false,      // modo infinito: sem vitória na onda 20
+      globals: { dmg: 0, rng: 0 }, // melhorias globais compradas (ralo de almas)
       enemies: [],
       towers: [],
       projectiles: [],
@@ -150,11 +161,27 @@
 
   function towerType(id) { return TOWER_TYPES.find(t => t.id === id); }
 
-  // ----- Stats efetivos por torre (escalam com o nível de upgrade) -----
-  function effDamage(tw)   { return tw.type.damage   * Math.pow(CONFIG.lvlDamageMul,   tw.level - 1); }
-  function effRange(tw)    { return tw.type.range    * Math.pow(CONFIG.lvlRangeMul,    tw.level - 1); }
+  // ----- Stats efetivos por torre (nível da torre + melhorias globais) -----
+  function effDamage(tw)   { return tw.type.damage   * Math.pow(CONFIG.lvlDamageMul, tw.level - 1) * (1 + CONFIG.globalDmgStep * state.globals.dmg); }
+  function effRange(tw)    { return tw.type.range    * Math.pow(CONFIG.lvlRangeMul,  tw.level - 1) * (1 + CONFIG.globalRngStep * state.globals.rng); }
   function effCooldown(tw) { return tw.type.cooldown * Math.pow(CONFIG.lvlCooldownMul, tw.level - 1); }
   function upgradeCost(tw) { return Math.round(tw.type.cost * Math.pow(CONFIG.upgradeCostMul, tw.level)); }
+
+  // Melhorias globais — ralo de almas sem teto (custo escala com o nível atual)
+  const GLOBALS = {
+    dmg: { name: "Foco Arcano", desc: "+dano de todas as torres", base: 60, mul: 1.55, color: "#ffd166" },
+    rng: { name: "Lentes Rúnicas", desc: "+alcance de todas as torres", base: 50, mul: 1.5, color: "#6ee7ff" },
+  };
+  function globalCost(kind) { return Math.round(GLOBALS[kind].base * Math.pow(GLOBALS[kind].mul, state.globals[kind])); }
+  function buyGlobal(kind) {
+    const cost = globalCost(kind);
+    if (state.souls < cost) return false;
+    state.souls -= cost;
+    state.globals[kind]++;
+    Sound.play("upgrade");
+    updateHUD();
+    return true;
+  }
 
   function spawnFloater(x, y, text, color, size = 18) {
     state.floaters.push({ x, y, text, color, size, life: 0.8, vy: -38 });
@@ -253,12 +280,28 @@
   })();
 
   // ===================================================================
+  //  PREFERÊNCIAS — som, velocidade e modo infinito (localStorage)
+  // ===================================================================
+  const Prefs = (() => {
+    const KEY = "overhead_prefs_v1";
+    const def = { sound: true, speed: 1, endless: false };
+    let data;
+    try { data = { ...def, ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
+    catch (e) { data = { ...def }; }
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
+    return {
+      get: (k) => data[k],
+      set: (k, v) => { data[k] = v; save(); },
+    };
+  })();
+
+  // ===================================================================
   //  ONDAS
   // ===================================================================
   function startWave() {
     if (state.running || state.gameOver) return;
     state.wave++;
-    if (state.wave > CONFIG.totalWaves) { winGame(); return; }
+    if (!state.endless && state.wave > CONFIG.totalWaves) { winGame(); return; }
     state.running = true;
     state.betweenTimer = 0;
     state.spawnQueue = buildWave(state.wave);
@@ -280,6 +323,7 @@
       baseSpeed: waveSpeed() * t.speedMul,
       slowUntil: 0, slowFactor: 1,
       burn: 0, burnUntil: 0, burnTick: 0,
+      healTick: t.healInterval || 0,
       wp: 1, radius: t.radius, dead: false,
     });
   }
@@ -349,15 +393,17 @@
     tower.cooldown -= dt;
 
     const range = effRange(tower);
-    // (re)seleciona alvo: inimigo mais avançado dentro do alcance
+    // (re)seleciona alvo: o inimigo mais perto do núcleo (ameaça mais iminente).
+    // Usar distância ao núcleo trata voadores (que cortam direto) de forma justa,
+    // em vez do progresso no caminho — que os ignorava (wp fica em 1).
     if (!tower.target || tower.target.dead || dist(tower, tower.target) > range) {
       tower.target = null;
-      let best = -1;
+      let best = Infinity;
       for (const e of state.enemies) {
         if (e.dead) continue;
         if (dist(tower, e) <= range) {
-          const prog = e.wp + (1 - dist(e, PATH[e.wp]) / 1000);
-          if (prog > best) { best = prog; tower.target = e; }
+          const d = dist(e, CORE);
+          if (d < best) { best = d; tower.target = e; }
         }
       }
     }
@@ -461,7 +507,7 @@
         // onda concluída
         state.running = false;
         state.betweenTimer = CONFIG.timeBetweenWaves;
-        if (state.wave >= CONFIG.totalWaves) winGame();
+        if (!state.endless && state.wave >= CONFIG.totalWaves) winGame();
         updateHUD();
       }
     } else if (state.betweenTimer > 0 && state.wave > 0) {
@@ -483,15 +529,28 @@
           damageEnemy(e, e.burn * 0.4, null);
         }
       }
+      // curandeiro: restaura HP de inimigos próximos
+      if (e.def.heal) {
+        e.healTick -= dt;
+        if (e.healTick <= 0) {
+          e.healTick = e.def.healInterval;
+          for (const o of state.enemies) {
+            if (o === e || o.dead || o.hp >= o.maxHP) continue;
+            if (dist(e, o) <= e.def.healRange) {
+              o.hp = Math.min(o.maxHP, o.hp + e.def.heal);
+              spawnFloater(o.x, o.y - o.radius, "+" + e.def.heal, "#94e2d5", 13);
+            }
+          }
+        }
+      }
 
       const speed = e.baseSpeed * e.slowFactor;
-      const tgt = PATH[e.wp];
+      // voadores vão direto ao núcleo; os demais seguem o caminho
+      const tgt = e.def.flying ? CORE : PATH[e.wp];
       const d = dist(e, tgt);
       if (d <= speed * dt + 1) {
-        e.x = tgt.x; e.y = tgt.y;
-        e.wp++;
-        if (e.wp >= PATH.length) {
-          // atacou a Torre Mestra
+        if (e.def.flying || e.wp >= PATH.length - 1) {
+          // chegou ao alvo final -> atacou a Torre Mestra
           e.dead = true;
           state.lives--;
           spawnParticles(CORE.x, CORE.y, "#ff6b81", 18, 160);
@@ -499,6 +558,9 @@
           Sound.play("leak");
           if (state.lives <= 0) { state.lives = 0; loseGame(); }
           updateHUD();
+        } else {
+          e.x = tgt.x; e.y = tgt.y;
+          e.wp++;
         }
       } else {
         e.x += ((tgt.x - e.x) / d) * speed * dt;
@@ -676,6 +738,26 @@
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2); ctx.fill();
 
+      // voador: "asas" laterais
+      if (e.def.flying) {
+        ctx.strokeStyle = e.def.color; ctx.lineWidth = 2;
+        const w = e.radius + 6 + Math.sin(pulse * 3) * 2;
+        ctx.beginPath();
+        ctx.moveTo(e.x - w, e.y); ctx.lineTo(e.x - e.radius, e.y);
+        ctx.moveTo(e.x + e.radius, e.y); ctx.lineTo(e.x + w, e.y);
+        ctx.stroke();
+      }
+      // curandeiro: aura de cura (cruz)
+      if (e.def.heal) {
+        ctx.strokeStyle = "rgba(148,226,213,0.5)"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(e.x, e.y, e.def.healRange, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = "#94e2d5"; ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(e.x - 5, e.y); ctx.lineTo(e.x + 5, e.y);
+        ctx.moveTo(e.x, e.y - 5); ctx.lineTo(e.x, e.y + 5);
+        ctx.stroke();
+      }
+
       // efeito gélido
       if (e.slowFactor < 1) {
         ctx.strokeStyle = "#7ad7ff"; ctx.lineWidth = 2;
@@ -846,7 +928,21 @@
     startBtn.disabled = state.running || state.gameOver;
     startBtn.textContent = state.betweenTimer > 0 ? "▶ Pular espera" : "▶ Iniciar onda";
     if (state.selectedTower) updateTowerButtons();
+    updateGlobals();
     refreshShop();
+  }
+
+  // Atualiza os botões de melhorias globais (rótulo, custo, disponibilidade)
+  function updateGlobals() {
+    document.querySelectorAll(".global-btn").forEach((btn) => {
+      const kind = btn.dataset.kind;
+      const g = GLOBALS[kind];
+      const cost = globalCost(kind);
+      const icon = kind === "dmg" ? "⚔" : "◎";
+      btn.textContent = `${icon} ${g.name} Nv.${state.globals[kind]} — ${cost} ✦`;
+      btn.disabled = state.souls < cost;
+      btn.style.borderColor = g.color + "66";
+    });
   }
 
   function refreshShop() {
@@ -922,8 +1018,17 @@
       saveRow.hidden = true;
     }
     renderLeaderboard();
+    renderBest();
     ov.classList.add("show");
     updateHUD();
+  }
+
+  function renderBest() {
+    const best = Leaderboard.top()[0];
+    const el = document.getElementById("best");
+    el.textContent = best
+      ? `Recorde: ${best.score} pts · ${best.won ? "venceu 🏆" : "onda " + best.wave} (${best.name})`
+      : "";
   }
 
   function renderLeaderboard(highlightDate) {
@@ -971,12 +1076,24 @@
   document.getElementById("speed-btn").addEventListener("click", () => {
     state.speed = state.speed === 1 ? 2 : state.speed === 2 ? 3 : 1;
     document.getElementById("speed-btn").textContent = state.speed + "×";
+    Prefs.set("speed", state.speed);
   });
 
   document.getElementById("sound-btn").addEventListener("click", () => {
     Sound.init();
     const on = Sound.toggle();
     document.getElementById("sound-btn").textContent = on ? "🔊" : "🔇";
+    Prefs.set("sound", on);
+  });
+
+  // botões de melhorias globais (ralo de almas)
+  document.querySelectorAll(".global-btn").forEach((btn) => {
+    btn.addEventListener("click", () => { buyGlobal(btn.dataset.kind); });
+  });
+
+  // modo infinito (checkbox do menu)
+  document.getElementById("endless-check").addEventListener("change", (e) => {
+    Prefs.set("endless", e.target.checked);
   });
 
   document.getElementById("save-btn").addEventListener("click", () => {
@@ -993,12 +1110,15 @@
     Sound.init();
     newGame();
     for (const n of NODES) n.taken = false;
+    // aplica preferências e o modo escolhido no menu
+    state.endless = document.getElementById("endless-check").checked;
+    state.speed = Prefs.get("speed") || 1;
     pendingScore = null;
     document.getElementById("save-row").hidden = true;
     document.getElementById("overlay").classList.remove("show");
     updateTowerButtons();
     document.getElementById("pause-btn").textContent = "❚❚";
-    document.getElementById("speed-btn").textContent = "1×";
+    document.getElementById("speed-btn").textContent = state.speed + "×";
     updateHUD();
   });
 
@@ -1057,6 +1177,11 @@
     },
     startWave: () => startWave(),
     setSpeed: (n) => { state.speed = n; },
+    setEndless: (b) => { state.endless = !!b; },
+    addSouls: (n) => { state.souls += n; updateHUD(); },   // só p/ testes
+    addLives: (n) => { state.lives += n; updateHUD(); },   // só p/ testes
+    buyGlobal: (kind) => buyGlobal(kind),
+    globalCost: (kind) => globalCost(kind),
 
     // constrói toro `typeId` no nó `nodeIndex`; retorna true se construiu
     build: (typeId, nodeIndex) => {
@@ -1092,15 +1217,31 @@
       projectiles: state.projectiles.length,
       slowed: state.enemies.filter(e => e.slowFactor < 1).length,
       burning: state.enemies.filter(e => e.burnUntil > state.time).length,
+      flying: state.enemies.filter(e => e.def.flying).length,
+      healers: state.enemies.filter(e => e.def.heal).length,
+      endless: state.endless,
+      globals: { ...state.globals },
       towers: state.towers.map(t => ({ type: t.type.id, level: t.level })),
     }),
   };
 
+  // ----- aplica preferências salvas -----
+  function applyPrefs() {
+    const soundOn = Prefs.get("sound");
+    if (!soundOn) { Sound.toggle(); /* começa desligado */ }
+    document.getElementById("sound-btn").textContent = soundOn ? "🔊" : "🔇";
+    state.speed = Prefs.get("speed") || 1;
+    document.getElementById("speed-btn").textContent = state.speed + "×";
+    document.getElementById("endless-check").checked = !!Prefs.get("endless");
+  }
+
   // start
+  applyPrefs();
   refreshShop();
   updateHUD();
   resize();
   renderLeaderboard();
+  renderBest();
   requestAnimationFrame(loop);
 
   // mostra menu inicial
