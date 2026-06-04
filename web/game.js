@@ -610,9 +610,54 @@
   //  RENDER
   // ===================================================================
   let pulse = 0;
+
+  // ----- Câmera: zoom + deslocamento (pan) -----
+  // O mundo é sempre 0..W × 0..H; a câmera mapeia mundo→tela. zoom=1 mostra o
+  // mapa inteiro (encaixado no playfield); zoom>1 amplia e habilita o pan.
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const view = { zoom: 1, panX: 0, panY: 0, cw: W, ch: H, dpr: 1 };
+
+  // Escala e offset atuais, já com o pan limitado p/ não revelar fora do mapa.
+  function camera() {
+    const fit = Math.min(view.cw / W, view.ch / H);
+    const scale = fit * view.zoom;
+    const wpx = W * scale, hpx = H * scale;
+    const ox = wpx <= view.cw ? (view.cw - wpx) / 2 : clamp(view.panX, view.cw - wpx, 0);
+    const oy = hpx <= view.ch ? (view.ch - hpx) / 2 : clamp(view.panY, view.ch - hpx, 0);
+    view.panX = ox; view.panY = oy;
+    return { scale, ox, oy, fit };
+  }
+  // Ajusta o zoom mantendo o ponto de tela (fx,fy) fixo (foco da pinça/scroll).
+  function zoomAt(newZoom, fx, fy) {
+    const c0 = camera();
+    const wx = (fx - c0.ox) / c0.scale, wy = (fy - c0.oy) / c0.scale;
+    view.zoom = clamp(newZoom, 1, 3);
+    const fit = Math.min(view.cw / W, view.ch / H);
+    const scale = fit * view.zoom;
+    view.panX = fx - wx * scale;
+    view.panY = fy - wy * scale;
+    camera();
+    updateZoomUI();
+  }
+  function panBy(dx, dy) { view.panX += dx; view.panY += dy; camera(); }
+  function zoomByFactor(f) { zoomAt(view.zoom * f, view.cw / 2, view.ch / 2); }
+  function resetView() { view.zoom = 1; view.panX = 0; view.panY = 0; camera(); updateZoomUI(); }
+  function updateZoomUI() {
+    const out = document.getElementById("zoom-out");
+    const ins = document.getElementById("zoom-in");
+    if (out) out.disabled = view.zoom <= 1.001;
+    if (ins) ins.disabled = view.zoom >= 2.999;
+  }
+
   function render() {
     pulse += 0.04;
-    ctx.clearRect(0, 0, W, H);
+    const { scale, ox, oy } = camera();
+    // limpa a tela inteira (em px de tela) e aplica a transformação da câmera
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    ctx.clearRect(0, 0, view.cw, view.ch);
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.scale(scale, scale);
 
     // fundo / grade
     drawBackground();
@@ -625,6 +670,7 @@
     drawParticles();
     drawFloaters();
     drawBuildPreview();
+    ctx.restore();
   }
 
   function drawBackground() {
@@ -692,7 +738,7 @@
     ctx.stroke();
 
     ctx.fillStyle = "#ffd166";
-    ctx.font = "bold 20px Segoe UI, sans-serif";
+    ctx.font = "bold 26px Segoe UI, sans-serif";
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText("♥ " + state.lives, CORE.x, CORE.y);
   }
@@ -854,12 +900,48 @@
 
   function toWorld(ev) {
     const rect = canvas.getBoundingClientRect();
-    const sx = W / rect.width, sy = H / rect.height;
-    return { x: (ev.clientX - rect.left) * sx, y: (ev.clientY - rect.top) * sy };
+    // posição em px de tela (CSS) dentro do canvas
+    const px = (ev.clientX - rect.left) * (view.cw / rect.width);
+    const py = (ev.clientY - rect.top) * (view.ch / rect.height);
+    const { scale, ox, oy } = camera();
+    return { x: (px - ox) / scale, y: (py - oy) / scale };
+  }
+
+  // posição do evento em px de tela (CSS) relativos ao canvas
+  function toCanvasPx(ev) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (ev.clientX - rect.left) * (view.cw / rect.width),
+      y: (ev.clientY - rect.top) * (view.ch / rect.height),
+    };
   }
 
   canvas.addEventListener("mousemove", (ev) => { mouse.world = toWorld(ev); });
   canvas.addEventListener("mouseleave", () => { mouse.world = null; });
+
+  // Scroll do mouse = zoom centrado no cursor (desktop)
+  canvas.addEventListener("wheel", (ev) => {
+    ev.preventDefault();
+    const p = toCanvasPx(ev);
+    zoomAt(view.zoom * (ev.deltaY < 0 ? 1.12 : 1 / 1.12), p.x, p.y);
+  }, { passive: false });
+
+  // Arrastar com o mouse = pan (apenas quando há zoom); senão é clique normal.
+  let dragPan = null, suppressClick = false;
+  canvas.addEventListener("mousedown", (ev) => {
+    if (view.zoom > 1.001) dragPan = { x: ev.clientX, y: ev.clientY, moved: false };
+  });
+  window.addEventListener("mousemove", (ev) => {
+    if (!dragPan) return;
+    const dx = ev.clientX - dragPan.x, dy = ev.clientY - dragPan.y;
+    if (Math.abs(dx) + Math.abs(dy) > 3) dragPan.moved = true;
+    panBy(dx, dy);
+    dragPan.x = ev.clientX; dragPan.y = ev.clientY;
+  });
+  window.addEventListener("mouseup", () => {
+    if (dragPan && dragPan.moved) suppressClick = true;
+    dragPan = null;
+  });
 
   // Lógica de toque/clique no campo: construir no nó, ou selecionar torre.
   // No toque os alvos são maiores (dedo é menos preciso que o mouse).
@@ -891,6 +973,7 @@
   // `touchend`; este flag evita que um `click` sintetizado dispare em dobro.
   let lastTouchTap = 0;
   canvas.addEventListener("click", (ev) => {
+    if (suppressClick) { suppressClick = false; return; } // foi um pan, não clique
     if (Date.now() - lastTouchTap < 600) return; // já tratado pelo touchend
     handleTap(toWorld(ev));
   });
@@ -904,27 +987,58 @@
     refreshShop();
   });
 
-  // ----- Toque (mobile): preview ao arrastar, ação ao soltar -----
-  let touchStart = null;
+  // ----- Toque (mobile) -----
+  //  1 dedo: preview ao arrastar, construir/selecionar ao soltar (tap).
+  //  2 dedos: pinça = zoom, arrasto = pan. (não dispara tap)
+  let touchStart = null;   // ponto-mundo do toque de 1 dedo (detecção de tap)
+  let pinch = null;        // { d, z } estado inicial da pinça
+  let panLast = null;      // último ponto-médio (px) p/ o pan de 2 dedos
+
   canvas.addEventListener("touchstart", (ev) => {
-    if (ev.touches.length) { mouse.world = toWorld(ev.touches[0]); touchStart = mouse.world; }
+    if (ev.touches.length >= 2) {
+      const a = toCanvasPx(ev.touches[0]), b = toCanvasPx(ev.touches[1]);
+      pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: view.zoom };
+      panLast = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      touchStart = null; mouse.world = null; // cancela qualquer tap
+    } else if (ev.touches.length === 1) {
+      pinch = null;
+      mouse.world = toWorld(ev.touches[0]);
+      touchStart = mouse.world;
+    }
     ev.preventDefault();
   }, { passive: false });
+
   canvas.addEventListener("touchmove", (ev) => {
-    if (ev.touches.length) mouse.world = toWorld(ev.touches[0]);
+    if (ev.touches.length >= 2 && pinch) {
+      const a = toCanvasPx(ev.touches[0]), b = toCanvasPx(ev.touches[1]);
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      if (pinch.d > 0) zoomAt(pinch.z * (d / pinch.d), mx, my);
+      if (panLast) panBy(mx - panLast.x, my - panLast.y);
+      panLast = { x: mx, y: my };
+    } else if (ev.touches.length === 1 && !pinch) {
+      mouse.world = toWorld(ev.touches[0]);
+    }
     ev.preventDefault();
   }, { passive: false });
+
   canvas.addEventListener("touchend", (ev) => {
     ev.preventDefault();
     lastTouchTap = Date.now();
-    const t = ev.changedTouches[0];
-    if (t) {
-      const w = toWorld(t);
-      // só conta como toque (não arrasto) se o dedo não andou muito
-      if (!touchStart || dist(w, touchStart) <= 44) handleTap(w, true);
+    if (ev.touches.length === 0) {
+      if (!pinch) { // só conta como tap se não estava em pinça
+        const t = ev.changedTouches[0];
+        if (t) {
+          const w = toWorld(t);
+          if (!touchStart || dist(w, touchStart) <= 44) handleTap(w, true);
+        }
+      }
+      pinch = null; panLast = null; touchStart = null; mouse.world = null;
+    } else if (ev.touches.length === 1) {
+      // saiu de 2→1 dedo: reinicia rastreio sem disparar tap
+      pinch = null; panLast = null; touchStart = null;
+      mouse.world = toWorld(ev.touches[0]);
     }
-    touchStart = null;
-    mouse.world = null; // limpa o preview após soltar
   }, { passive: false });
 
   // Preenche o painel da torre selecionada: nome, nível, stats efetivos
@@ -1155,6 +1269,10 @@
     Prefs.set("speed", state.speed);
   });
 
+  document.getElementById("zoom-in").addEventListener("click", () => zoomByFactor(1.3));
+  document.getElementById("zoom-out").addEventListener("click", () => zoomByFactor(1 / 1.3));
+  document.getElementById("zoom-reset").addEventListener("click", () => resetView());
+
   document.getElementById("sound-btn").addEventListener("click", () => {
     Sound.init();
     const on = Sound.toggle();
@@ -1185,6 +1303,7 @@
   document.getElementById("overlay-btn").addEventListener("click", () => {
     Sound.init();
     newGame();
+    resetView();
     for (const n of NODES) n.taken = false;
     // aplica preferências e o modo escolhido no menu
     state.endless = document.getElementById("endless-check").checked;
@@ -1231,10 +1350,15 @@
     const availW = pf.clientWidth;
     const availH = pf.clientHeight;
     if (availW <= 0 || availH <= 0) return;
-    const scale = Math.min(availW / W, availH / H);
-    canvas.width = W; canvas.height = H;
-    canvas.style.width = Math.floor(W * scale) + "px";
-    canvas.style.height = Math.floor(H * scale) + "px";
+    // o canvas preenche todo o playfield; o "encaixe" do mapa vira escala da
+    // câmera (assim sobra menos margem preta e o pan/zoom usam a área toda).
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    view.cw = availW; view.ch = availH; view.dpr = dpr;
+    canvas.width = Math.round(availW * dpr);
+    canvas.height = Math.round(availH * dpr);
+    canvas.style.width = availW + "px";
+    canvas.style.height = availH + "px";
+    camera(); // re-limita o pan ao novo tamanho
   }
   window.addEventListener("resize", resize);
   window.addEventListener("orientationchange", () => setTimeout(resize, 250));
@@ -1297,6 +1421,18 @@
       state.selectedTower = tw || null; state.selectedType = null;
       updateTowerButtons(); refreshShop();
       return !!tw;
+    },
+    // câmera (zoom/pan) — usado nos testes
+    zoomState: () => ({ zoom: +view.zoom.toFixed(3), panX: Math.round(view.panX), panY: Math.round(view.panY) }),
+    setZoom: (z) => { zoomAt(z, view.cw / 2, view.ch / 2); return +view.zoom.toFixed(3); },
+    resetView: () => resetView(),
+    // coords de tela (clientX/Y) do nó, já passando pela câmera — p/ testes de toque
+    nodeClientXY: (i) => {
+      const c = camera();
+      const n = NODES[i];
+      const rect = canvas.getBoundingClientRect();
+      const sx = rect.width / view.cw, sy = rect.height / view.ch;
+      return { x: rect.left + (n.x * c.scale + c.ox) * sx, y: rect.top + (n.y * c.scale + c.oy) * sy };
     },
 
     // avança a simulação `seconds` em passos fixos de `dt` (sem depender do rAF)

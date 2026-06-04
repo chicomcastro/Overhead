@@ -9,17 +9,9 @@ test.beforeEach(async ({ page }, testInfo) => {
   await boot(page);
 });
 
-// Converte coords de mundo (do nó) para coords de tela do toque.
+// Coords de tela do toque para um nó — via câmera real do jogo (zoom/pan/DPR).
 async function nodeScreenPos(page, nodeIndex) {
-  return page.evaluate((i) => {
-    const c = document.getElementById("canvas");
-    const r = c.getBoundingClientRect();
-    const n = window.__OVERHEAD.nodes()[i];
-    return {
-      x: r.left + (n.x * r.width) / c.width,
-      y: r.top + (n.y * r.height) / c.height,
-    };
-  }, nodeIndex);
+  return page.evaluate((i) => window.__OVERHEAD.nodeClientXY(i), nodeIndex);
 }
 
 test("tocar num nó com esfera selecionada constrói a torre", async ({ page }) => {

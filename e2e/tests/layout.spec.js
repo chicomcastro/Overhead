@@ -103,6 +103,30 @@ test("torre recém-construída já vem selecionada", async ({ page }) => {
   await expect(page.locator("#tower-panel .tp-name")).toContainText("Esfera de Alma");
 });
 
+test("zoom: botões e setZoom alteram a escala e o reset enquadra", async ({ page }) => {
+  await boot(page);
+  const z0 = await page.evaluate(() => window.__OVERHEAD.zoomState().zoom);
+  expect(z0).toBeCloseTo(1, 1);
+
+  // botão de aproximar aumenta o zoom
+  await page.locator("#zoom-in").click();
+  const z1 = await page.evaluate(() => window.__OVERHEAD.zoomState().zoom);
+  expect(z1).toBeGreaterThan(1);
+
+  // não estoura a viewport mesmo ampliado
+  expect(await hOverflow(page)).toBeLessThanOrEqual(1);
+
+  // reset volta a enquadrar (zoom 1, sem pan)
+  await page.locator("#zoom-reset").click();
+  const zr = await page.evaluate(() => window.__OVERHEAD.zoomState());
+  expect(zr.zoom).toBeCloseTo(1, 1);
+  expect(zr.panX).toBe(0);
+
+  // zoom é limitado (não passa de 3x)
+  await page.evaluate(() => window.__OVERHEAD.setZoom(99));
+  expect(await page.evaluate(() => window.__OVERHEAD.zoomState().zoom)).toBeLessThanOrEqual(3);
+});
+
 test("tutorial de primeira jogada aparece uma vez", async ({ page }) => {
   await gotoFresh(page);
   await page.evaluate(() => window.__OVERHEAD.resetTutorial());

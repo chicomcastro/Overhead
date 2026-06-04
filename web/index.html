@@ -36,7 +36,14 @@
 
     <!-- Playfield -->
     <div id="stage">
-      <div id="playfield"><canvas id="canvas"></canvas></div>
+      <div id="playfield">
+        <canvas id="canvas"></canvas>
+        <div id="zoom-ctrls">
+          <button id="zoom-in" title="Aproximar">+</button>
+          <button id="zoom-out" title="Afastar" disabled>−</button>
+          <button id="zoom-reset" title="Enquadrar o mapa">⤢</button>
+        </div>
+      </div>
 
       <!-- Coach de primeira jogada (mostrado uma vez) -->
       <div id="coach" hidden>
@@ -76,8 +83,8 @@
           <button class="global-btn" data-kind="dmg"></button>
           <button class="global-btn" data-kind="rng"></button>
         </div>
-        <button id="start-btn">▶ Iniciar onda</button>
         <p class="hint">Selecione uma esfera (<b>1–4</b>) e clique num <b>nó</b> azul para construir. Clique numa torre para ver alcance, <b>melhorar</b> (U) ou vender.</p>
+        <button id="start-btn">▶ Iniciar onda</button>
       </aside>
     </div>
 
