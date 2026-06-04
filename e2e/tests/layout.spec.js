@@ -93,6 +93,16 @@ test("torre selecionada: painel com nome/nível/stats substitui as esferas", asy
   await expect(page.locator(".tower-card")).toHaveCount(4);
 });
 
+test("torre recém-construída já vem selecionada", async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => window.__OVERHEAD.addSouls(500));
+  const free = await page.evaluate(() => window.__OVERHEAD.freeNodes()[0]);
+  await page.evaluate((n) => window.__OVERHEAD.build("soul", n), free);
+  // sem chamar selectAt: o painel deve aparecer sozinho com a torre construída
+  await expect(page.locator("#tower-panel")).toBeVisible();
+  await expect(page.locator("#tower-panel .tp-name")).toContainText("Esfera de Alma");
+});
+
 test("tutorial de primeira jogada aparece uma vez", async ({ page }) => {
   await gotoFresh(page);
   await page.evaluate(() => window.__OVERHEAD.resetTutorial());

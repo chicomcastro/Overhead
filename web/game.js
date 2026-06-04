@@ -348,15 +348,21 @@
     }
     state.souls -= type.cost;
     node.taken = true;
-    state.towers.push({
+    const tower = {
       type, node, x: node.x, y: node.y, level: 1,
       cooldown: 0, angle: -Math.PI / 2, target: null,
       invested: type.cost,
-    });
+    };
+    state.towers.push(tower);
     spawnParticles(node.x, node.y, type.color, 12);
     spawnFloater(node.x, node.y - 22, "✓ " + type.name, type.color, 16); // confirmação
     Sound.play("build");
     buzz(18); // confirmação tátil
+    // já deixa a torre recém-construída selecionada (mostra o painel com stats,
+    // melhorar e vender) — sem precisar tocar nela de novo.
+    state.selectedTower = tower;
+    state.selectedType = null;
+    updateTowerButtons();
     updateHUD();
     refreshShop();
   }
