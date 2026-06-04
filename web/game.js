@@ -95,14 +95,14 @@
 
   // ----- Tipos de inimigo -----
   const ENEMY_TYPES = {
-    grunt: { name: "Alma", hpMul: 1.0, speedMul: 1.0, reward: 4, color: "#cdd6f4", radius: 13 },
-    fast:  { name: "Espectro", hpMul: 0.6, speedMul: 1.7, reward: 5, color: "#a6e3a1", radius: 11 },
-    tank:  { name: "Carrasco", hpMul: 3.2, speedMul: 0.6, reward: 9, color: "#f38ba8", radius: 19 },
+    grunt: { name: "Alma", icon: "👻", hpMul: 1.0, speedMul: 1.0, reward: 4, color: "#cdd6f4", radius: 13 },
+    fast:  { name: "Espectro", icon: "💨", hpMul: 0.6, speedMul: 1.7, reward: 5, color: "#a6e3a1", radius: 11 },
+    tank:  { name: "Carrasco", icon: "🪨", hpMul: 3.2, speedMul: 0.6, reward: 9, color: "#f38ba8", radius: 19 },
     // Voa em linha reta até o núcleo, ignorando o caminho.
-    flyer: { name: "Alma Alada", hpMul: 0.85, speedMul: 1.15, reward: 6, color: "#89dceb", radius: 12, flying: true },
+    flyer: { name: "Alma Alada", icon: "🦇", hpMul: 0.85, speedMul: 1.15, reward: 6, color: "#89dceb", radius: 12, flying: true },
     // Cura inimigos próximos periodicamente.
-    healer:{ name: "Sacerdote", hpMul: 1.7, speedMul: 0.8, reward: 8, color: "#94e2d5", radius: 15, heal: 22, healRange: 95, healInterval: 1.1 },
-    boss:  { name: "Ceifador", hpMul: 14, speedMul: 0.5, reward: 40, color: "#f9e2af", radius: 26 },
+    healer:{ name: "Sacerdote", icon: "✚", hpMul: 1.7, speedMul: 0.8, reward: 8, color: "#94e2d5", radius: 15, heal: 22, healRange: 95, healInterval: 1.1 },
+    boss:  { name: "Ceifador", icon: "💀", hpMul: 14, speedMul: 0.5, reward: 40, color: "#f9e2af", radius: 26 },
   };
 
   // Composição de cada onda (lista de tipos de inimigo)
@@ -351,7 +351,7 @@
     const tower = {
       type, node, x: node.x, y: node.y, level: 1,
       cooldown: 0, angle: -Math.PI / 2, target: null,
-      invested: type.cost,
+      invested: type.cost, targetMode: "core",
     };
     state.towers.push(tower);
     spawnParticles(node.x, node.y, type.color, 12);
@@ -401,23 +401,37 @@
   // ===================================================================
   //  COMBATE
   // ===================================================================
+  // Modos de prioridade de alvo. Cada um devolve um "peso": escolhemos o
+  // inimigo no alcance com o MENOR peso. Usar distância ao núcleo trata os
+  // voadores (que cortam direto) de forma justa, não pelo progresso no caminho.
+  const TARGET_MODES = {
+    core: { label: "Núcleo", weight: (tw, e) => dist(e, CORE) },          // ameaça mais iminente
+    strong: { label: "Forte", weight: (tw, e) => -e.hp },                 // maior HP
+    weak: { label: "Fraco", weight: (tw, e) => e.hp },                    // menor HP (acaba rápido)
+    near: { label: "Perto", weight: (tw, e) => dist(tw, e) },            // mais perto da torre
+  };
+  const TARGET_ORDER = ["core", "strong", "weak", "near"];
+
+  function acquireTarget(tower, range) {
+    const mode = TARGET_MODES[tower.targetMode] || TARGET_MODES.core;
+    let best = Infinity, chosen = null;
+    for (const e of state.enemies) {
+      if (e.dead) continue;
+      if (dist(tower, e) <= range) {
+        const w = mode.weight(tower, e);
+        if (w < best) { best = w; chosen = e; }
+      }
+    }
+    return chosen;
+  }
+
   function towerFire(tower, dt) {
     tower.cooldown -= dt;
 
     const range = effRange(tower);
-    // (re)seleciona alvo: o inimigo mais perto do núcleo (ameaça mais iminente).
-    // Usar distância ao núcleo trata voadores (que cortam direto) de forma justa,
-    // em vez do progresso no caminho — que os ignorava (wp fica em 1).
+    // (re)seleciona alvo conforme a prioridade escolhida na torre.
     if (!tower.target || tower.target.dead || dist(tower, tower.target) > range) {
-      tower.target = null;
-      let best = Infinity;
-      for (const e of state.enemies) {
-        if (e.dead) continue;
-        if (dist(tower, e) <= range) {
-          const d = dist(e, CORE);
-          if (d < best) { best = d; tower.target = e; }
-        }
-      }
+      tower.target = acquireTarget(tower, range);
     }
 
     if (tower.target) {
@@ -1080,6 +1094,26 @@
     tagEl.textContent = tags.join("  ·  ");
     tagEl.hidden = tags.length === 0;
 
+    // botões de prioridade de alvo (reconstruídos só quando muda a torre/modo)
+    const modes = document.getElementById("tp-target-modes");
+    const stamp = tw.node + "|" + tw.targetMode;
+    if (modes.dataset.stamp !== stamp) {
+      modes.dataset.stamp = stamp;
+      modes.innerHTML = "";
+      for (const key of TARGET_ORDER) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "tp-mode" + (tw.targetMode === key ? " active" : "");
+        b.textContent = TARGET_MODES[key].label;
+        b.addEventListener("click", () => {
+          tw.targetMode = key;
+          tw.target = null;       // re-mira já no próximo quadro
+          updateTowerButtons();
+        });
+        modes.appendChild(b);
+      }
+    }
+
     const sb = document.getElementById("sell-btn");
     const ub = document.getElementById("upgrade-btn");
     sb.textContent = `Vender (+${Math.round(tw.invested * 0.6)} ✦)`;
@@ -1113,7 +1147,27 @@
     startBtn.textContent = state.betweenTimer > 0 ? "▶ Pular espera" : "▶ Iniciar onda";
     if (state.selectedTower) updateTowerButtons();
     updateGlobals();
+    updateWavePreview();
     refreshShop();
+  }
+
+  // Prévia da próxima onda: tipos e quantidades de inimigos que vêm a seguir.
+  function updateWavePreview() {
+    const el = document.getElementById("wave-preview");
+    if (!el) return;
+    const next = state.wave + 1;
+    const lastWave = !state.endless && state.wave >= CONFIG.totalWaves;
+    if (state.running || state.gameOver || lastWave) { el.hidden = true; return; }
+
+    // conta inimigos por tipo, preservando a ordem de ENEMY_TYPES
+    const counts = {};
+    for (const id of buildWave(next)) counts[id] = (counts[id] || 0) + 1;
+    const parts = Object.keys(ENEMY_TYPES)
+      .filter(id => counts[id])
+      .map(id => `<span class="wp-item" title="${ENEMY_TYPES[id].name}">${ENEMY_TYPES[id].icon}<b>${counts[id]}</b></span>`);
+
+    el.innerHTML = `<span class="wp-title">Próxima onda ${next}</span>` + parts.join("");
+    el.hidden = false;
   }
 
   // Atualiza os botões de melhorias globais (rótulo, custo, disponibilidade)
@@ -1174,16 +1228,19 @@
   function loseGame() {
     state.gameOver = true; state.won = false; state.running = false;
     Sound.play("lose");
-    showOverlay("Fim de jogo", `A Torre Mestra caiu na onda ${state.wave}.`,
-      `Pontuação: ${state.score}`, true);
+    const n = state.towers.length;
+    showOverlay("💀 Fim de jogo", `A Torre Mestra caiu na <b>onda ${state.wave}</b>.`,
+      `★ ${state.score} pontos · ${n} esfera${n !== 1 ? "s" : ""} erguida${n !== 1 ? "s" : ""}`, true);
   }
   function winGame() {
     if (state.gameOver) return;
     state.gameOver = true; state.won = true; state.running = false;
     Sound.play("win");
-    showOverlay("Vitória!", `Você sobreviveu a todas as ${CONFIG.totalWaves} ondas!`,
-      `Pontuação final: ${state.score}`, true);
+    showOverlay("🏆 Vitória!", `Você defendeu a Torre Mestra por todas as ${CONFIG.totalWaves} ondas!`,
+      `★ ${state.score} pontos · ${state.lives} vidas restantes`, true);
   }
+
+  let lastShareText = "";
 
   function showOverlay(title, msg, stats, isResult) {
     const ov = document.getElementById("overlay");
@@ -1191,6 +1248,21 @@
     document.getElementById("overlay-msg").innerHTML = msg;
     document.getElementById("overlay-stats").textContent = stats || "";
     document.getElementById("overlay-btn").textContent = isResult ? "Jogar novamente" : "Jogar";
+
+    // estado visual: menu × resultado (vitória/derrota)
+    ov.classList.toggle("result", !!isResult);
+    ov.classList.toggle("win", !!isResult && state.won);
+    ov.classList.toggle("lose", !!isResult && !state.won);
+
+    // botão de compartilhar (só em resultado)
+    const shareBtn = document.getElementById("share-btn");
+    if (isResult) {
+      const verbo = state.won ? "venci" : "sobrevivi até";
+      lastShareText = `Overhead 🏰 — ${verbo} a onda ${state.wave} com ${state.score} pontos!`;
+      shareBtn.hidden = false;
+    } else {
+      shareBtn.hidden = true;
+    }
 
     // fila para salvar pontuação, se qualificar
     const saveRow = document.getElementById("save-row");
@@ -1300,8 +1372,24 @@
     Sound.play("upgrade");
   });
 
+  document.getElementById("share-btn").addEventListener("click", async () => {
+    const text = lastShareText || "Overhead 🏰 — tower defense web!";
+    const url = location.href;
+    const btn = document.getElementById("share-btn");
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Overhead", text, url });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        btn.textContent = "✓ Copiado!";
+        setTimeout(() => { btn.textContent = "↗ Compartilhar resultado"; }, 1800);
+      }
+    } catch (e) { /* usuário cancelou o compartilhamento — ignora */ }
+  });
+
   document.getElementById("overlay-btn").addEventListener("click", () => {
     Sound.init();
+    document.getElementById("overlay").classList.remove("result", "win", "lose");
     newGame();
     resetView();
     for (const n of NODES) n.taken = false;
@@ -1422,6 +1510,25 @@
       updateTowerButtons(); refreshShop();
       return !!tw;
     },
+    // prioridade de alvo
+    setTargetMode: (nodeIndex, mode) => {
+      const tw = state.towers.find(t => t.node === NODES[nodeIndex]);
+      if (!tw || !TARGET_MODES[mode]) return false;
+      tw.targetMode = mode; tw.target = null;
+      if (state.selectedTower === tw) updateTowerButtons();
+      return true;
+    },
+    targetModeAt: (nodeIndex) => {
+      const tw = state.towers.find(t => t.node === NODES[nodeIndex]);
+      return tw ? tw.targetMode : null;
+    },
+    nextWaveCounts: () => {
+      const counts = {};
+      for (const id of buildWave(state.wave + 1)) counts[id] = (counts[id] || 0) + 1;
+      return counts;
+    },
+    endGame: (won) => { if (won) winGame(); else loseGame(); }, // p/ testes da tela de fim
+
     // câmera (zoom/pan) — usado nos testes
     zoomState: () => ({ zoom: +view.zoom.toFixed(3), panX: Math.round(view.panX), panY: Math.round(view.panY) }),
     setZoom: (z) => { zoomAt(z, view.cw / 2, view.ch / 2); return +view.zoom.toFixed(3); },

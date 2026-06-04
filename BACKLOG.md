@@ -1,0 +1,57 @@
+# Backlog — Overhead (versão web)
+
+Acompanhamento do que já foi feito, o que está em andamento e o que falta na
+remasterização web em [`web/`](web/). Atualize ao concluir cada item.
+
+> Não há issues no GitHub para este projeto; este arquivo é a fonte de verdade
+> do backlog. PRs são squash-merge na `master` e o deploy é automático no
+> GitHub Pages.
+
+## ✅ Entregue
+
+| PR | Tema | Resumo |
+|----|------|--------|
+| #6 | Profundidade de endgame | Melhorias globais (ralo de almas), inimigos novos (voador + curandeiro), boss a cada 5 ondas, modo infinito, leaderboard local e persistência de preferências. Fix de mira (voadores). |
+| #7 | Toque no mobile | Construir torre por toque (ação no `touchend`, pois `preventDefault` mata o `click`). |
+| #8 | Jogabilidade mobile | Alvos de toque maiores, feedback ao construir (✓ + vibração), tutorial de 1ª jogada. + **layout guard** e2e (regressão de layout determinística por DOM, não pixel-diff). |
+| #9 | UX/UI mobile | HUD compacto numa linha, painel da torre selecionada (nome/nível/stats/tags), auto-seleção ao construir, fim do overlap loja↔ações. |
+| #10 | Câmera | Zoom (1–3×) + pan: pinça/2 dedos no mobile, scroll/arrasto no desktop, botões +/−/⤢. Fix do shop lateral cortando no desktop (Iniciar onda sticky). |
+| #11 | Gameplay + polish | Prioridade de alvo por torre, prévia da próxima onda, telas de vitória/derrota ricas + compartilhar resultado. Atualização do README e deste backlog. |
+
+## 🔜 Backlog (próximos candidatos)
+
+**Profundidade de jogo**
+- [ ] Níveis de dificuldade (fácil/normal/difícil — ajusta HP/contagem/almas iniciais).
+- [ ] Variedade de mapa: mapas ou caminhos alternativos.
+- [ ] Habilidades ativas com cooldown (ex.: congelar tudo, dano em área manual).
+
+**Áudio / polish**
+- [ ] Controle de volume + música de fundo (hoje só SFX via Web Audio).
+- [ ] Feedback de dano no núcleo (flash/shake ao perder vida).
+- [ ] Bestiário de inimigos (detalhe de cada tipo).
+
+**Plataforma**
+- [ ] PWA instalável + offline (manifest + service worker; ícone na home, joga sem rede).
+
+## 🧭 Decisões de design (log)
+
+- **Regressão visual via DOM, não pixel-diff.** Sem container pinado (Docker),
+  screenshots variam entre o ambiente local e o `ubuntu-latest` do CI (fontes/
+  antialiasing). O *layout guard* (`e2e/tests/layout.spec.js`) valida estrutura
+  (elementos visíveis/escondidos, contagens, sem overflow horizontal no mobile),
+  que é determinístico e estável.
+- **Câmera por transformação, mundo fixo 1280×720.** O canvas preenche o
+  playfield (com `devicePixelRatio`); o "encaixe" do mapa virou escala da
+  câmera. `zoom ∈ [1,3]`; pan limitado para não revelar fora do mapa.
+- **Gestos sem conflito:** 1 dedo = construir/selecionar; 2 dedos = zoom/pan.
+- **Mira por distância ao núcleo** (não por progresso no caminho) — trata os
+  voadores, que cortam direto, de forma justa. A prioridade de alvo
+  (Núcleo/Forte/Fraco/Perto) é um peso por inimigo; escolhe-se o menor no alcance.
+- **API de debug (`window.__OVERHEAD`)** expõe hooks determinísticos (build,
+  step, snapshot, zoom, etc.) usados só pelos testes e2e — não altera o jogo.
+
+## Como rodar os testes
+
+```bash
+cd e2e && npm ci && npx playwright test      # desktop + mobile
+```
