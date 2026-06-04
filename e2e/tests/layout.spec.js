@@ -1,0 +1,87 @@
+// "Regressão visual" determinística: em vez de comparar pixels (frágil entre
+// ambientes), valida a ESTRUTURA do layout em cada estado — elementos certos
+// visíveis/escondidos, sem overflow horizontal no mobile, controles dentro da
+// viewport. Pega a classe de bug que importa (layout quebrado, item cortado)
+// sem flakiness de fonte/antialiasing. Roda em desktop e mobile.
+import { test, expect } from "@playwright/test";
+import { boot } from "./helpers.js";
+
+async function gotoFresh(page) {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__OVERHEAD);
+}
+
+// Inicia a partida pelo botão do menu e fecha o coach de 1ª jogada, se surgir.
+async function startGame(page) {
+  await page.locator("#overlay-btn").click();
+  if (await page.evaluate(() => window.__OVERHEAD.coachVisible())) {
+    await page.locator("#coach-ok").click();
+  }
+}
+
+// Overflow horizontal do documento (px). <= 1 significa "sem barra lateral".
+function hOverflow(page) {
+  return page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+}
+
+// boundingBox precisa caber dentro da viewport (com pequena tolerância).
+async function expectInViewport(page, selector) {
+  const box = await page.locator(selector).boundingBox();
+  const vp = page.viewportSize();
+  expect(box, `${selector} sem boundingBox`).not.toBeNull();
+  expect(box.x).toBeGreaterThanOrEqual(-1);
+  expect(box.y).toBeGreaterThanOrEqual(-1);
+  expect(box.x + box.width).toBeLessThanOrEqual(vp.width + 1);
+  expect(box.y + box.height).toBeLessThanOrEqual(vp.height + 1);
+}
+
+test("menu: controles essenciais presentes e visíveis", async ({ page }) => {
+  await gotoFresh(page);
+  await expect(page.locator("#overlay")).toBeVisible();
+  await expect(page.locator("#endless-check")).toBeVisible();
+  await expect(page.locator("#save-row")).toBeHidden();        // só aparece ao pontuar
+  await expect(page.locator("#how-to li")).toHaveCount(3);
+  await expect(page.locator("#overlay-btn")).toBeVisible();
+  await expectInViewport(page, "#overlay-btn");                // botão Jogar acessível
+});
+
+test("menu: sem overflow horizontal", async ({ page }) => {
+  await gotoFresh(page);
+  expect(await hOverflow(page)).toBeLessThanOrEqual(1);
+});
+
+test("em jogo: loja, melhorias globais e HUD presentes", async ({ page }) => {
+  await boot(page);            // reset, sem overlay
+  await expect(page.locator(".tower-card")).toHaveCount(4);    // 4 esferas
+  await expect(page.locator(".global-btn")).toHaveCount(2);    // ralo de almas
+  for (const id of ["souls", "lives", "wave", "score"]) {
+    await expect(page.locator(`#${id}`)).toBeVisible();
+  }
+  await expect(page.locator("#start-btn")).toBeVisible();
+  await expectInViewport(page, "#start-btn");                  // iniciar onda acessível
+});
+
+test("em jogo: sem overflow horizontal", async ({ page }) => {
+  await boot(page);
+  expect(await hOverflow(page)).toBeLessThanOrEqual(1);
+});
+
+test("tutorial de primeira jogada aparece uma vez", async ({ page }) => {
+  await gotoFresh(page);
+  await page.evaluate(() => window.__OVERHEAD.resetTutorial());
+
+  // 1ª jogada: o coach aparece e cabe na tela
+  await page.locator("#overlay-btn").click();
+  expect(await page.evaluate(() => window.__OVERHEAD.coachVisible())).toBe(true);
+  await expectInViewport(page, ".coach-card");
+
+  // ao fechar, marca como visto (persistido)
+  await page.locator("#coach-ok").click();
+  expect(await page.evaluate(() => window.__OVERHEAD.coachVisible())).toBe(false);
+
+  // recarrega (localStorage persiste) e joga de novo: não reaparece
+  await page.reload();
+  await page.waitForFunction(() => !!window.__OVERHEAD);
+  await page.locator("#overlay-btn").click();
+  expect(await page.evaluate(() => window.__OVERHEAD.coachVisible())).toBe(false);
+});

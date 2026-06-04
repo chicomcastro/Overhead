@@ -36,6 +36,20 @@
     <div id="stage">
       <div id="playfield"><canvas id="canvas"></canvas></div>
 
+      <!-- Coach de primeira jogada (mostrado uma vez) -->
+      <div id="coach" hidden>
+        <div class="coach-card">
+          <button id="coach-close" aria-label="Fechar">×</button>
+          <h3>Como jogar</h3>
+          <ol>
+            <li><b>Toque numa esfera</b> na loja</li>
+            <li><b>Toque num nó azul</b> do mapa para construí-la</li>
+            <li><b>Inicie a onda</b> e defenda a Torre Mestra ♥</li>
+          </ol>
+          <button id="coach-ok">Entendi</button>
+        </div>
+      </div>
+
       <!-- Tower shop -->
       <aside id="shop">
         <h2>Esferas</h2>
