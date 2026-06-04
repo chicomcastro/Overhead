@@ -849,9 +849,9 @@
   canvas.addEventListener("mousemove", (ev) => { mouse.world = toWorld(ev); });
   canvas.addEventListener("mouseleave", () => { mouse.world = null; });
 
-  canvas.addEventListener("click", (ev) => {
+  // Lógica de toque/clique no campo: construir no nó, ou selecionar torre.
+  function handleTap(w) {
     Sound.init(); Sound.resume();
-    const w = toWorld(ev);
 
     // modo construção
     if (state.selectedType) {
@@ -869,6 +869,15 @@
     }
     updateTowerButtons();
     refreshShop();
+  }
+
+  // No mobile o touchstart usa preventDefault (anti-scroll/zoom), o que impede
+  // o navegador de sintetizar o `click`. Por isso o toque é tratado no
+  // `touchend`; este flag evita que um `click` sintetizado dispare em dobro.
+  let lastTouchTap = 0;
+  canvas.addEventListener("click", (ev) => {
+    if (Date.now() - lastTouchTap < 600) return; // já tratado pelo touchend
+    handleTap(toWorld(ev));
   });
 
   // botão direito cancela seleção
@@ -880,14 +889,27 @@
     refreshShop();
   });
 
-  // ----- Toque (mobile): mostra preview e evita rolagem/zoom -----
+  // ----- Toque (mobile): preview ao arrastar, ação ao soltar -----
+  let touchStart = null;
   canvas.addEventListener("touchstart", (ev) => {
-    if (ev.touches.length) mouse.world = toWorld(ev.touches[0]);
+    if (ev.touches.length) { mouse.world = toWorld(ev.touches[0]); touchStart = mouse.world; }
     ev.preventDefault();
   }, { passive: false });
   canvas.addEventListener("touchmove", (ev) => {
     if (ev.touches.length) mouse.world = toWorld(ev.touches[0]);
     ev.preventDefault();
+  }, { passive: false });
+  canvas.addEventListener("touchend", (ev) => {
+    ev.preventDefault();
+    lastTouchTap = Date.now();
+    const t = ev.changedTouches[0];
+    if (t) {
+      const w = toWorld(t);
+      // só conta como toque (não arrasto) se o dedo não andou muito
+      if (!touchStart || dist(w, touchStart) <= 44) handleTap(w);
+    }
+    touchStart = null;
+    mouse.world = null; // limpa o preview após soltar
   }, { passive: false });
 
   // Mostra/atualiza os botões de vender e melhorar a torre selecionada
