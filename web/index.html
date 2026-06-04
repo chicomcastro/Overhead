@@ -42,6 +42,11 @@
         <div id="shop-list"></div>
         <button id="upgrade-btn" class="upgrade" hidden>⬆ Melhorar torre</button>
         <button id="sell-btn" class="ghost" hidden>Vender torre selecionada</button>
+        <div id="globals">
+          <div class="gl-title">Melhorias globais</div>
+          <button class="global-btn" data-kind="dmg"></button>
+          <button class="global-btn" data-kind="rng"></button>
+        </div>
         <button id="start-btn">▶ Iniciar onda</button>
         <p class="hint">Selecione uma esfera (<b>1–4</b>) e clique num <b>nó</b> azul para construir. Clique numa torre para ver alcance, <b>melhorar</b> (U) ou vender.</p>
       </aside>
@@ -59,6 +64,11 @@
           <li><b>Toque num nó azul</b> do mapa para construí-la</li>
           <li><b>Inicie a onda</b> e defenda a Torre Mestra</li>
         </ol>
+        <label id="endless-row">
+          <input type="checkbox" id="endless-check" />
+          <span>Modo infinito <small>(sem fim na onda 20 — sobreviva o máximo que puder)</small></span>
+        </label>
+        <div id="best"></div>
         <div id="overlay-stats"></div>
         <div id="save-row" hidden>
           <input id="name-input" maxlength="14" placeholder="Seu nome" autocomplete="off" />

@@ -18,9 +18,11 @@ and play directly. It recreates the core loop of the original: defend the Master
 escalating waves of souls, spend **souls** to build defensive spheres along the path, and use
 each sphere's special effects (slow, fatal hit, area damage, burn, soul bonus) to survive.
 
-Features: 4 sphere types with upgrades (3 levels each), 4 enemy types (boss every 5 waves),
-20 escalating waves, synthesized sound effects (Web Audio, no asset files), and a local
-top‑10 leaderboard saved in `localStorage`.
+Features: 4 sphere types with per-tower upgrades (4 levels each) plus buyable **global
+upgrades** (a late-game souls sink), 6 enemy types — including a **flyer** that cuts straight
+to the core and a **healer** that mends nearby foes — a boss every 5 waves, 20 escalating
+waves with an optional **endless mode**, synthesized sound effects (Web Audio, no asset files),
+and a local top‑10 leaderboard. Sound/speed/mode preferences are remembered in `localStorage`.
 
 Controls: click a sphere in the shop then click a blue **node** to build; click a placed tower
 to see its range, **upgrade** it (`U`) or sell it. Keys `1`–`4` pick a sphere, `Space` starts
