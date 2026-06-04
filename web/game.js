@@ -284,7 +284,7 @@
   // ===================================================================
   const Prefs = (() => {
     const KEY = "overhead_prefs_v1";
-    const def = { sound: true, speed: 1, endless: false };
+    const def = { sound: true, speed: 1, endless: false, seenTutorial: false };
     let data;
     try { data = { ...def, ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
     catch (e) { data = { ...def }; }
@@ -331,15 +331,19 @@
   // ===================================================================
   //  CONSTRUÇÃO
   // ===================================================================
-  function nodeAt(p) {
-    return NODES.find(n => !n.taken && dist(n, p) < 26);
+  function nodeAt(p, r = 26) {
+    return NODES.find(n => !n.taken && dist(n, p) < r);
   }
+
+  // vibração curta (haptics) quando suportado — feedback tátil no mobile
+  function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
 
   function tryBuild(node) {
     const type = state.selectedType;
     if (!type) return;
     if (state.souls < type.cost) {
       spawnFloater(node.x, node.y, "Almas insuficientes!", "#ff6b81", 15);
+      buzz([12, 40, 12]); // padrão de "negado"
       return;
     }
     state.souls -= type.cost;
@@ -350,7 +354,9 @@
       invested: type.cost,
     });
     spawnParticles(node.x, node.y, type.color, 12);
+    spawnFloater(node.x, node.y - 22, "✓ " + type.name, type.color, 16); // confirmação
     Sound.play("build");
+    buzz(18); // confirmação tátil
     updateHUD();
     refreshShop();
   }
@@ -850,17 +856,20 @@
   canvas.addEventListener("mouseleave", () => { mouse.world = null; });
 
   // Lógica de toque/clique no campo: construir no nó, ou selecionar torre.
-  function handleTap(w) {
+  // No toque os alvos são maiores (dedo é menos preciso que o mouse).
+  function handleTap(w, isTouch) {
     Sound.init(); Sound.resume();
+    const nodeR = isTouch ? 40 : 26;
+    const towerR = isTouch ? 34 : 22;
 
     // modo construção
     if (state.selectedType) {
-      const node = nodeAt(w);
+      const node = nodeAt(w, nodeR);
       if (node) { tryBuild(node); return; }
     }
 
     // selecionar torre existente
-    const tw = state.towers.find(t => dist(t, w) < 22);
+    const tw = state.towers.find(t => dist(t, w) < towerR);
     if (tw) {
       state.selectedTower = tw;
       state.selectedType = null;
@@ -906,7 +915,7 @@
     if (t) {
       const w = toWorld(t);
       // só conta como toque (não arrasto) se o dedo não andou muito
-      if (!touchStart || dist(w, touchStart) <= 44) handleTap(w);
+      if (!touchStart || dist(w, touchStart) <= 44) handleTap(w, true);
     }
     touchStart = null;
     mouse.world = null; // limpa o preview após soltar
@@ -1142,7 +1151,18 @@
     document.getElementById("pause-btn").textContent = "❚❚";
     document.getElementById("speed-btn").textContent = state.speed + "×";
     updateHUD();
+    // mostra o coach na primeira jogada
+    if (!Prefs.get("seenTutorial")) showCoach();
   });
+
+  // ----- Coach de primeira jogada -----
+  function showCoach() { document.getElementById("coach").hidden = false; }
+  function dismissCoach() {
+    document.getElementById("coach").hidden = true;
+    Prefs.set("seenTutorial", true);
+  }
+  document.getElementById("coach-ok").addEventListener("click", dismissCoach);
+  document.getElementById("coach-close").addEventListener("click", dismissCoach);
 
   // teclado
   window.addEventListener("keydown", (e) => {
@@ -1203,6 +1223,10 @@
     addSouls: (n) => { state.souls += n; updateHUD(); },   // só p/ testes
     addLives: (n) => { state.lives += n; updateHUD(); },   // só p/ testes
     buyGlobal: (kind) => buyGlobal(kind),
+    showCoach: () => showCoach(),
+    dismissCoach: () => dismissCoach(),
+    coachVisible: () => !document.getElementById("coach").hidden,
+    resetTutorial: () => Prefs.set("seenTutorial", false),
     globalCost: (kind) => globalCost(kind),
 
     // constrói toro `typeId` no nó `nodeIndex`; retorna true se construiu

@@ -377,7 +377,9 @@ html, body {
   #shop h2 { display: none; }
   .hint { display: none; }
 
-  /* Cartões em linha, rolagem horizontal */
+  /* Cartões em linha, rolagem horizontal — contida no próprio shop-list
+     (min-width:0 evita que o flex item estoure a largura do documento). */
+  #shop { max-width: 100%; overflow-x: hidden; }
   #shop-list {
     display: flex;
     flex-direction: row;
@@ -385,6 +387,8 @@ html, body {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 4px;
+    min-width: 0;
+    max-width: 100%;
   }
   .tower-card {
     flex: 0 0 auto;
@@ -397,9 +401,73 @@ html, body {
   /* Botões de ação numa linha */
   #shop button { margin-top: 0; padding: 12px; font-size: 15px; }
   #start-btn { order: 99; }                /* iniciar onda por último */
+
+  /* Painel do menu cabe na viewport (não estoura largura no celular) */
+  #overlay { padding: 12px; }
+  .panel { max-width: 100%; padding: 26px 20px; }
+  .panel h1 { font-size: 40px; letter-spacing: 3px; }
 }
 
 /* Telas muito baixas em paisagem: reduz altura da loja-rodapé */
 @media (orientation: portrait) and (max-height: 560px) {
   #shop { max-height: 38vh; }
+}
+
+/* ---------- Coach de primeira jogada ---------- */
+#coach {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 6%;
+  pointer-events: none; /* só o card captura toques; resto do campo segue visível */
+}
+.coach-card {
+  pointer-events: auto;
+  position: relative;
+  background: rgba(20, 27, 46, 0.96);
+  border: 1px solid rgba(110, 231, 255, 0.35);
+  border-radius: 14px;
+  padding: 18px 20px 16px;
+  max-width: 320px;
+  width: calc(100% - 32px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+.coach-card h3 { color: var(--accent); font-size: 16px; margin-bottom: 10px; }
+.coach-card ol { margin: 0 0 14px 18px; display: flex; flex-direction: column; gap: 7px; }
+.coach-card li { font-size: 14px; line-height: 1.35; }
+.coach-card #coach-ok {
+  width: 100%;
+  padding: 12px;
+  min-height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--souls));
+  color: #0b0f1a;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+#coach-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* ---------- Alvos de toque maiores no mobile ---------- */
+@media (max-width: 820px), (orientation: portrait) {
+  #shop button { min-height: 46px; }
+  .global-btn { min-height: 42px; }
+  #hud button { min-height: 38px; min-width: 44px; }
+  .tower-card { width: 150px; min-height: 84px; }
 }
