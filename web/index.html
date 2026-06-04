@@ -73,6 +73,10 @@
           </div>
           <div class="tp-stats"></div>
           <div class="tp-tags"></div>
+          <div class="tp-target">
+            <span class="tp-target-label">Mirar:</span>
+            <div id="tp-target-modes" class="tp-target-modes"></div>
+          </div>
           <button id="upgrade-btn" class="upgrade">⬆ Melhorar torre</button>
           <button id="sell-btn" class="ghost">Vender torre selecionada</button>
           <button id="tp-close" class="tp-close">Fechar</button>
@@ -84,6 +88,7 @@
           <button class="global-btn" data-kind="rng"></button>
         </div>
         <p class="hint">Selecione uma esfera (<b>1–4</b>) e clique num <b>nó</b> azul para construir. Clique numa torre para ver alcance, <b>melhorar</b> (U) ou vender.</p>
+        <div id="wave-preview" class="wave-preview"></div>
         <button id="start-btn">▶ Iniciar onda</button>
       </aside>
     </div>
@@ -92,10 +97,10 @@
     <div id="overlay" class="show">
       <div class="panel">
         <h1>OVERHEAD</h1>
-        <p class="subtitle">Tower Defense — Web Edition</p>
+        <p class="subtitle menu-only">Tower Defense — Web Edition</p>
         <p id="overlay-msg">Defenda a Torre Mestra das ondas de almas perdidas.<br />
           Construa esferas, derrote os inimigos e sobreviva.</p>
-        <ol id="how-to">
+        <ol id="how-to" class="menu-only">
           <li><b>Escolha</b> uma esfera na loja</li>
           <li><b>Toque num nó azul</b> do mapa para construí-la</li>
           <li><b>Inicie a onda</b> e defenda a Torre Mestra</li>
@@ -112,7 +117,8 @@
         </div>
         <div id="leaderboard"></div>
         <button id="overlay-btn">Jogar</button>
-        <p class="credits">Remake web do jogo original feito em Unity por chicomcastro &amp; equipe.</p>
+        <button id="share-btn" class="share-btn" hidden>↗ Compartilhar resultado</button>
+        <p class="credits menu-only">Remake web do jogo original feito em Unity por chicomcastro &amp; equipe.</p>
       </div>
     </div>
   </div>

@@ -228,6 +228,43 @@ html, body {
 .tp-level { margin-left: auto; color: var(--accent); font-weight: 700; font-size: 13px; }
 .tp-stats { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: #b6c4e0; }
 .tp-tags { font-size: 12px; color: var(--muted); }
+
+/* prioridade de alvo */
+.tp-target { display: flex; align-items: center; gap: 8px; }
+.tp-target-label { font-size: 12px; color: var(--muted); flex: 0 0 auto; }
+.tp-target-modes { display: flex; gap: 4px; flex: 1; }
+.tp-mode {
+  flex: 1;
+  margin-top: 0 !important;
+  padding: 6px 4px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  background: var(--panel) !important;
+  color: var(--muted) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 8px !important;
+}
+.tp-mode.active {
+  background: rgba(110,231,255,0.16) !important;
+  color: var(--accent) !important;
+  border-color: rgba(110,231,255,0.5) !important;
+}
+
+/* prévia da próxima onda */
+.wave-preview {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 7px 10px;
+  background: var(--panel-2);
+  border: 1px solid rgba(110,231,255,0.12);
+  border-radius: 10px;
+  font-size: 14px;
+}
+.wave-preview .wp-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; width: 100%; }
+.wave-preview .wp-item { display: inline-flex; align-items: center; gap: 3px; }
+.wave-preview .wp-item b { color: var(--text); font-size: 13px; }
 .tp-close {
   margin-top: 0 !important;
   background: transparent !important;
@@ -317,6 +354,28 @@ html, body {
 }
 #overlay-btn:hover { transform: scale(1.04); }
 .credits { color: var(--muted); font-size: 11px; margin-top: 22px; line-height: 1.5; }
+
+/* ---------- Estado de resultado (vitória / derrota) ---------- */
+#overlay.result .menu-only { display: none; }       /* esconde subtítulo/como-jogar/créditos */
+#overlay.result.win .panel h1 { background: linear-gradient(90deg, var(--score), #ffb347); -webkit-background-clip: text; background-clip: text; }
+#overlay.result.lose .panel h1 { background: linear-gradient(90deg, var(--bad), #ff9f6b); -webkit-background-clip: text; background-clip: text; }
+#overlay.result.win .panel { border-color: rgba(255,209,102,0.45); }
+#overlay.result.lose .panel { border-color: rgba(255,107,129,0.4); }
+
+.share-btn {
+  display: block;
+  margin: 10px auto 0;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid rgba(110,231,255,0.4);
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.share-btn:hover { background: rgba(110,231,255,0.1); }
 
 /* ---------- Save row + Leaderboard ---------- */
 #save-row {
