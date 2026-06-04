@@ -20,16 +20,18 @@
       </div>
       <div class="stat" title="Onda atual">
         <span class="stat-icon wave">⛌</span>
-        <span>Onda <span id="wave">0</span></span>
+        <span><span class="wave-label">Onda </span><span id="wave">0</span></span>
       </div>
       <div class="stat" title="Pontuação">
         <span class="stat-icon score">★</span>
         <span id="score">0</span>
       </div>
       <div class="stat grow" id="wave-status">Prepare suas defesas…</div>
-      <button id="sound-btn" title="Ligar/desligar som">🔊</button>
-      <button id="speed-btn" title="Velocidade do jogo">1×</button>
-      <button id="pause-btn" title="Pausar">❚❚</button>
+      <div class="hud-controls">
+        <button id="sound-btn" title="Ligar/desligar som">🔊</button>
+        <button id="speed-btn" title="Velocidade do jogo">1×</button>
+        <button id="pause-btn" title="Pausar">❚❚</button>
+      </div>
     </header>
 
     <!-- Playfield -->
@@ -52,10 +54,23 @@
 
       <!-- Tower shop -->
       <aside id="shop">
-        <h2>Esferas</h2>
+        <h2 id="shop-title">Esferas</h2>
         <div id="shop-list"></div>
-        <button id="upgrade-btn" class="upgrade" hidden>⬆ Melhorar torre</button>
-        <button id="sell-btn" class="ghost" hidden>Vender torre selecionada</button>
+
+        <!-- Painel da torre selecionada (nome, nível, stats atuais, ações) -->
+        <div id="tower-panel" hidden>
+          <div class="tp-head">
+            <span class="tp-dot"></span>
+            <span class="tp-name"></span>
+            <span class="tp-level"></span>
+          </div>
+          <div class="tp-stats"></div>
+          <div class="tp-tags"></div>
+          <button id="upgrade-btn" class="upgrade">⬆ Melhorar torre</button>
+          <button id="sell-btn" class="ghost">Vender torre selecionada</button>
+          <button id="tp-close" class="tp-close">Fechar</button>
+        </div>
+
         <div id="globals">
           <div class="gl-title">Melhorias globais</div>
           <button class="global-btn" data-kind="dmg"></button>

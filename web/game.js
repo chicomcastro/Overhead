@@ -921,15 +921,48 @@
     mouse.world = null; // limpa o preview após soltar
   }, { passive: false });
 
-  // Mostra/atualiza os botões de vender e melhorar a torre selecionada
+  // Preenche o painel da torre selecionada: nome, nível, stats efetivos
+  // (já com nível + melhorias globais) e os botões de melhorar/vender.
   function updateTowerButtons() {
+    const panel = document.getElementById("tower-panel");
+    const shop = document.getElementById("shop");
+    const tw = state.selectedTower;
+    if (!tw) {
+      panel.hidden = true;
+      shop.classList.remove("inspecting");
+      return;
+    }
+    panel.hidden = false;
+    shop.classList.add("inspecting"); // no mobile, troca a lista de esferas pelo painel
+
+    const t = tw.type;
+    const dot = panel.querySelector(".tp-dot");
+    dot.style.background = t.color;
+    dot.style.color = t.color;
+    panel.querySelector(".tp-name").textContent = t.name;
+    panel.querySelector(".tp-level").textContent = `Nv. ${tw.level}/${CONFIG.maxLevel}`;
+
+    const dmg = Math.round(effDamage(tw));
+    const rng = Math.round(effRange(tw));
+    const cd = effCooldown(tw);
+    const dps = cd > 0 ? Math.round(dmg / cd) : dmg;
+    panel.querySelector(".tp-stats").innerHTML =
+      `<span>⚔ ${dmg} dano</span><span>◎ ${rng} alcance</span>` +
+      `<span>⏱ ${cd.toFixed(2)}s</span><span>💥 ${dps} DPS</span>`;
+
+    const tags = [];
+    if (t.slow) tags.push("❄ lentidão");
+    if (t.fatal) tags.push("💀 fatal");
+    if (t.splash) tags.push("💥 área");
+    if (t.burn) tags.push("🔥 queimadura");
+    if (t.soulBonus) tags.push("✦ bônus de almas");
+    const tagEl = panel.querySelector(".tp-tags");
+    tagEl.textContent = tags.join("  ·  ");
+    tagEl.hidden = tags.length === 0;
+
     const sb = document.getElementById("sell-btn");
     const ub = document.getElementById("upgrade-btn");
-    const tw = state.selectedTower;
-    if (!tw) { sb.hidden = true; ub.hidden = true; return; }
-    sb.hidden = false;
     sb.textContent = `Vender (+${Math.round(tw.invested * 0.6)} ✦)`;
-    ub.hidden = false;
     if (tw.level >= CONFIG.maxLevel) {
       ub.disabled = true;
       ub.textContent = "Nível máximo";
@@ -1099,6 +1132,12 @@
     if (state.selectedTower) upgradeTower(state.selectedTower);
   });
 
+  document.getElementById("tp-close").addEventListener("click", () => {
+    state.selectedTower = null;
+    updateTowerButtons();
+    refreshShop();
+  });
+
   document.getElementById("pause-btn").addEventListener("click", () => {
     state.paused = !state.paused;
     document.getElementById("pause-btn").textContent = state.paused ? "▶" : "❚❚";
@@ -1246,6 +1285,12 @@
       if (!tw) return false;
       const lvl = tw.level; state.selectedTower = tw; upgradeTower(tw);
       return tw.level > lvl;
+    },
+    selectAt: (nodeIndex) => {
+      const tw = state.towers.find(t => t.node === NODES[nodeIndex]);
+      state.selectedTower = tw || null; state.selectedType = null;
+      updateTowerButtons(); refreshShop();
+      return !!tw;
     },
 
     // avança a simulação `seconds` em passos fixos de `dt` (sem depender do rAF)
