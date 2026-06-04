@@ -75,6 +75,7 @@ html, body {
   transition: 0.15s;
 }
 #hud button:hover { background: #27345a; }
+.hud-controls { display: flex; align-items: center; gap: 8px; }
 
 /* ---------- Stage ---------- */
 #stage {
@@ -173,6 +174,32 @@ html, body {
 #shop button.upgrade:disabled { background: #2a3550; color: var(--muted); }
 
 .hint { font-size: 11px; color: var(--muted); line-height: 1.4; margin-top: 4px; }
+
+/* ---------- Painel da torre selecionada ---------- */
+#tower-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--panel-2);
+  border: 1px solid rgba(110,231,255,0.3);
+  border-radius: 12px;
+  padding: 12px;
+}
+.tp-head { display: flex; align-items: center; gap: 9px; }
+.tp-dot { width: 18px; height: 18px; border-radius: 50%; box-shadow: 0 0 8px currentColor; flex: 0 0 auto; }
+.tp-name { font-weight: 700; font-size: 16px; }
+.tp-level { margin-left: auto; color: var(--accent); font-weight: 700; font-size: 13px; }
+.tp-stats { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: #b6c4e0; }
+.tp-tags { font-size: 12px; color: var(--muted); }
+.tp-close {
+  margin-top: 0 !important;
+  background: transparent !important;
+  color: var(--muted) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+.tp-close:hover { background: rgba(255,255,255,0.06) !important; }
 
 /* ---------- Overlay ---------- */
 #overlay {
@@ -351,16 +378,18 @@ html, body {
  * horizontal rolável no rodapé, com cartões compactos.
  * ===================================================================== */
 @media (max-width: 820px), (orientation: portrait) {
-  /* HUD compacto, com quebra de linha */
+  /* HUD compacto numa linha só: stats à esquerda, controles à direita */
   #hud {
-    flex-wrap: wrap;
-    gap: 10px 14px;
-    padding: 8px 12px;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 6px 10px;
   }
-  .stat { font-size: 15px; gap: 5px; }
+  .stat { font-size: 15px; gap: 4px; }
   .stat-icon { font-size: 16px; }
   .stat.grow { display: none; }           /* texto de status some no mobile */
-  #hud button { padding: 5px 10px; font-size: 14px; }
+  .wave-label { display: none; }          /* mostra só o ícone + número da onda */
+  .hud-controls { margin-left: auto; gap: 6px; }
+  #hud button { padding: 5px 9px; font-size: 14px; }
 
   /* Empilha: campo de jogo em cima, loja embaixo */
   #stage { flex-direction: column; }
@@ -470,4 +499,9 @@ html, body {
   .global-btn { min-height: 42px; }
   #hud button { min-height: 38px; min-width: 44px; }
   .tower-card { width: 150px; min-height: 84px; }
+
+  /* Ao inspecionar uma torre, o painel substitui a lista de esferas
+     (em vez de empilhar por cima e sobrepor os cards no espaço apertado). */
+  #shop.inspecting #shop-list,
+  #shop.inspecting #shop-title { display: none; }
 }

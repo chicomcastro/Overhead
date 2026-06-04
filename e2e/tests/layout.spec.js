@@ -66,6 +66,43 @@ test("em jogo: sem overflow horizontal", async ({ page }) => {
   expect(await hOverflow(page)).toBeLessThanOrEqual(1);
 });
 
+test("torre selecionada: painel com nome/nível/stats substitui as esferas", async ({ page }, ti) => {
+  await boot(page);
+  await page.evaluate(() => window.__OVERHEAD.addSouls(500));
+  const free = await page.evaluate(() => window.__OVERHEAD.freeNodes()[0]);
+  await page.evaluate((n) => window.__OVERHEAD.build("soul", n), free);
+  await page.evaluate((n) => window.__OVERHEAD.selectAt(n), free);
+
+  const panel = page.locator("#tower-panel");
+  await expect(panel).toBeVisible();
+  await expect(panel.locator(".tp-name")).not.toBeEmpty();        // qual torre
+  await expect(panel.locator(".tp-level")).toContainText("Nv.");   // qual nível
+  await expect(panel.locator(".tp-stats")).toContainText("dano");  // stats atuais
+  await expect(page.locator("#upgrade-btn")).toBeVisible();
+  await expect(page.locator("#sell-btn")).toBeVisible();
+
+  // no mobile o painel substitui a lista de esferas (sem sobreposição)
+  if (ti.project.name === "mobile") {
+    await expect(page.locator("#shop-list")).toBeHidden();
+    expect(await hOverflow(page)).toBeLessThanOrEqual(1);
+  }
+
+  // fechar volta para a lista de esferas
+  await page.locator("#tp-close").click();
+  await expect(panel).toBeHidden();
+  await expect(page.locator(".tower-card")).toHaveCount(4);
+});
+
+test("torre recém-construída já vem selecionada", async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => window.__OVERHEAD.addSouls(500));
+  const free = await page.evaluate(() => window.__OVERHEAD.freeNodes()[0]);
+  await page.evaluate((n) => window.__OVERHEAD.build("soul", n), free);
+  // sem chamar selectAt: o painel deve aparecer sozinho com a torre construída
+  await expect(page.locator("#tower-panel")).toBeVisible();
+  await expect(page.locator("#tower-panel .tp-name")).toContainText("Esfera de Alma");
+});
+
 test("tutorial de primeira jogada aparece uma vez", async ({ page }) => {
   await gotoFresh(page);
   await page.evaluate(() => window.__OVERHEAD.resetTutorial());
