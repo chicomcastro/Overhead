@@ -152,6 +152,21 @@ test.describe("áudio", () => {
   });
 });
 
+test.describe("bestiário", () => {
+  test("abre, lista todos os inimigos e fecha", async ({ page }) => {
+    await gotoFresh(page);
+    await page.locator("#bestiary-btn").click();
+    const dlg = page.locator("#bestiary");
+    await expect(dlg).toHaveClass(/show/);
+    // um item por tipo de inimigo
+    const types = await page.evaluate(() => window.__OVERHEAD.enemyTypeCount());
+    await expect(page.locator(".bestiary-row")).toHaveCount(types);
+    await expect(page.locator(".bestiary-row").first().locator(".be-name")).not.toBeEmpty();
+    await page.locator("#bestiary-close").click();
+    await expect(dlg).not.toHaveClass(/show/);
+  });
+});
+
 test.describe("menu de pausa", () => {
   test("pausar abre o menu com continuar/reiniciar/menu", async ({ page }) => {
     await boot(page);
