@@ -60,26 +60,59 @@
   };
   const ABILITY_ORDER = ["freeze", "storm"];
 
-  // ----- Caminho que os inimigos percorrem (waypoints em world space) -----
-  const PATH = [
-    { x: -40,  y: 140 },
-    { x: 300,  y: 140 },
-    { x: 300,  y: 420 },
-    { x: 620,  y: 420 },
-    { x: 620,  y: 160 },
-    { x: 900,  y: 160 },
-    { x: 900,  y: 560 },
-    { x: 640,  y: 560 }, // chega no core
+  // ----- Mapas: cada um tem um caminho (waypoints) e nós de construção -----
+  // O mundo é 1280×720; o último ponto do caminho é o núcleo (Torre Mestra).
+  const MAPS = [
+    {
+      id: "serpent", name: "Serpente",
+      path: [
+        { x: -40, y: 140 }, { x: 300, y: 140 }, { x: 300, y: 420 },
+        { x: 620, y: 420 }, { x: 620, y: 160 }, { x: 900, y: 160 },
+        { x: 900, y: 560 }, { x: 640, y: 560 },
+      ],
+      nodes: [
+        { x: 180, y: 280 }, { x: 430, y: 280 }, { x: 460, y: 540 },
+        { x: 470, y: 300 }, { x: 760, y: 300 }, { x: 780, y: 420 },
+        { x: 1040, y: 320 }, { x: 760, y: 660 }, { x: 1050, y: 600 },
+        { x: 180, y: 30 }, { x: 500, y: 60 }, { x: 1050, y: 80 },
+      ],
+    },
+    {
+      id: "comb", name: "Pente",
+      path: [
+        { x: -40, y: 120 }, { x: 1120, y: 120 }, { x: 1120, y: 330 },
+        { x: 160, y: 330 }, { x: 160, y: 540 }, { x: 1120, y: 540 },
+      ],
+      nodes: [
+        { x: 160, y: 225 }, { x: 380, y: 225 }, { x: 600, y: 225 }, { x: 820, y: 225 }, { x: 1040, y: 225 },
+        { x: 380, y: 435 }, { x: 600, y: 435 }, { x: 820, y: 435 }, { x: 1040, y: 435 },
+        { x: 380, y: 645 }, { x: 600, y: 645 }, { x: 820, y: 645 },
+      ],
+    },
+    {
+      id: "ziggy", name: "Ziguezague",
+      path: [
+        { x: -40, y: 150 }, { x: 280, y: 150 }, { x: 280, y: 470 },
+        { x: 560, y: 470 }, { x: 560, y: 150 }, { x: 840, y: 150 },
+        { x: 840, y: 470 }, { x: 1100, y: 470 }, { x: 1100, y: 250 }, { x: 760, y: 250 },
+      ],
+      nodes: [
+        { x: 120, y: 310 }, { x: 420, y: 150 }, { x: 420, y: 320 }, { x: 700, y: 320 },
+        { x: 700, y: 470 }, { x: 970, y: 150 }, { x: 970, y: 360 }, { x: 120, y: 480 },
+        { x: 120, y: 630 }, { x: 420, y: 630 }, { x: 700, y: 630 }, { x: 970, y: 630 },
+      ],
+    },
   ];
-  const CORE = PATH[PATH.length - 1];
 
-  // ----- Nós de construção (perto do caminho) -----
-  const NODES = [
-    { x: 180, y: 280 }, { x: 430, y: 280 }, { x: 460, y: 540 },
-    { x: 470, y: 300 }, { x: 760, y: 300 }, { x: 780, y: 420 },
-    { x: 1040, y: 320 }, { x: 760, y: 660 }, { x: 1050, y: 600 },
-    { x: 180, y: 30 }, { x: 500, y: 60 }, { x: 1050, y: 80 },
-  ];
+  let PATH, CORE, NODES, currentMap;
+  function applyMap(id) {
+    const m = MAPS.find((x) => x.id === id) || MAPS[0];
+    currentMap = m.id;
+    PATH = m.path;
+    CORE = PATH[PATH.length - 1];
+    NODES = m.nodes.map((n) => ({ x: n.x, y: n.y, taken: false }));
+  }
+  applyMap("serpent");
 
   // ----- Tipos de torre (esferas) -----
   const TOWER_TYPES = [
@@ -357,7 +390,7 @@
   // ===================================================================
   const Prefs = (() => {
     const KEY = "overhead_prefs_v1";
-    const def = { sound: true, speed: 1, endless: false, seenTutorial: false, difficulty: "normal", volume: 0.45, music: true };
+    const def = { sound: true, speed: 1, endless: false, seenTutorial: false, difficulty: "normal", volume: 0.45, music: true, map: "serpent" };
     let data;
     try { data = { ...def, ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
     catch (e) { data = { ...def }; }
@@ -1520,6 +1553,26 @@
   }
   renderDifficulty();
 
+  // seletor de mapa
+  function renderMaps() {
+    const cur = Prefs.get("map") || "serpent";
+    const box = document.getElementById("map-modes");
+    box.innerHTML = "";
+    for (const m of MAPS) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "seg-btn" + (cur === m.id ? " active" : "");
+      b.textContent = m.name;
+      b.addEventListener("click", () => {
+        Prefs.set("map", m.id);
+        renderMaps();
+        applyMap(m.id);  // mostra o novo mapa atrás do menu na hora
+      });
+      box.appendChild(b);
+    }
+  }
+  renderMaps();
+
   // controles de áudio (volume + música)
   document.getElementById("volume-slider").addEventListener("input", (e) => {
     Sound.init();
@@ -1590,6 +1643,7 @@
   // Inicia uma partida do zero (usado pelo menu e pelo "Reiniciar fase").
   function beginGame(endless) {
     state.difficulty = Prefs.get("difficulty") || "normal"; // newGame usa p/ recursos iniciais
+    applyMap(Prefs.get("map") || "serpent");                // carrega o mapa escolhido
     newGame();
     resetView();
     for (const n of NODES) n.taken = false;
@@ -1769,6 +1823,9 @@
     endGame: (won) => { if (won) winGame(); else loseGame(); }, // p/ testes da tela de fim
     isPaused: () => state.paused,
     difficulty: () => state.difficulty,
+    mapId: () => currentMap,
+    mapCount: () => MAPS.length,
+    setMap: (id) => { Prefs.set("map", id); applyMap(id); return currentMap; },
     enemyTypeCount: () => Object.keys(ENEMY_TYPES).length,
     useAbility: (k) => activateAbility(k),
     abilityCd: (k) => +(state.abilities[k] || 0).toFixed(1),

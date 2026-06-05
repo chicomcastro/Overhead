@@ -107,6 +107,24 @@ test.describe("dificuldade", () => {
   });
 });
 
+test.describe("variedade de mapa", () => {
+  test("selecionar mapa troca o mapa ativo e persiste", async ({ page }) => {
+    await gotoFresh(page);
+    const count = await page.evaluate(() => window.__OVERHEAD.mapCount());
+    await expect(page.locator("#map-modes .seg-btn")).toHaveCount(count);
+    expect(await page.evaluate(() => window.__OVERHEAD.mapId())).toBe("serpent");
+
+    await page.locator("#map-modes .seg-btn", { hasText: /^Pente$/ }).click();
+    await page.locator("#overlay-btn").click();
+    expect(await page.evaluate(() => window.__OVERHEAD.mapId())).toBe("comb");
+
+    // persiste entre reloads
+    await page.reload();
+    await page.waitForFunction(() => !!window.__OVERHEAD);
+    await expect(page.locator("#map-modes .seg-btn.active")).toHaveText("Pente");
+  });
+});
+
 test.describe("feedback de dano no núcleo", () => {
   test("vazamento dispara tremor/vinheta", async ({ page }) => {
     await boot(page);

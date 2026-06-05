@@ -22,6 +22,7 @@ remasterização web em [`web/`](web/). Atualize ao concluir cada item.
 | #14 | Áudio | Controle de volume (slider) e música de fundo sintetizada (pad + arpejo em loop), com toggle. Tudo persistido. |
 | #15 | Bestiário | Painel no menu listando os 6 inimigos: ícone, descrição e stats (HP/velocidade/recompensa + traços). |
 | #16 | Habilidades ativas | Congelar (lentidão geral) e Tempestade (dano em área), com cooldown e anel de progresso, no canto do mapa. |
+| #17 | Variedade de mapa | 3 mapas selecionáveis no menu (Serpente, Pente, Ziguezague), cada um com caminho e nós próprios. |
 
 ## 🔜 Backlog (próximos candidatos)
 
@@ -29,7 +30,7 @@ remasterização web em [`web/`](web/). Atualize ao concluir cada item.
 
 **Profundidade de jogo**
 - [x] ~~Níveis de dificuldade~~ (PR #13).
-- [ ] Variedade de mapa: mapas ou caminhos alternativos.
+- [x] ~~Variedade de mapa~~ (PR #17): 3 mapas selecionáveis.
 - [x] ~~Habilidades ativas com cooldown~~ (PR #16).
 
 **Áudio / polish**
