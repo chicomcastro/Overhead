@@ -28,27 +28,29 @@
     initialLives: 20,
     baseHP: 58,            // baseHPConst
     baseSpeed: 54,         // px/s (baseSpeedConst escalado p/ tela)
-    hpWaveConst: 1.16,     // HPWaveConst — rampa de HP por onda (suavizada)
+    hpWaveConst: 1.14,     // rampa de HP por onda (suavizada p/ a curva não explodir)
     speedWaveConst: 1.05,  // SpeedWaveConst
     timeBetweenWaves: 6,   // s
     spawnDelay: 0.6,       // s entre inimigos
     totalWaves: 20,
     // ----- Upgrades (skill tree do original, simplificado por torre) -----
-    maxLevel: 4,           // nível 1 (base) -> 4; também serve de ralo de almas
+    maxLevel: 6,           // nível 1 (base) -> 6; teto de dano + ralo de almas
     upgradeCostMul: 1.6,   // custo do próx. nível = base * mul^nível
     lvlDamageMul: 1.4,     // +40% dano por nível
     lvlRangeMul: 1.12,     // +12% alcance por nível
     lvlCooldownMul: 0.88,  // -12% recarga por nível
     // ----- Melhorias globais (ralo de almas do endgame, sem teto) -----
-    globalDmgStep: 0.06,   // +6% dano por nível de Foco Arcano
-    globalRngStep: 0.05,   // +5% alcance por nível de Lentes Rúnicas
+    globalDmgStep: 0.07,   // +7% dano por nível de Foco Arcano
+    globalRngStep: 0.06,   // +6% alcance por nível de Lentes Rúnicas
   };
 
   // Níveis de dificuldade — afetam recursos iniciais, HP dos inimigos e recompensa.
+  // hpMul = HP base por dificuldade; hpRamp = quão rápido o HP cresce por onda
+  // (escala o expoente da rampa) — diferencia a CURVA, não só os recursos.
   const DIFFICULTIES = {
-    easy:   { label: "Fácil",   souls: 50, lives: 25, hpMul: 0.82, rewardMul: 1.15 },
-    normal: { label: "Normal",  souls: 40, lives: 20, hpMul: 1.0,  rewardMul: 1.0 },
-    hard:   { label: "Difícil", souls: 30, lives: 15, hpMul: 1.28, rewardMul: 0.9 },
+    easy:   { label: "Fácil",   souls: 50, lives: 25, hpMul: 0.90, hpRamp: 0.82, rewardMul: 1.15 },
+    normal: { label: "Normal",  souls: 40, lives: 20, hpMul: 1.0,  hpRamp: 1.0,  rewardMul: 1.0 },
+    hard:   { label: "Difícil", souls: 30, lives: 15, hpMul: 1.10, hpRamp: 1.22, rewardMul: 0.9 },
   };
   const DIFFICULTY_ORDER = ["easy", "normal", "hard"];
   const diffCfg = () => DIFFICULTIES[state.difficulty] || DIFFICULTIES.normal;
@@ -163,13 +165,13 @@
   // Composição de cada onda (lista de tipos de inimigo)
   function buildWave(n) {
     const list = [];
-    const count = 6 + Math.floor(n * 1.8);
+    const count = 6 + Math.floor(n * 1.9);
     for (let i = 0; i < count; i++) {
       let t = "grunt";
-      if (n >= 3 && i % 4 === 0) t = "fast";
-      if (n >= 5 && i % 6 === 0) t = "tank";
-      if (n >= 4 && i % 7 === 3) t = "flyer";   // voadores a partir da onda 4
-      if (n >= 7 && i % 9 === 4) t = "healer";  // curandeiros a partir da onda 7
+      if (n >= 2 && i % 4 === 0) t = "fast";     // espectros já na onda 2
+      if (n >= 4 && i % 6 === 0) t = "tank";     // carrascos a partir da onda 4
+      if (n >= 4 && i % 7 === 3) t = "flyer";    // voadores a partir da onda 4
+      if (n >= 6 && i % 9 === 4) t = "healer";   // curandeiros a partir da onda 6
       list.push(t);
     }
     if (n % 5 === 0) list.push("boss"); // chefe a cada 5 ondas
@@ -416,7 +418,10 @@
     updateHUD();
   }
 
-  function waveHP() { return CONFIG.baseHP * Math.pow(CONFIG.hpWaveConst, state.wave - 1); }
+  function waveHP() {
+    const eff = 1 + (CONFIG.hpWaveConst - 1) * (diffCfg().hpRamp || 1);
+    return CONFIG.baseHP * Math.pow(eff, state.wave - 1);
+  }
   function waveSpeed() { return CONFIG.baseSpeed * Math.pow(CONFIG.speedWaveConst, state.wave - 1); }
 
   function spawnEnemy(typeId) {
