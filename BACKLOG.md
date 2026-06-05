@@ -18,17 +18,20 @@ remasterização web em [`web/`](web/). Atualize ao concluir cada item.
 | #10 | Câmera | Zoom (1–3×) + pan: pinça/2 dedos no mobile, scroll/arrasto no desktop, botões +/−/⤢. Fix do shop lateral cortando no desktop (Iniciar onda sticky). |
 | #11 | Gameplay + polish | Prioridade de alvo por torre, prévia da próxima onda, telas de vitória/derrota ricas + compartilhar resultado. Atualização do README e deste backlog. |
 | #12 | Refinamento de UI | Fix dos cards da loja cortando no mobile (shop-list não encolhe), prévia da próxima onda compacta (uma linha) e **menu de pausa** (Continuar / Reiniciar fase / Menu principal). |
+| #13 | Dificuldade + game feel | Níveis de dificuldade (Fácil/Normal/Difícil: recursos iniciais, HP, recompensa) e feedback de dano no núcleo (tremor de tela + vinheta vermelha + vibração). |
 
 ## 🔜 Backlog (próximos candidatos)
 
+> Em andamento: puxando os itens abaixo em sequência (PRs #13+).
+
 **Profundidade de jogo**
-- [ ] Níveis de dificuldade (fácil/normal/difícil — ajusta HP/contagem/almas iniciais).
+- [x] ~~Níveis de dificuldade~~ (PR #13).
 - [ ] Variedade de mapa: mapas ou caminhos alternativos.
 - [ ] Habilidades ativas com cooldown (ex.: congelar tudo, dano em área manual).
 
 **Áudio / polish**
 - [ ] Controle de volume + música de fundo (hoje só SFX via Web Audio).
-- [ ] Feedback de dano no núcleo (flash/shake ao perder vida).
+- [x] ~~Feedback de dano no núcleo (flash/shake)~~ (PR #13).
 - [ ] Bestiário de inimigos (detalhe de cada tipo).
 
 **Plataforma**

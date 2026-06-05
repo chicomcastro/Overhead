@@ -488,6 +488,23 @@ html, body {
 .global-btn:disabled { opacity: 0.5; cursor: default; }
 
 /* ---------- Menu: modo infinito + recorde ---------- */
+/* segmented control (dificuldade) */
+.seg-row { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 12px; }
+.seg-label { font-size: 13px; color: var(--muted); }
+.seg-modes { display: flex; gap: 4px; }
+.seg-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.seg-btn.active { background: rgba(110,231,255,0.16); color: var(--accent); border-color: rgba(110,231,255,0.5); }
+
 #endless-row {
   display: flex;
   align-items: center;

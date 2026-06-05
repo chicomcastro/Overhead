@@ -3,6 +3,11 @@
 import { test, expect } from "@playwright/test";
 import { boot } from "./helpers.js";
 
+async function gotoFresh(page) {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__OVERHEAD);
+}
+
 async function buildSoul(page) {
   await page.evaluate(() => window.__OVERHEAD.addSouls(500));
   const node = await page.evaluate(() => window.__OVERHEAD.freeNodes()[0]);
@@ -75,6 +80,50 @@ test.describe("tela de fim de jogo", () => {
     const ov = page.locator("#overlay");
     await expect(ov).not.toHaveClass(/result/);
     await expect(ov).not.toHaveClass(/show/);
+  });
+});
+
+test.describe("dificuldade", () => {
+  test("escolher Fácil/Difícil ajusta recursos iniciais e HP", async ({ page }) => {
+    await gotoFresh(page);
+    await expect(page.locator("#difficulty-modes .seg-btn")).toHaveCount(3);
+
+    // Fácil: mais almas/vidas
+    await page.locator("#difficulty-modes .seg-btn", { hasText: "Fácil" }).click();
+    await page.locator("#overlay-btn").click();
+    let s = await page.evaluate(() => window.__OVERHEAD.snapshot());
+    expect(s.souls).toBe(50);
+    expect(s.lives).toBe(25);
+    expect(await page.evaluate(() => window.__OVERHEAD.difficulty())).toBe("easy");
+
+    // Difícil: menos almas/vidas (via menu de pausa → menu principal → trocar)
+    await page.locator("#pause-btn").click();
+    await page.locator("#menu-btn").click();
+    await page.locator("#difficulty-modes .seg-btn", { hasText: "Difícil" }).click();
+    await page.locator("#overlay-btn").click();
+    s = await page.evaluate(() => window.__OVERHEAD.snapshot());
+    expect(s.souls).toBe(30);
+    expect(s.lives).toBe(15);
+  });
+});
+
+test.describe("feedback de dano no núcleo", () => {
+  test("vazamento dispara tremor/vinheta", async ({ page }) => {
+    await boot(page);
+    // sem torres: a 1ª onda vaza; captura o fx no quadro do vazamento
+    const fx = await page.evaluate(() => {
+      const O = window.__OVERHEAD;
+      O.startWave();
+      const before = O.snapshot().lives;
+      for (let i = 0; i < 4000; i++) {
+        O.step(0.05);
+        if (O.snapshot().lives < before) return O.fxState();
+      }
+      return null;
+    });
+    expect(fx).not.toBeNull();
+    expect(fx.shake).toBeGreaterThan(0);
+    expect(fx.flash).toBeGreaterThan(0);
   });
 });
 
