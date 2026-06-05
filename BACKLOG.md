@@ -20,6 +20,7 @@ remasterização web em [`web/`](web/). Atualize ao concluir cada item.
 | #12 | Refinamento de UI | Fix dos cards da loja cortando no mobile (shop-list não encolhe), prévia da próxima onda compacta (uma linha) e **menu de pausa** (Continuar / Reiniciar fase / Menu principal). |
 | #13 | Dificuldade + game feel | Níveis de dificuldade (Fácil/Normal/Difícil: recursos iniciais, HP, recompensa) e feedback de dano no núcleo (tremor de tela + vinheta vermelha + vibração). |
 | #14 | Áudio | Controle de volume (slider) e música de fundo sintetizada (pad + arpejo em loop), com toggle. Tudo persistido. |
+| #15 | Bestiário | Painel no menu listando os 6 inimigos: ícone, descrição e stats (HP/velocidade/recompensa + traços). |
 
 ## 🔜 Backlog (próximos candidatos)
 
@@ -33,7 +34,7 @@ remasterização web em [`web/`](web/). Atualize ao concluir cada item.
 **Áudio / polish**
 - [x] ~~Controle de volume + música de fundo~~ (PR #14).
 - [x] ~~Feedback de dano no núcleo (flash/shake)~~ (PR #13).
-- [ ] Bestiário de inimigos (detalhe de cada tipo).
+- [x] ~~Bestiário de inimigos~~ (PR #15).
 
 **Plataforma**
 - [ ] PWA instalável + offline (manifest + service worker; ícone na home, joga sem rede).

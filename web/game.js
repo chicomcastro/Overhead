@@ -104,14 +104,20 @@
 
   // ----- Tipos de inimigo -----
   const ENEMY_TYPES = {
-    grunt: { name: "Alma", icon: "👻", hpMul: 1.0, speedMul: 1.0, reward: 4, color: "#cdd6f4", radius: 13 },
-    fast:  { name: "Espectro", icon: "💨", hpMul: 0.6, speedMul: 1.7, reward: 5, color: "#a6e3a1", radius: 11 },
-    tank:  { name: "Carrasco", icon: "🪨", hpMul: 3.2, speedMul: 0.6, reward: 9, color: "#f38ba8", radius: 19 },
+    grunt: { name: "Alma", icon: "👻", hpMul: 1.0, speedMul: 1.0, reward: 4, color: "#cdd6f4", radius: 13,
+             desc: "Inimigo comum, equilibrado. Aparece desde a 1ª onda." },
+    fast:  { name: "Espectro", icon: "💨", hpMul: 0.6, speedMul: 1.7, reward: 5, color: "#a6e3a1", radius: 11,
+             desc: "Frágil, mas muito veloz. Bom alvo para torres de lentidão." },
+    tank:  { name: "Carrasco", icon: "🪨", hpMul: 3.2, speedMul: 0.6, reward: 9, color: "#f38ba8", radius: 19,
+             desc: "Lento e resistente. Exige dano concentrado para derrubar." },
     // Voa em linha reta até o núcleo, ignorando o caminho.
-    flyer: { name: "Alma Alada", icon: "🦇", hpMul: 0.85, speedMul: 1.15, reward: 6, color: "#89dceb", radius: 12, flying: true },
+    flyer: { name: "Alma Alada", icon: "🦇", hpMul: 0.85, speedMul: 1.15, reward: 6, color: "#89dceb", radius: 12, flying: true,
+             desc: "Voa em linha reta até o núcleo, ignorando o caminho." },
     // Cura inimigos próximos periodicamente.
-    healer:{ name: "Sacerdote", icon: "✚", hpMul: 1.7, speedMul: 0.8, reward: 8, color: "#94e2d5", radius: 15, heal: 22, healRange: 95, healInterval: 1.1 },
-    boss:  { name: "Ceifador", icon: "💀", hpMul: 14, speedMul: 0.5, reward: 40, color: "#f9e2af", radius: 26 },
+    healer:{ name: "Sacerdote", icon: "✚", hpMul: 1.7, speedMul: 0.8, reward: 8, color: "#94e2d5", radius: 15, heal: 22, healRange: 95, healInterval: 1.1,
+             desc: "Cura inimigos próximos periodicamente. Elimine-o primeiro." },
+    boss:  { name: "Ceifador", icon: "💀", hpMul: 14, speedMul: 0.5, reward: 40, color: "#f9e2af", radius: 26,
+             desc: "Chefe colossal a cada 5 ondas. Recompensa generosa." },
   };
 
   // Composição de cada onda (lista de tipos de inimigo)
@@ -1473,6 +1479,33 @@
     document.getElementById("music-toggle").classList.toggle("active", on);
   });
 
+  // ----- Bestiário -----
+  function renderBestiary() {
+    const list = document.getElementById("bestiary-list");
+    list.innerHTML = "";
+    for (const id of Object.keys(ENEMY_TYPES)) {
+      const e = ENEMY_TYPES[id];
+      const tags = [`HP ×${e.hpMul}`, `Vel ×${e.speedMul}`, `✦ ${e.reward}`];
+      if (e.flying) tags.push("voa");
+      if (e.heal) tags.push("cura");
+      const row = document.createElement("div");
+      row.className = "bestiary-row";
+      row.innerHTML =
+        `<span class="be-icon" style="color:${e.color}">${e.icon}</span>` +
+        `<div class="be-info"><div class="be-name">${e.name}</div>` +
+        `<div class="be-desc">${e.desc}</div>` +
+        `<div class="be-tags">${tags.join(" · ")}</div></div>`;
+      list.appendChild(row);
+    }
+  }
+  document.getElementById("bestiary-btn").addEventListener("click", () => {
+    renderBestiary();
+    document.getElementById("bestiary").classList.add("show");
+  });
+  document.getElementById("bestiary-close").addEventListener("click", () => {
+    document.getElementById("bestiary").classList.remove("show");
+  });
+
   document.getElementById("save-btn").addEventListener("click", () => {
     if (!pendingScore) return;
     const name = document.getElementById("name-input").value;
@@ -1680,6 +1713,7 @@
     endGame: (won) => { if (won) winGame(); else loseGame(); }, // p/ testes da tela de fim
     isPaused: () => state.paused,
     difficulty: () => state.difficulty,
+    enemyTypeCount: () => Object.keys(ENEMY_TYPES).length,
     fxState: () => ({ shake: +state.shake.toFixed(2), flash: +state.flash.toFixed(2) }),
     audioState: () => ({ volume: +Sound.getVolume().toFixed(2), music: Sound.isMusicOn(), sound: Sound.isEnabled() }),
 
