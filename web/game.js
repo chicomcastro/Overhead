@@ -1467,10 +1467,7 @@
   function renderLeaderboard(highlightDate) {
     const el = document.getElementById("leaderboard");
     const list = Leaderboard.top();
-    if (list.length === 0) {
-      el.innerHTML = `<div class="lb-empty">Sem pontuações ainda — seja o primeiro!</div>`;
-      return;
-    }
+    if (list.length === 0) { el.innerHTML = ""; return; } // sem ruído no menu limpo
     let rows = "";
     list.forEach((e, i) => {
       const hl = e.date === highlightDate ? " class=\"hl\"" : "";
@@ -1612,6 +1609,19 @@
       list.appendChild(row);
     }
   }
+  // toggles recolhíveis do menu (opções / como jogar)
+  function toggleSection(btnId, panelId) {
+    const btn = document.getElementById(btnId);
+    const panel = document.getElementById(panelId);
+    btn.addEventListener("click", () => {
+      const open = panel.hidden;
+      panel.hidden = !open;
+      btn.classList.toggle("open", open);
+    });
+  }
+  toggleSection("options-btn", "options-panel");
+  toggleSection("howto-btn", "how-to");
+
   document.getElementById("bestiary-btn").addEventListener("click", () => {
     renderBestiary();
     document.getElementById("bestiary").classList.add("show");
