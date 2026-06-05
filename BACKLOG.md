@@ -24,6 +24,18 @@ remasterização web em [`web/`](web/). Atualize ao concluir cada item.
 | #16 | Habilidades ativas | Congelar (lentidão geral) e Tempestade (dano em área), com cooldown e anel de progresso, no canto do mapa. |
 | #17 | Variedade de mapa | 3 mapas selecionáveis no menu (Serpente, Pente, Ziguezague), cada um com caminho e nós próprios. |
 | #18 | PWA | Instalável (manifest + ícone) e jogável offline (service worker cacheia o app shell). |
+| #19 | Rebalanceamento | Curva de HP suavizada (1.16→1.14) e diferenciada por dificuldade (hpRamp), teto de dano maior (maxLevel 4→6), globais melhores, inimigos especiais mais cedo. + ferramenta de simulação `e2e/tools` (`npm run balance`). |
+
+## 🎚️ Balanceamento (alvos, PR #19)
+
+Validado com a simulação (`npm run balance`, jogador-robô razoável):
+- **Fácil:** vitória confortável (~25 vidas).
+- **Normal:** vitória apertada — pressão real só no fim (vaza a partir da onda ~18).
+- **Difícil:** o build genérico perde (~onda 17); exige torres diversas + habilidades + globais.
+
+Antes (1.16 / maxLevel 4): curva "plana e depois despenca" — 0 ameaça até ~onda 10,
+parede exponencial depois, derrota ~onda 18 mesmo com tabuleiro no talo, e almas
+sobrando sem ralo. O HP crescia ~4× mais rápido que o teto de dano.
 
 ## 🔜 Backlog (próximos candidatos)
 

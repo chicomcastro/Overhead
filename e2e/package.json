@@ -5,7 +5,8 @@
   "description": "End-to-end gameplay tests for the Overhead web version",
   "type": "module",
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "balance": "playwright test --config tools/balance.config.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0"
