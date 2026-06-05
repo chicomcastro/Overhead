@@ -551,9 +551,9 @@ html, body {
 
 /* ---------- Menu: modo infinito + recorde ---------- */
 /* segmented control (dificuldade) */
-.seg-row { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 12px; }
+.seg-row { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap; }
 .seg-label { font-size: 13px; color: var(--muted); }
-.seg-modes { display: flex; gap: 4px; }
+.seg-modes { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
 .seg-btn {
   padding: 7px 14px;
   border-radius: 8px;
