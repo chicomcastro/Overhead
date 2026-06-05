@@ -1,0 +1,15 @@
+{
+  "name": "Overhead — Tower Defense",
+  "short_name": "Overhead",
+  "description": "Defenda a Torre Mestra das ondas de almas perdidas. Tower defense web.",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0f1a",
+  "theme_color": "#0b0f1a",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

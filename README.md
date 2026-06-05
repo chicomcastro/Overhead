@@ -23,7 +23,9 @@ upgrades** (a late-game souls sink), **per-tower targeting priority** (closest t
 strongest / weakest / nearest), a **next-wave preview**, 6 enemy types — including a **flyer**
 that cuts straight to the core and a **healer** that mends nearby foes — a boss every 5 waves,
 20 escalating waves with an optional **endless mode**, synthesized sound effects (Web Audio, no
-asset files), and a local top‑10 leaderboard. Win/lose screens let you share your result.
+asset files), and a local top‑10 leaderboard. Win/lose screens let you share your result. Difficulty levels, selectable maps, active
+abilities (freeze / area damage on cooldown), an enemy bestiary, a volume slider and synth
+background music round it out. Installable as a **PWA** and fully **playable offline**.
 Sound/speed/mode preferences are remembered in `localStorage`.
 
 Controls:

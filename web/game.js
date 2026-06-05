@@ -1896,3 +1896,10 @@
   // mostra menu inicial
   document.getElementById("overlay-btn").textContent = "Jogar";
 })();
+
+// PWA: registra o service worker (só em http/https; ignora file://)
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js").catch(() => {});
+  });
+}
