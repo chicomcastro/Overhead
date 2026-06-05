@@ -127,6 +127,31 @@ test.describe("feedback de dano no núcleo", () => {
   });
 });
 
+test.describe("áudio", () => {
+  test("slider de volume e toggle de música atualizam estado e prefs", async ({ page }) => {
+    await gotoFresh(page);
+    await expect(page.locator("#volume-slider")).toBeVisible();
+    await expect(page.locator("#music-toggle")).toBeVisible();
+
+    // ajusta volume via slider
+    await page.locator("#volume-slider").fill("80");
+    await page.locator("#volume-slider").dispatchEvent("input");
+    expect(await page.evaluate(() => window.__OVERHEAD.audioState().volume)).toBeCloseTo(0.8, 1);
+
+    // música começa ligada; toggle desliga
+    expect(await page.evaluate(() => window.__OVERHEAD.audioState().music)).toBe(true);
+    await page.locator("#music-toggle").click();
+    expect(await page.evaluate(() => window.__OVERHEAD.audioState().music)).toBe(false);
+    await expect(page.locator("#music-toggle")).not.toHaveClass(/active/);
+
+    // persiste entre reloads
+    await page.reload();
+    await page.waitForFunction(() => !!window.__OVERHEAD);
+    expect(await page.evaluate(() => window.__OVERHEAD.audioState().music)).toBe(false);
+    expect(await page.evaluate(() => window.__OVERHEAD.audioState().volume)).toBeCloseTo(0.8, 1);
+  });
+});
+
 test.describe("menu de pausa", () => {
   test("pausar abre o menu com continuar/reiniciar/menu", async ({ page }) => {
     await boot(page);

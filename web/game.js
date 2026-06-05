@@ -214,18 +214,60 @@
   //  SOM — efeitos sintetizados via Web Audio (sem arquivos externos)
   // ===================================================================
   const Sound = (() => {
-    let ctx = null, master = null, enabled = true;
+    let ctx = null, master = null, musicGain = null, enabled = true;
+    let vol = 0.45, musicOn = true, musicTimer = null, step = 0;
+    function applyVolume() { if (master) master.gain.value = enabled ? vol * 0.5 : 0; }
     function init() {
       if (ctx) return;
       try {
         const AC = window.AudioContext || window.webkitAudioContext;
         ctx = new AC();
         master = ctx.createGain();
-        master.gain.value = 0.22;
         master.connect(ctx.destination);
+        applyVolume();
+        musicGain = ctx.createGain();
+        musicGain.gain.value = 0.5;
+        musicGain.connect(master);
+        if (musicOn) startMusic();
       } catch (e) { enabled = false; }
     }
     function resume() { if (ctx && ctx.state === "suspended") ctx.resume(); }
+
+    // ----- Música de fundo: pad + arpejo sintetizados, em loop suave -----
+    const CHORDS = [[0, 7, 12, 16], [-3, 4, 9, 12], [-5, 2, 7, 11], [-1, 4, 7, 14]];
+    const noteFreq = (semi) => 220 * Math.pow(2, semi / 12); // base A3
+    function pad(freq, t0, dur) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.10, t0 + 0.4);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(musicGain);
+      o.start(t0); o.stop(t0 + dur + 0.05);
+    }
+    function pluck(freq, t0, dur) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "triangle"; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.06, t0 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(musicGain);
+      o.start(t0); o.stop(t0 + dur + 0.05);
+    }
+    function bar() {
+      if (!ctx || !musicOn) return;
+      const t0 = ctx.currentTime + 0.06;
+      const ch = CHORDS[step % CHORDS.length];
+      ch.forEach((s) => pad(noteFreq(s), t0, 2.1));            // acorde sustentado
+      ch.forEach((s, i) => pluck(noteFreq(s + 12), t0 + i * 0.5, 0.35)); // arpejo
+      step++;
+    }
+    function startMusic() {
+      if (!ctx || musicTimer) return;
+      bar();
+      musicTimer = setInterval(bar, 2000);
+    }
+    function stopMusic() { if (musicTimer) { clearInterval(musicTimer); musicTimer = null; } }
     function tone({ freq = 440, freq2 = null, type = "sine", dur = 0.12, vol = 0.5, delay = 0 }) {
       if (!ctx) return;
       const t0 = ctx.currentTime + delay;
@@ -263,8 +305,12 @@
     return {
       init, resume,
       play(name) { if (!enabled || !ctx) return; const f = SFX[name]; if (f) { resume(); f(); } },
-      toggle() { enabled = !enabled; return enabled; },
+      toggle() { enabled = !enabled; applyVolume(); return enabled; },
       isEnabled() { return enabled; },
+      setVolume(v) { vol = Math.max(0, Math.min(1, v)); applyVolume(); },
+      getVolume() { return vol; },
+      setMusic(on) { musicOn = !!on; if (ctx) { on ? startMusic() : stopMusic(); } },
+      isMusicOn() { return musicOn; },
     };
   })();
 
@@ -297,7 +343,7 @@
   // ===================================================================
   const Prefs = (() => {
     const KEY = "overhead_prefs_v1";
-    const def = { sound: true, speed: 1, endless: false, seenTutorial: false, difficulty: "normal" };
+    const def = { sound: true, speed: 1, endless: false, seenTutorial: false, difficulty: "normal", volume: 0.45, music: true };
     let data;
     try { data = { ...def, ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
     catch (e) { data = { ...def }; }
@@ -1412,6 +1458,21 @@
   }
   renderDifficulty();
 
+  // controles de áudio (volume + música)
+  document.getElementById("volume-slider").addEventListener("input", (e) => {
+    Sound.init();
+    const v = (+e.target.value) / 100;
+    Sound.setVolume(v);
+    Prefs.set("volume", v);
+  });
+  document.getElementById("music-toggle").addEventListener("click", () => {
+    Sound.init(); Sound.resume();
+    const on = !Sound.isMusicOn();
+    Sound.setMusic(on);
+    Prefs.set("music", on);
+    document.getElementById("music-toggle").classList.toggle("active", on);
+  });
+
   document.getElementById("save-btn").addEventListener("click", () => {
     if (!pendingScore) return;
     const name = document.getElementById("name-input").value;
@@ -1620,6 +1681,7 @@
     isPaused: () => state.paused,
     difficulty: () => state.difficulty,
     fxState: () => ({ shake: +state.shake.toFixed(2), flash: +state.flash.toFixed(2) }),
+    audioState: () => ({ volume: +Sound.getVolume().toFixed(2), music: Sound.isMusicOn(), sound: Sound.isEnabled() }),
 
     // câmera (zoom/pan) — usado nos testes
     zoomState: () => ({ zoom: +view.zoom.toFixed(3), panX: Math.round(view.panX), panY: Math.round(view.panY) }),
@@ -1662,6 +1724,11 @@
     const soundOn = Prefs.get("sound");
     if (!soundOn) { Sound.toggle(); /* começa desligado */ }
     document.getElementById("sound-btn").textContent = soundOn ? "🔊" : "🔇";
+    const v = Prefs.get("volume");
+    Sound.setVolume(typeof v === "number" ? v : 0.45);
+    Sound.setMusic(!!Prefs.get("music"));
+    document.getElementById("volume-slider").value = Math.round(Sound.getVolume() * 100);
+    document.getElementById("music-toggle").classList.toggle("active", Sound.isMusicOn());
     state.speed = Prefs.get("speed") || 1;
     document.getElementById("speed-btn").textContent = state.speed + "×";
     document.getElementById("endless-check").checked = !!Prefs.get("endless");

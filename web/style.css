@@ -504,6 +504,8 @@ html, body {
   transition: 0.15s;
 }
 .seg-btn.active { background: rgba(110,231,255,0.16); color: var(--accent); border-color: rgba(110,231,255,0.5); }
+#volume-slider { flex: 1; max-width: 140px; accent-color: var(--accent); cursor: pointer; }
+#audio-row .seg-btn { white-space: nowrap; }
 
 #endless-row {
   display: flex;
