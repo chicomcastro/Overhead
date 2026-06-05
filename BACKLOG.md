@@ -23,10 +23,11 @@ remasterização web em [`web/`](web/). Atualize ao concluir cada item.
 | #15 | Bestiário | Painel no menu listando os 6 inimigos: ícone, descrição e stats (HP/velocidade/recompensa + traços). |
 | #16 | Habilidades ativas | Congelar (lentidão geral) e Tempestade (dano em área), com cooldown e anel de progresso, no canto do mapa. |
 | #17 | Variedade de mapa | 3 mapas selecionáveis no menu (Serpente, Pente, Ziguezague), cada um com caminho e nós próprios. |
+| #18 | PWA | Instalável (manifest + ícone) e jogável offline (service worker cacheia o app shell). |
 
 ## 🔜 Backlog (próximos candidatos)
 
-> Em andamento: puxando os itens abaixo em sequência (PRs #13+).
+> ✅ Backlog inicial concluído (PRs #13–#18). Novas ideias entram abaixo.
 
 **Profundidade de jogo**
 - [x] ~~Níveis de dificuldade~~ (PR #13).
@@ -39,7 +40,7 @@ remasterização web em [`web/`](web/). Atualize ao concluir cada item.
 - [x] ~~Bestiário de inimigos~~ (PR #15).
 
 **Plataforma**
-- [ ] PWA instalável + offline (manifest + service worker; ícone na home, joga sem rede).
+- [x] ~~PWA instalável + offline~~ (PR #18).
 
 ## 🧭 Decisões de design (log)
 
