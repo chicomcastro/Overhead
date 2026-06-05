@@ -44,6 +44,15 @@
     globalRngStep: 0.05,   // +5% alcance por nível de Lentes Rúnicas
   };
 
+  // Níveis de dificuldade — afetam recursos iniciais, HP dos inimigos e recompensa.
+  const DIFFICULTIES = {
+    easy:   { label: "Fácil",   souls: 50, lives: 25, hpMul: 0.82, rewardMul: 1.15 },
+    normal: { label: "Normal",  souls: 40, lives: 20, hpMul: 1.0,  rewardMul: 1.0 },
+    hard:   { label: "Difícil", souls: 30, lives: 15, hpMul: 1.28, rewardMul: 0.9 },
+  };
+  const DIFFICULTY_ORDER = ["easy", "normal", "hard"];
+  const diffCfg = () => DIFFICULTIES[state.difficulty] || DIFFICULTIES.normal;
+
   // ----- Caminho que os inimigos percorrem (waypoints em world space) -----
   const PATH = [
     { x: -40,  y: 140 },
@@ -126,9 +135,11 @@
   // ===================================================================
   let state;
   function newGame() {
+    const diff = DIFFICULTIES[(state && state.difficulty)] || DIFFICULTIES.normal;
     state = {
-      souls: CONFIG.initialSouls,
-      lives: CONFIG.initialLives,
+      difficulty: (state && state.difficulty) || "normal",
+      souls: diff.souls,
+      lives: diff.lives,
       score: 0,
       wave: 0,
       running: false,      // true durante uma onda
@@ -136,6 +147,8 @@
       gameOver: false,
       won: false,
       speed: 1,
+      shake: 0,            // tremor de tela ao tomar dano no núcleo
+      flash: 0,            // vinheta vermelha ao tomar dano no núcleo
       time: 0,             // relógio de jogo (s), avança com dt — base dos timers de efeito
       endless: false,      // modo infinito: sem vitória na onda 20
       globals: { dmg: 0, rng: 0 }, // melhorias globais compradas (ralo de almas)
@@ -284,7 +297,7 @@
   // ===================================================================
   const Prefs = (() => {
     const KEY = "overhead_prefs_v1";
-    const def = { sound: true, speed: 1, endless: false, seenTutorial: false };
+    const def = { sound: true, speed: 1, endless: false, seenTutorial: false, difficulty: "normal" };
     let data;
     try { data = { ...def, ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
     catch (e) { data = { ...def }; }
@@ -315,7 +328,7 @@
 
   function spawnEnemy(typeId) {
     const t = ENEMY_TYPES[typeId];
-    const maxHP = waveHP() * t.hpMul;
+    const maxHP = waveHP() * t.hpMul * diffCfg().hpMul;
     state.enemies.push({
       type: typeId, def: t,
       x: PATH[0].x, y: PATH[0].y,
@@ -475,7 +488,7 @@
   function killEnemy(e, type) {
     if (e.dead) return;
     e.dead = true;
-    let reward = e.def.reward;
+    let reward = Math.round(e.def.reward * diffCfg().rewardMul);
     state.souls += reward;
     state.score += Math.round(reward * 2 + e.maxHP / 10);
 
@@ -520,6 +533,9 @@
     if ((state.paused && !force) || state.gameOver) return;
     state.time += dt;
     const now = state.time;
+    // decai o feedback de dano (tremor/vinheta)
+    if (state.shake > 0) state.shake = Math.max(0, state.shake - dt);
+    if (state.flash > 0) state.flash = Math.max(0, state.flash - dt * 1.6);
 
     // --- spawn da onda ---
     if (state.running) {
@@ -581,6 +597,9 @@
           state.lives--;
           spawnParticles(CORE.x, CORE.y, "#ff6b81", 18, 160);
           spawnFloater(CORE.x, CORE.y - 40, "-1 ♥", "#ff6b81", 22);
+          state.shake = 0.4;  // tremor + vinheta de dano
+          state.flash = 0.6;
+          buzz(30);
           Sound.play("leak");
           if (state.lives <= 0) { state.lives = 0; loseGame(); }
           updateHUD();
@@ -666,11 +685,15 @@
   function render() {
     pulse += 0.04;
     const { scale, ox, oy } = camera();
+    // tremor de tela ao tomar dano no núcleo
+    const sh = state.shake > 0 ? state.shake * 16 : 0;
+    const shx = sh ? (Math.random() * 2 - 1) * sh : 0;
+    const shy = sh ? (Math.random() * 2 - 1) * sh : 0;
     // limpa a tela inteira (em px de tela) e aplica a transformação da câmera
     ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
     ctx.clearRect(0, 0, view.cw, view.ch);
     ctx.save();
-    ctx.translate(ox, oy);
+    ctx.translate(ox + shx, oy + shy);
     ctx.scale(scale, scale);
 
     // fundo / grade
@@ -685,6 +708,17 @@
     drawFloaters();
     drawBuildPreview();
     ctx.restore();
+
+    // vinheta vermelha de dano (em px de tela, por cima de tudo)
+    if (state.flash > 0) {
+      const a = Math.min(1, state.flash) * 0.55;
+      const cx = view.cw / 2, cy = view.ch / 2;
+      const g = ctx.createRadialGradient(cx, cy, Math.min(cx, cy) * 0.55, cx, cy, Math.max(cx, cy) * 1.05);
+      g.addColorStop(0, "rgba(255,0,40,0)");
+      g.addColorStop(1, `rgba(255,0,40,${a})`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, view.cw, view.ch);
+    }
   }
 
   function drawBackground() {
@@ -1362,6 +1396,22 @@
     Prefs.set("endless", e.target.checked);
   });
 
+  // seletor de dificuldade (segmented control no menu)
+  function renderDifficulty() {
+    const cur = Prefs.get("difficulty") || "normal";
+    const box = document.getElementById("difficulty-modes");
+    box.innerHTML = "";
+    for (const key of DIFFICULTY_ORDER) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "seg-btn" + (cur === key ? " active" : "");
+      b.textContent = DIFFICULTIES[key].label;
+      b.addEventListener("click", () => { Prefs.set("difficulty", key); renderDifficulty(); });
+      box.appendChild(b);
+    }
+  }
+  renderDifficulty();
+
   document.getElementById("save-btn").addEventListener("click", () => {
     if (!pendingScore) return;
     const name = document.getElementById("name-input").value;
@@ -1389,6 +1439,7 @@
 
   // Inicia uma partida do zero (usado pelo menu e pelo "Reiniciar fase").
   function beginGame(endless) {
+    state.difficulty = Prefs.get("difficulty") || "normal"; // newGame usa p/ recursos iniciais
     newGame();
     resetView();
     for (const n of NODES) n.taken = false;
@@ -1567,6 +1618,8 @@
     },
     endGame: (won) => { if (won) winGame(); else loseGame(); }, // p/ testes da tela de fim
     isPaused: () => state.paused,
+    difficulty: () => state.difficulty,
+    fxState: () => ({ shake: +state.shake.toFixed(2), flash: +state.flash.toFixed(2) }),
 
     // câmera (zoom/pan) — usado nos testes
     zoomState: () => ({ zoom: +view.zoom.toFixed(3), panX: Math.round(view.panX), panY: Math.round(view.panY) }),
