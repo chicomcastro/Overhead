@@ -17,6 +17,7 @@ remasterização web em [`web/`](web/). Atualize ao concluir cada item.
 | #9 | UX/UI mobile | HUD compacto numa linha, painel da torre selecionada (nome/nível/stats/tags), auto-seleção ao construir, fim do overlap loja↔ações. |
 | #10 | Câmera | Zoom (1–3×) + pan: pinça/2 dedos no mobile, scroll/arrasto no desktop, botões +/−/⤢. Fix do shop lateral cortando no desktop (Iniciar onda sticky). |
 | #11 | Gameplay + polish | Prioridade de alvo por torre, prévia da próxima onda, telas de vitória/derrota ricas + compartilhar resultado. Atualização do README e deste backlog. |
+| #12 | Refinamento de UI | Fix dos cards da loja cortando no mobile (shop-list não encolhe), prévia da próxima onda compacta (uma linha) e **menu de pausa** (Continuar / Reiniciar fase / Menu principal). |
 
 ## 🔜 Backlog (próximos candidatos)
 

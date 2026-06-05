@@ -77,3 +77,47 @@ test.describe("tela de fim de jogo", () => {
     await expect(ov).not.toHaveClass(/show/);
   });
 });
+
+test.describe("menu de pausa", () => {
+  test("pausar abre o menu com continuar/reiniciar/menu", async ({ page }) => {
+    await boot(page);
+    await page.locator("#pause-btn").click();
+    await expect(page.locator("#pause-menu")).toHaveClass(/show/);
+    expect(await page.evaluate(() => window.__OVERHEAD.isPaused())).toBe(true);
+    for (const id of ["#resume-btn", "#restart-btn", "#menu-btn"]) {
+      await expect(page.locator(id)).toBeVisible();
+    }
+    // continuar fecha o menu e despausa
+    await page.locator("#resume-btn").click();
+    await expect(page.locator("#pause-menu")).not.toHaveClass(/show/);
+    expect(await page.evaluate(() => window.__OVERHEAD.isPaused())).toBe(false);
+  });
+
+  test("reiniciar zera a fase (torres e onda)", async ({ page }) => {
+    await boot(page);
+    await page.evaluate(() => window.__OVERHEAD.addSouls(500));
+    const node = await page.evaluate(() => window.__OVERHEAD.freeNodes()[0]);
+    await page.evaluate((n) => window.__OVERHEAD.build("soul", n), node);
+    await page.evaluate(() => window.__OVERHEAD.startWave());
+
+    await page.locator("#pause-btn").click();
+    await page.locator("#restart-btn").click();
+
+    const s = await page.evaluate(() => window.__OVERHEAD.snapshot());
+    expect(s.towers.length).toBe(0);
+    expect(s.wave).toBe(0);
+    expect(s.running).toBe(false);
+    await expect(page.locator("#pause-menu")).not.toHaveClass(/show/);
+  });
+
+  test("menu principal volta ao menu (modo jogo, sem resultado)", async ({ page }) => {
+    await boot(page);
+    await page.locator("#pause-btn").click();
+    await page.locator("#menu-btn").click();
+    const ov = page.locator("#overlay");
+    await expect(ov).toHaveClass(/show/);
+    await expect(ov).not.toHaveClass(/result/);
+    await expect(page.locator("#overlay-btn")).toHaveText("Jogar");
+    await expect(page.locator("#how-to")).toBeVisible(); // conteúdo de menu volta
+  });
+});

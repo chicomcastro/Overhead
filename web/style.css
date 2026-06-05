@@ -262,7 +262,7 @@ html, body {
   border-radius: 10px;
   font-size: 14px;
 }
-.wave-preview .wp-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; width: 100%; }
+.wave-preview .wp-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; }
 .wave-preview .wp-item { display: inline-flex; align-items: center; gap: 3px; }
 .wave-preview .wp-item b { color: var(--text); font-size: 13px; }
 .tp-close {
@@ -376,6 +376,38 @@ html, body {
   transition: 0.15s;
 }
 .share-btn:hover { background: rgba(110,231,255,0.1); }
+
+/* ---------- Menu de pausa ---------- */
+#pause-menu {
+  position: absolute;
+  inset: 0;
+  background: rgba(8,12,22,0.86);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 25;
+}
+#pause-menu.show { display: flex; }
+.pause-panel { display: flex; flex-direction: column; gap: 12px; min-width: 250px; }
+.pause-panel h1 { margin-bottom: 6px; }
+.pause-panel button {
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  transition: 0.15s;
+}
+#resume-btn { background: linear-gradient(90deg, var(--accent), #4ea8ff); color: #04222c; }
+#resume-btn:hover { transform: scale(1.03); }
+.pause-panel .ghost-btn {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.pause-panel .ghost-btn:hover { background: #27345a; }
 
 /* ---------- Save row + Leaderboard ---------- */
 #save-row {
@@ -504,7 +536,7 @@ html, body {
 
   /* Cartões em linha, rolagem horizontal — contida no próprio shop-list
      (min-width:0 evita que o flex item estoure a largura do documento). */
-  #shop { max-width: 100%; overflow-x: hidden; }
+  #shop { max-width: 100%; overflow-x: hidden; overflow-y: auto; }
   #shop-list {
     display: flex;
     flex-direction: row;
@@ -514,12 +546,14 @@ html, body {
     padding-bottom: 4px;
     min-width: 0;
     max-width: 100%;
+    flex-shrink: 0;           /* não deixa espremer/cortar os cards na vertical */
   }
   .tower-card {
     flex: 0 0 auto;
-    width: 140px;
+    width: 150px;
     padding: 8px;
   }
+  .tower-card .name { font-size: 14px; line-height: 1.2; }
   .tower-card .desc { display: none; }     /* descrição some p/ economizar espaço */
   .tower-card .stats { font-size: 10px; gap: 6px; }
 
