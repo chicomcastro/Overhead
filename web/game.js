@@ -1331,8 +1331,8 @@
   });
 
   document.getElementById("pause-btn").addEventListener("click", () => {
-    state.paused = !state.paused;
-    document.getElementById("pause-btn").textContent = state.paused ? "▶" : "❚❚";
+    if (state.gameOver) return;
+    setPaused(!state.paused); // abre/fecha o menu de pausa
   });
 
   document.getElementById("speed-btn").addEventListener("click", () => {
@@ -1387,25 +1387,63 @@
     } catch (e) { /* usuário cancelou o compartilhamento — ignora */ }
   });
 
-  document.getElementById("overlay-btn").addEventListener("click", () => {
-    Sound.init();
-    document.getElementById("overlay").classList.remove("result", "win", "lose");
+  // Inicia uma partida do zero (usado pelo menu e pelo "Reiniciar fase").
+  function beginGame(endless) {
     newGame();
     resetView();
     for (const n of NODES) n.taken = false;
-    // aplica preferências e o modo escolhido no menu
-    state.endless = document.getElementById("endless-check").checked;
+    state.endless = endless;
     state.speed = Prefs.get("speed") || 1;
+    state.paused = false;
     pendingScore = null;
     document.getElementById("save-row").hidden = true;
-    document.getElementById("overlay").classList.remove("show");
+    document.getElementById("overlay").classList.remove("show", "result", "win", "lose");
+    document.getElementById("pause-menu").classList.remove("show");
     updateTowerButtons();
     document.getElementById("pause-btn").textContent = "❚❚";
     document.getElementById("speed-btn").textContent = state.speed + "×";
     updateHUD();
+  }
+
+  document.getElementById("overlay-btn").addEventListener("click", () => {
+    Sound.init();
+    beginGame(document.getElementById("endless-check").checked);
     // mostra o coach na primeira jogada
     if (!Prefs.get("seenTutorial")) showCoach();
   });
+
+  // ----- Menu de pausa: continuar / reiniciar / menu principal -----
+  function setPaused(p) {
+    state.paused = p;
+    document.getElementById("pause-menu").classList.toggle("show", p);
+    document.getElementById("pause-btn").textContent = p ? "▶" : "❚❚";
+  }
+  document.getElementById("resume-btn").addEventListener("click", () => setPaused(false));
+  document.getElementById("restart-btn").addEventListener("click", () => {
+    Sound.init();
+    beginGame(state.endless); // mantém o modo (infinito ou não)
+  });
+  document.getElementById("menu-btn").addEventListener("click", () => {
+    setPaused(false);
+    showMenu();
+  });
+
+  // Volta para o menu principal (sem resultado), com o jogo congelado atrás.
+  function showMenu() {
+    const ov = document.getElementById("overlay");
+    ov.classList.remove("result", "win", "lose");
+    ov.querySelector("h1").textContent = "OVERHEAD";
+    document.getElementById("overlay-msg").innerHTML =
+      "Defenda a Torre Mestra das ondas de almas perdidas.<br />Construa esferas, derrote os inimigos e sobreviva.";
+    document.getElementById("overlay-btn").textContent = "Jogar";
+    document.getElementById("share-btn").hidden = true;
+    document.getElementById("save-row").hidden = true;
+    pendingScore = null;
+    renderLeaderboard();
+    renderBest();
+    state.paused = true; // congela a partida atual atrás do menu
+    ov.classList.add("show");
+  }
 
   // ----- Coach de primeira jogada -----
   function showCoach() { document.getElementById("coach").hidden = false; }
@@ -1528,6 +1566,7 @@
       return counts;
     },
     endGame: (won) => { if (won) winGame(); else loseGame(); }, // p/ testes da tela de fim
+    isPaused: () => state.paused,
 
     // câmera (zoom/pan) — usado nos testes
     zoomState: () => ({ zoom: +view.zoom.toFixed(3), panX: Math.round(view.panX), panY: Math.round(view.panY) }),
