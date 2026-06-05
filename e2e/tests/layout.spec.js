@@ -38,11 +38,16 @@ async function expectInViewport(page, selector) {
 test("menu: controles essenciais presentes e visíveis", async ({ page }) => {
   await gotoFresh(page);
   await expect(page.locator("#overlay")).toBeVisible();
-  await expect(page.locator("#endless-check")).toBeVisible();
+  await expect(page.locator("#difficulty-modes .seg-btn")).toHaveCount(3); // escolha primária
+  await expect(page.locator("#options-btn")).toBeVisible();    // acesso às opções
+  await expect(page.locator("#options-panel")).toBeHidden();   // recolhido por padrão
   await expect(page.locator("#save-row")).toBeHidden();        // só aparece ao pontuar
-  await expect(page.locator("#how-to li")).toHaveCount(3);
   await expect(page.locator("#overlay-btn")).toBeVisible();
   await expectInViewport(page, "#overlay-btn");                // botão Jogar acessível
+
+  // abrir Opções revela mapa/áudio/modo infinito
+  await page.locator("#options-btn").click();
+  await expect(page.locator("#endless-check")).toBeVisible();
 });
 
 test("menu: sem overflow horizontal", async ({ page }) => {

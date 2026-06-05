@@ -25,6 +25,7 @@ remasterização web em [`web/`](web/). Atualize ao concluir cada item.
 | #17 | Variedade de mapa | 3 mapas selecionáveis no menu (Serpente, Pente, Ziguezague), cada um com caminho e nós próprios. |
 | #18 | PWA | Instalável (manifest + ícone) e jogável offline (service worker cacheia o app shell). |
 | #19 | Rebalanceamento | Curva de HP suavizada (1.16→1.14) e diferenciada por dificuldade (hpRamp), teto de dano maior (maxLevel 4→6), globais melhores, inimigos especiais mais cedo. + ferramenta de simulação `e2e/tools` (`npm run balance`). |
+| #20 | Lobby mobile | Hierarquia clara no menu: destaque em título → dificuldade → Jogar; mapa/áudio/modo infinito recolhidos em ⚙ Opções e passos em ❓ Como jogar; leaderboard vazio não polui. |
 
 ## 🎚️ Balanceamento (alvos, PR #19)
 

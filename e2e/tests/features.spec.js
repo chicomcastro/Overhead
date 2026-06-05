@@ -110,6 +110,7 @@ test.describe("dificuldade", () => {
 test.describe("variedade de mapa", () => {
   test("selecionar mapa troca o mapa ativo e persiste", async ({ page }) => {
     await gotoFresh(page);
+    await page.locator("#options-btn").click();   // mapa fica dentro de Opções
     const count = await page.evaluate(() => window.__OVERHEAD.mapCount());
     await expect(page.locator("#map-modes .seg-btn")).toHaveCount(count);
     expect(await page.evaluate(() => window.__OVERHEAD.mapId())).toBe("serpent");
@@ -121,6 +122,7 @@ test.describe("variedade de mapa", () => {
     // persiste entre reloads
     await page.reload();
     await page.waitForFunction(() => !!window.__OVERHEAD);
+    await page.locator("#options-btn").click();
     await expect(page.locator("#map-modes .seg-btn.active")).toHaveText("Pente");
   });
 });
@@ -148,6 +150,7 @@ test.describe("feedback de dano no núcleo", () => {
 test.describe("áudio", () => {
   test("slider de volume e toggle de música atualizam estado e prefs", async ({ page }) => {
     await gotoFresh(page);
+    await page.locator("#options-btn").click();   // áudio fica dentro de Opções
     await expect(page.locator("#volume-slider")).toBeVisible();
     await expect(page.locator("#music-toggle")).toBeVisible();
 
@@ -258,6 +261,6 @@ test.describe("menu de pausa", () => {
     await expect(ov).toHaveClass(/show/);
     await expect(ov).not.toHaveClass(/result/);
     await expect(page.locator("#overlay-btn")).toHaveText("Jogar");
-    await expect(page.locator("#how-to")).toBeVisible(); // conteúdo de menu volta
+    await expect(page.locator("#difficulty-modes")).toBeVisible(); // controles de menu voltam
   });
 });

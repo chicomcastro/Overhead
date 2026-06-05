@@ -113,30 +113,9 @@
       <div class="panel">
         <h1>OVERHEAD</h1>
         <p class="subtitle menu-only">Tower Defense — Web Edition</p>
-        <p id="overlay-msg">Defenda a Torre Mestra das ondas de almas perdidas.<br />
-          Construa esferas, derrote os inimigos e sobreviva.</p>
-        <ol id="how-to" class="menu-only">
-          <li><b>Escolha</b> uma esfera na loja</li>
-          <li><b>Toque num nó azul</b> do mapa para construí-la</li>
-          <li><b>Inicie a onda</b> e defenda a Torre Mestra</li>
-        </ol>
-        <div id="difficulty-row" class="seg-row">
-          <span class="seg-label">Dificuldade</span>
-          <div id="difficulty-modes" class="seg-modes"></div>
-        </div>
-        <div id="map-row" class="seg-row">
-          <span class="seg-label">Mapa</span>
-          <div id="map-modes" class="seg-modes"></div>
-        </div>
-        <div id="audio-row" class="seg-row">
-          <span class="seg-label">Áudio</span>
-          <input type="range" id="volume-slider" min="0" max="100" value="45" aria-label="Volume" />
-          <button type="button" id="music-toggle" class="seg-btn">♪ Música</button>
-        </div>
-        <label id="endless-row">
-          <input type="checkbox" id="endless-check" />
-          <span>Modo infinito <small>(sem fim na onda 20 — sobreviva o máximo que puder)</small></span>
-        </label>
+        <p id="overlay-msg">Defenda a Torre Mestra das ondas de almas perdidas.</p>
+
+        <!-- resultado (vitória/derrota): mensagem + stats -->
         <div id="best"></div>
         <div id="overlay-stats"></div>
         <div id="save-row" hidden>
@@ -144,10 +123,49 @@
           <button id="save-btn">Salvar pontuação</button>
         </div>
         <div id="leaderboard"></div>
+
+        <!-- escolha primária: dificuldade -->
+        <div id="difficulty-row" class="seg-row">
+          <span class="seg-label">Dificuldade</span>
+          <div id="difficulty-modes" class="seg-modes"></div>
+        </div>
+
+        <!-- ação principal -->
         <button id="overlay-btn">Jogar</button>
         <button id="share-btn" class="share-btn" hidden>↗ Compartilhar resultado</button>
-        <button id="bestiary-btn" class="share-btn menu-only">👹 Bestiário</button>
-        <p class="credits menu-only">Remake web do jogo original feito em Unity por chicomcastro &amp; equipe.</p>
+
+        <!-- ações secundárias -->
+        <div class="menu-actions">
+          <button type="button" id="options-btn" class="link-btn">⚙ Opções</button>
+          <button type="button" id="howto-btn" class="link-btn menu-only">❓ Como jogar</button>
+          <button type="button" id="bestiary-btn" class="link-btn">👹 Bestiário</button>
+        </div>
+
+        <!-- painel de opções (recolhível) -->
+        <div id="options-panel" hidden>
+          <div id="map-row" class="seg-row">
+            <span class="seg-label">Mapa</span>
+            <div id="map-modes" class="seg-modes"></div>
+          </div>
+          <div id="audio-row" class="seg-row">
+            <span class="seg-label">Áudio</span>
+            <input type="range" id="volume-slider" min="0" max="100" value="45" aria-label="Volume" />
+            <button type="button" id="music-toggle" class="seg-btn">♪ Música</button>
+          </div>
+          <label id="endless-row">
+            <input type="checkbox" id="endless-check" />
+            <span>Modo infinito <small>(sem fim na onda 20)</small></span>
+          </label>
+        </div>
+
+        <!-- como jogar (recolhível) -->
+        <ol id="how-to" class="menu-only" hidden>
+          <li><b>Escolha</b> uma esfera na loja</li>
+          <li><b>Toque num nó azul</b> do mapa para construí-la</li>
+          <li><b>Inicie a onda</b> e defenda a Torre Mestra</li>
+        </ol>
+
+        <p class="credits menu-only">Remake web do original (Unity) por chicomcastro &amp; equipe.</p>
       </div>
     </div>
 
