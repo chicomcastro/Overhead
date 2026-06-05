@@ -53,6 +53,13 @@
   const DIFFICULTY_ORDER = ["easy", "normal", "hard"];
   const diffCfg = () => DIFFICULTIES[state.difficulty] || DIFFICULTIES.normal;
 
+  // Habilidades ativas (cooldown global, sem custo de almas).
+  const ABILITIES = {
+    freeze: { icon: "❄", name: "Congelar", cd: 24, dur: 3.5, factor: 0.15 },          // congela todos
+    storm:  { icon: "⚡", name: "Tempestade", cd: 34, dmgPct: 0.32, dmgFlat: 30 },     // dano em área
+  };
+  const ABILITY_ORDER = ["freeze", "storm"];
+
   // ----- Caminho que os inimigos percorrem (waypoints em world space) -----
   const PATH = [
     { x: -40,  y: 140 },
@@ -155,6 +162,7 @@
       speed: 1,
       shake: 0,            // tremor de tela ao tomar dano no núcleo
       flash: 0,            // vinheta vermelha ao tomar dano no núcleo
+      abilities: { freeze: 0, storm: 0 }, // cooldown restante (s) de cada habilidade
       time: 0,             // relógio de jogo (s), avança com dt — base dos timers de efeito
       endless: false,      // modo infinito: sem vitória na onda 20
       globals: { dmg: 0, rng: 0 }, // melhorias globais compradas (ralo de almas)
@@ -490,6 +498,33 @@
     return chosen;
   }
 
+  // Habilidades ativas — efeito instantâneo em todos os inimigos + cooldown.
+  function activateAbility(key) {
+    const a = ABILITIES[key];
+    if (!a || state.gameOver || state.abilities[key] > 0) return false;
+    const alive = state.enemies.filter(e => !e.dead);
+    if (key === "freeze") {
+      for (const e of alive) {
+        e.slowFactor = Math.min(e.slowFactor, a.factor);
+        e.slowUntil = Math.max(e.slowUntil, state.time + a.dur);
+        spawnParticles(e.x, e.y, "#9be7ff", 6);
+      }
+      Sound.play("shoot_frost");
+    } else if (key === "storm") {
+      for (const e of alive) {
+        spawnParticles(e.x, e.y, "#ffd166", 8);
+        damageEnemy(e, e.maxHP * a.dmgPct + a.dmgFlat, null);
+      }
+      state.shake = Math.max(state.shake, 0.25);
+      Sound.play("boss_die");
+    }
+    state.abilities[key] = a.cd;
+    buzz(20);
+    updateAbilities();
+    updateHUD();
+    return true;
+  }
+
   function towerFire(tower, dt) {
     tower.cooldown -= dt;
 
@@ -588,6 +623,8 @@
     // decai o feedback de dano (tremor/vinheta)
     if (state.shake > 0) state.shake = Math.max(0, state.shake - dt);
     if (state.flash > 0) state.flash = Math.max(0, state.flash - dt * 1.6);
+    // cooldown das habilidades ativas
+    for (const k of ABILITY_ORDER) if (state.abilities[k] > 0) state.abilities[k] = Math.max(0, state.abilities[k] - dt);
 
     // --- spawn da onda ---
     if (state.running) {
@@ -990,6 +1027,7 @@
     dt = Math.max(0, Math.min(dt, 0.05)); // clamp p/ evitar saltos / valores negativos
     for (let i = 0; i < state.speed; i++) update(dt);
     render();
+    updateAbilities();
     requestAnimationFrame(loop);
   }
 
@@ -1213,6 +1251,21 @@
     }
   }
 
+  // Atualiza os botões de habilidade (cooldown: texto + preenchimento radial).
+  function updateAbilities() {
+    for (const k of ABILITY_ORDER) {
+      const btn = document.getElementById("ability-" + k);
+      if (!btn) continue;
+      const cd = state.abilities[k], max = ABILITIES[k].cd;
+      btn.disabled = cd > 0 || state.gameOver;
+      const cdEl = btn.querySelector(".cd");
+      if (cdEl) cdEl.textContent = cd > 0 ? Math.ceil(cd) : "";
+      // anel de progresso do cooldown via conic-gradient
+      const pct = cd > 0 ? (1 - cd / max) * 100 : 100;
+      btn.style.setProperty("--cd", pct + "%");
+    }
+  }
+
   // ===================================================================
   //  UI
   // ===================================================================
@@ -1430,6 +1483,9 @@
   document.getElementById("zoom-in").addEventListener("click", () => zoomByFactor(1.3));
   document.getElementById("zoom-out").addEventListener("click", () => zoomByFactor(1 / 1.3));
   document.getElementById("zoom-reset").addEventListener("click", () => resetView());
+
+  document.getElementById("ability-freeze").addEventListener("click", () => { Sound.init(); Sound.resume(); activateAbility("freeze"); });
+  document.getElementById("ability-storm").addEventListener("click", () => { Sound.init(); Sound.resume(); activateAbility("storm"); });
 
   document.getElementById("sound-btn").addEventListener("click", () => {
     Sound.init();
@@ -1714,6 +1770,9 @@
     isPaused: () => state.paused,
     difficulty: () => state.difficulty,
     enemyTypeCount: () => Object.keys(ENEMY_TYPES).length,
+    useAbility: (k) => activateAbility(k),
+    abilityCd: (k) => +(state.abilities[k] || 0).toFixed(1),
+    enemyHpTotal: () => state.enemies.filter(e => !e.dead).reduce((s, e) => s + e.hp, 0),
     fxState: () => ({ shake: +state.shake.toFixed(2), flash: +state.flash.toFixed(2) }),
     audioState: () => ({ volume: +Sound.getVolume().toFixed(2), music: Sound.isMusicOn(), sound: Sound.isEnabled() }),
 

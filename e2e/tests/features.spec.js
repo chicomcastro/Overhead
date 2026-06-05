@@ -167,6 +167,39 @@ test.describe("bestiário", () => {
   });
 });
 
+test.describe("habilidades ativas", () => {
+  test("Congelar deixa todos os inimigos lentos e entra em cooldown", async ({ page }) => {
+    await boot(page);
+    // tudo num único evaluate: sem rAF interferindo (spawns) entre as medições
+    const r = await page.evaluate(() => {
+      const O = window.__OVERHEAD;
+      O.startWave(); O.step(2);
+      const before = O.snapshot().enemies;
+      O.useAbility("freeze");
+      const s = O.snapshot();
+      return { before, enemies: s.enemies, slowed: s.slowed, cd: O.abilityCd("freeze") };
+    });
+    expect(r.before).toBeGreaterThan(0);
+    expect(r.slowed).toBe(r.enemies);                 // todos lentos
+    expect(r.cd).toBeGreaterThan(0);
+    await expect(page.locator("#ability-freeze")).toBeDisabled(); // botão reflete o cooldown
+  });
+
+  test("Tempestade causa dano em área a todos os inimigos", async ({ page }) => {
+    await boot(page);
+    const r = await page.evaluate(() => {
+      const O = window.__OVERHEAD;
+      O.startWave(); O.step(2);
+      const before = O.enemyHpTotal();
+      O.useAbility("storm");
+      return { before, after: O.enemyHpTotal(), cd: O.abilityCd("storm") };
+    });
+    expect(r.before).toBeGreaterThan(0);
+    expect(r.after).toBeLessThan(r.before);
+    expect(r.cd).toBeGreaterThan(0);
+  });
+});
+
 test.describe("menu de pausa", () => {
   test("pausar abre o menu com continuar/reiniciar/menu", async ({ page }) => {
     await boot(page);
