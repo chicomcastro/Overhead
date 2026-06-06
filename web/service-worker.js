@@ -1,7 +1,9 @@
-// Service worker do Overhead: cacheia o app shell para jogar offline.
-// Estratégia: cache-first com fallback à rede; navegações offline caem no
-// index.html cacheado. Bump CACHE ao mudar os assets para invalidar o cache.
-const CACHE = "overhead-v1";
+// Service worker do Overhead.
+// Estratégia: NETWORK-FIRST para assets same-origin — online sempre pega a
+// versão mais nova (evita ficar preso a uma versão antiga em cache); offline
+// cai no cache (app shell), e navegações offline caem no index.html.
+// O nome do cache é versionado: ao mudar, o `activate` apaga os caches antigos.
+const CACHE = "overhead-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -28,19 +30,21 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
+  // só gerencia recursos do próprio app; o resto passa direto
+  if (new URL(req.url).origin !== self.location.origin) return;
+
   e.respondWith(
-    caches.match(req).then((hit) => {
-      if (hit) return hit;
-      return fetch(req)
-        .then((res) => {
-          // guarda cópias de respostas same-origin bem-sucedidas
-          if (res && res.ok && res.type === "basic") {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => { try { c.put(req, copy); } catch (err) {} });
-          }
-          return res;
-        })
-        .catch(() => (req.mode === "navigate" ? caches.match("./index.html") : undefined));
-    })
+    fetch(req)
+      .then((res) => {
+        // atualiza o cache com a resposta fresca (same-origin OK)
+        if (res && res.ok && res.type === "basic") {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => { try { c.put(req, copy); } catch (err) {} });
+        }
+        return res;
+      })
+      .catch(() =>
+        caches.match(req).then((hit) => hit || (req.mode === "navigate" ? caches.match("./index.html") : undefined))
+      )
   );
 });
