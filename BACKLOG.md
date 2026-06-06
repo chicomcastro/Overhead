@@ -39,6 +39,13 @@ Antes (1.16 / maxLevel 4): curva "plana e depois despenca" — 0 ameaça até ~o
 parede exponencial depois, derrota ~onda 18 mesmo com tabuleiro no talo, e almas
 sobrando sem ralo. O HP crescia ~4× mais rápido que o teto de dano.
 
+## 🗺️ Campanha — roadmap
+
+- [x] **Fundação** (PR #24): mapa de fases, estrelas, best por fase, desbloqueio, save.
+- [ ] **Conteúdo**: ampliar p/ ~8–10 fases com ondas/mecânicas/inimigos crescentes + textos (história).
+- [ ] **Fase de tutorial** dedicada como fase 1 (onboarding guiado).
+- [ ] **Polish**: visual do mapa (caminho entre fases, estrelas animadas), 'Próxima fase' direto no resultado.
+
 ## 🔜 Backlog (próximos candidatos)
 
 > ✅ Backlog inicial concluído (PRs #13–#18). Novas ideias entram abaixo.

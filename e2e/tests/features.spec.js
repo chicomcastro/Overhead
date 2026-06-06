@@ -60,7 +60,7 @@ test.describe("tela de fim de jogo", () => {
     await expect(ov).toHaveClass(/result/);
     await expect(ov).toHaveClass(/lose/);
     await expect(page.locator("#share-btn")).toBeVisible();
-    await expect(page.locator("#overlay-btn")).toHaveText("Jogar novamente");
+    await expect(page.locator("#overlay-btn")).toContainText("Mapa de fases");
     // conteúdo de menu fica escondido no resultado
     await expect(page.locator("#how-to")).toBeHidden();
   });
@@ -73,13 +73,11 @@ test.describe("tela de fim de jogo", () => {
     await expect(page.locator("#share-btn")).toBeVisible();
   });
 
-  test("jogar novamente limpa o estado de resultado", async ({ page }) => {
+  test("'Mapa de fases' (resultado) reabre o mapa de fases", async ({ page }) => {
     await boot(page);
     await page.evaluate(() => window.__OVERHEAD.endGame(false));
-    await page.locator("#overlay-btn").click();
-    const ov = page.locator("#overlay");
-    await expect(ov).not.toHaveClass(/result/);
-    await expect(ov).not.toHaveClass(/show/);
+    await page.locator("#overlay-btn").click(); // "Mapa de fases"
+    await expect(page.locator("#levels")).toHaveClass(/show/);
   });
 });
 
@@ -88,43 +86,57 @@ test.describe("dificuldade", () => {
     await gotoFresh(page);
     await expect(page.locator("#difficulty-modes .seg-btn")).toHaveCount(3);
 
-    // Fácil: mais almas/vidas
+    // Fácil: mais almas/vidas (Jogar → mapa de fases → inicia a fase 1)
     await page.locator("#difficulty-modes .seg-btn", { hasText: "Fácil" }).click();
-    await page.locator("#overlay-btn").click();
+    await page.evaluate(() => window.__OVERHEAD.startLevel(1));
     let s = await page.evaluate(() => window.__OVERHEAD.snapshot());
     expect(s.souls).toBe(50);
     expect(s.lives).toBe(25);
     expect(await page.evaluate(() => window.__OVERHEAD.difficulty())).toBe("easy");
 
-    // Difícil: menos almas/vidas (via menu de pausa → menu principal → trocar)
+    // Difícil (via menu de pausa → menu principal → trocar)
     await page.locator("#pause-btn").click();
     await page.locator("#menu-btn").click();
     await page.locator("#difficulty-modes .seg-btn", { hasText: "Difícil" }).click();
-    await page.locator("#overlay-btn").click();
+    await page.evaluate(() => window.__OVERHEAD.startLevel(1));
     s = await page.evaluate(() => window.__OVERHEAD.snapshot());
     expect(s.souls).toBe(30);
     expect(s.lives).toBe(15);
   });
 });
 
-test.describe("variedade de mapa", () => {
-  test("selecionar mapa troca o mapa ativo e persiste", async ({ page }) => {
+test.describe("campanha", () => {
+  test("mapa de fases: estrelas, melhor pontuação e desbloqueio", async ({ page }) => {
     await gotoFresh(page);
-    await page.locator("#options-btn").click();   // mapa fica dentro de Opções
-    const count = await page.evaluate(() => window.__OVERHEAD.mapCount());
-    await expect(page.locator("#map-modes .seg-btn")).toHaveCount(count);
-    expect(await page.evaluate(() => window.__OVERHEAD.mapId())).toBe("serpent");
-
-    await page.locator("#map-modes .seg-btn", { hasText: /^Pente$/ }).click();
-    await page.locator("#options-sheet [data-close]").click(); // fecha o sheet
-    await page.locator("#overlay-btn").click();
-    expect(await page.evaluate(() => window.__OVERHEAD.mapId())).toBe("comb");
-
-    // persiste entre reloads
+    await page.evaluate(() => { localStorage.removeItem("overhead_campaign_v1"); window.__OVERHEAD.resetTutorial(); });
     await page.reload();
     await page.waitForFunction(() => !!window.__OVERHEAD);
-    await page.locator("#options-btn").click();
-    await expect(page.locator("#map-modes .seg-btn.active")).toHaveText("Pente");
+
+    // "Jogar" abre o mapa de fases com as 3 fases; a 2 começa bloqueada
+    await page.locator("#overlay-btn").click();
+    await expect(page.locator("#levels")).toHaveClass(/show/);
+    await expect(page.locator(".level-card")).toHaveCount(3);
+    expect(await page.evaluate(() => window.__OVERHEAD.levelInfo(2).unlocked)).toBe(false);
+
+    // joga a fase 1 e vence com pontuação alta → 3★
+    await page.evaluate(() => window.__OVERHEAD.startLevel(1));
+    if (await page.evaluate(() => window.__OVERHEAD.coachVisible())) await page.locator("#coach-ok").click();
+    expect(await page.evaluate(() => window.__OVERHEAD.levelId())).toBe(1);
+    await page.evaluate(() => { window.__OVERHEAD.setScore(9999); window.__OVERHEAD.endGame(true); });
+
+    // resultado mostra estrelas + botão mapa de fases
+    await expect(page.locator("#result-stars")).toBeVisible();
+    await expect(page.locator("#overlay-btn")).toContainText("Mapa de fases");
+
+    // progresso: fase 1 com 3★ e melhor pontuação; fase 2 desbloqueada
+    expect(await page.evaluate(() => window.__OVERHEAD.levelInfo(1).stars)).toBe(3);
+    expect(await page.evaluate(() => window.__OVERHEAD.levelInfo(1).best)).toBeGreaterThanOrEqual(9999);
+    expect(await page.evaluate(() => window.__OVERHEAD.levelInfo(2).unlocked)).toBe(true);
+
+    // voltar ao mapa de fases: agora só a fase 3 segue bloqueada (1 e 2 abertas)
+    await page.locator("#overlay-btn").click();
+    await expect(page.locator("#levels")).toHaveClass(/show/);
+    await expect(page.locator(".level-card.locked")).toHaveCount(1);
   });
 });
 

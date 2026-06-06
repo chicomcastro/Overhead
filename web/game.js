@@ -116,6 +116,31 @@
   }
   applyMap("serpent");
 
+  // ----- Campanha: fases com estrelas (1★ vencer, 2★/3★ por pontuação) -----
+  const LEVELS = [
+    { id: 1, name: "Despertar",    mapId: "serpent", star2: 1500, star3: 3200 },
+    { id: 2, name: "Encruzilhada", mapId: "comb",    star2: 2200, star3: 4500 },
+    { id: 3, name: "O Labirinto",  mapId: "ziggy",   star2: 3000, star3: 6000 },
+  ];
+  let activeLevel = 1;
+  const Progress = (() => {
+    const KEY = "overhead_campaign_v1";
+    const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+    const save = (o) => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} };
+    return {
+      get(id) { return load()[id] || { best: 0, stars: 0 }; },
+      record(id, score, stars) {
+        const all = load(), cur = all[id] || { best: 0, stars: 0 };
+        all[id] = { best: Math.max(cur.best, score), stars: Math.max(cur.stars, stars) };
+        save(all); return all[id];
+      },
+      totalStars() { return Object.values(load()).reduce((s, e) => s + (e.stars || 0), 0); },
+      unlocked(id) { return id <= 1 || (load()[id - 1] || {}).stars >= 1; },
+    };
+  })();
+  const levelById = (id) => LEVELS.find((l) => l.id === id) || LEVELS[0];
+  const starsFor = (lv, score, won) => (!won ? 0 : score >= lv.star3 ? 3 : score >= lv.star2 ? 2 : 1);
+
   // ----- Tipos de torre (esferas) -----
   const TOWER_TYPES = [
     {
@@ -186,6 +211,7 @@
     const diff = DIFFICULTIES[(state && state.difficulty)] || DIFFICULTIES.normal;
     state = {
       difficulty: (state && state.difficulty) || "normal",
+      levelId: activeLevel,
       souls: diff.souls,
       lives: diff.lives,
       score: 0,
@@ -1402,19 +1428,27 @@
   // ===================================================================
   let pendingScore = null; // { score, wave, won } aguardando salvar no leaderboard
 
+  let lastResult = { stars: 0, level: null };
+
   function loseGame() {
     state.gameOver = true; state.won = false; state.running = false;
     Sound.play("lose");
-    const n = state.towers.length;
-    showOverlay("💀 Fim de jogo", `A Torre Mestra caiu na <b>onda ${state.wave}</b>.`,
-      `★ ${state.score} pontos · ${n} esfera${n !== 1 ? "s" : ""} erguida${n !== 1 ? "s" : ""}`, true);
+    const lv = levelById(activeLevel);
+    Progress.record(lv.id, state.score, 0);
+    lastResult = { stars: 0, level: lv };
+    showOverlay("💀 Derrota", `A Torre Mestra caiu na <b>onda ${state.wave}</b>.`,
+      `★ ${state.score} pontos`, true);
   }
   function winGame() {
     if (state.gameOver) return;
     state.gameOver = true; state.won = true; state.running = false;
     Sound.play("win");
-    showOverlay("🏆 Vitória!", `Você defendeu a Torre Mestra por todas as ${CONFIG.totalWaves} ondas!`,
-      `★ ${state.score} pontos · ${state.lives} vidas restantes`, true);
+    const lv = levelById(activeLevel);
+    const stars = starsFor(lv, state.score, true);
+    Progress.record(lv.id, state.score, stars);
+    lastResult = { stars, level: lv };
+    showOverlay("🏆 Fase concluída!", `Fase ${lv.id} — <b>${lv.name}</b>`,
+      `★ ${state.score} pontos · ${state.lives} vidas`, true);
   }
 
   let lastShareText = "";
@@ -1424,32 +1458,37 @@
     ov.querySelector("h1").textContent = title;
     document.getElementById("overlay-msg").innerHTML = msg;
     document.getElementById("overlay-stats").textContent = stats || "";
-    document.getElementById("overlay-btn").textContent = isResult ? "Jogar novamente" : "Jogar";
+    document.getElementById("overlay-btn").textContent = isResult ? "🗺 Mapa de fases" : "Jogar";
 
     // estado visual: menu × resultado (vitória/derrota)
     ov.classList.toggle("result", !!isResult);
     ov.classList.toggle("win", !!isResult && state.won);
     ov.classList.toggle("lose", !!isResult && !state.won);
 
+    // estrelas conquistadas (só em vitória)
+    const starsEl = document.getElementById("result-stars");
+    if (isResult && state.won) {
+      const n = lastResult.stars;
+      starsEl.innerHTML = [1, 2, 3].map((i) => `<span class="${i <= n ? "on" : ""}">★</span>`).join("");
+      starsEl.hidden = false;
+    } else {
+      starsEl.hidden = true;
+    }
+
     // botão de compartilhar (só em resultado)
     const shareBtn = document.getElementById("share-btn");
     if (isResult) {
-      const verbo = state.won ? "venci" : "sobrevivi até";
-      lastShareText = `Overhead 🏰 — ${verbo} a onda ${state.wave} com ${state.score} pontos!`;
+      const lv = lastResult.level;
+      lastShareText = state.won
+        ? `Overhead 🏰 — ${lastResult.stars}★ na fase ${lv ? lv.id : "?"} (${state.score} pts)!`
+        : `Overhead 🏰 — caí na onda ${state.wave} (${state.score} pts).`;
       shareBtn.hidden = false;
     } else {
       shareBtn.hidden = true;
     }
 
-    // fila para salvar pontuação, se qualificar
-    const saveRow = document.getElementById("save-row");
-    if (isResult && Leaderboard.qualifies(state.score)) {
-      pendingScore = { score: state.score, wave: state.wave, won: state.won };
-      saveRow.hidden = false;
-    } else {
-      pendingScore = null;
-      saveRow.hidden = true;
-    }
+    pendingScore = null;
+    document.getElementById("save-row").hidden = true;
     renderLeaderboard();
     renderBest();
     ov.classList.add("show");
@@ -1457,17 +1496,15 @@
   }
 
   function renderBest() {
-    const best = Leaderboard.top()[0];
     const el = document.getElementById("best");
-    el.textContent = best
-      ? `Recorde: ${best.score} pts · ${best.won ? "venceu 🏆" : "onda " + best.wave} (${best.name})`
-      : "";
+    const total = Progress.totalStars(), max = LEVELS.length * 3;
+    el.textContent = total > 0 ? `⭐ ${total}/${max} estrelas` : "";
   }
 
   function renderLeaderboard(highlightDate) {
     const el = document.getElementById("leaderboard");
-    const list = Leaderboard.top();
-    if (list.length === 0) { el.innerHTML = ""; return; } // sem ruído no menu limpo
+    const list = [];
+    if (list.length === 0) { el.innerHTML = ""; return; } // ranking agora é por fase (no mapa)
     let rows = "";
     list.forEach((e, i) => {
       const hl = e.date === highlightDate ? " class=\"hl\"" : "";
@@ -1555,25 +1592,36 @@
   }
   renderDifficulty();
 
-  // seletor de mapa
-  function renderMaps() {
-    const cur = Prefs.get("map") || "serpent";
-    const box = document.getElementById("map-modes");
-    box.innerHTML = "";
-    for (const m of MAPS) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "seg-btn" + (cur === m.id ? " active" : "");
-      b.textContent = m.name;
-      b.addEventListener("click", () => {
-        Prefs.set("map", m.id);
-        renderMaps();
-        applyMap(m.id);  // mostra o novo mapa atrás do menu na hora
-      });
-      box.appendChild(b);
+  // ----- Mapa de fases (campanha) -----
+  const starRow = (n) => `<span class="lv-stars">` +
+    [1, 2, 3].map((i) => `<span class="${i <= n ? "on" : ""}">★</span>`).join("") + `</span>`;
+  function renderLevels() {
+    const list = document.getElementById("levels-list");
+    list.innerHTML = "";
+    document.getElementById("levels-total").textContent = `⭐ ${Progress.totalStars()}/${LEVELS.length * 3}`;
+    for (const lv of LEVELS) {
+      const open = Progress.unlocked(lv.id);
+      const p = Progress.get(lv.id);
+      const card = document.createElement(open ? "button" : "div");
+      card.className = "level-card" + (open ? "" : " locked");
+      card.innerHTML =
+        `<span class="lv-num">${lv.id}</span>` +
+        `<span class="lv-info"><span class="lv-name">${lv.name}</span>` +
+        `<span class="lv-meta">${open ? (p.best > 0 ? "Melhor: " + p.best + " pts" : "Não jogada") : "🔒 Zere a fase anterior"}</span></span>` +
+        (open ? starRow(p.stars) : `<span class="lv-lock">🔒</span>`);
+      if (open) card.addEventListener("click", () => startLevel(lv.id));
+      list.appendChild(card);
     }
   }
-  renderMaps();
+  function openLevels() { renderLevels(); document.getElementById("levels").classList.add("show"); }
+  function startLevel(id) {
+    Sound.init();
+    activeLevel = id;
+    Prefs.set("map", levelById(id).mapId);
+    document.getElementById("levels").classList.remove("show");
+    beginGame(false);
+    if (!Prefs.get("seenTutorial")) showCoach();
+  }
 
   // controles de áudio (volume + música)
   document.getElementById("volume-slider").addEventListener("input", (e) => {
@@ -1675,11 +1723,10 @@
     updateHUD();
   }
 
+  // "Jogar" (menu) e "Mapa de fases" (resultado) abrem o mapa de fases
   document.getElementById("overlay-btn").addEventListener("click", () => {
     Sound.init();
-    beginGame(document.getElementById("endless-check").checked);
-    // mostra o coach na primeira jogada
-    if (!Prefs.get("seenTutorial")) showCoach();
+    openLevels();
   });
 
   // ----- Menu de pausa: continuar / reiniciar / menu principal -----
@@ -1776,6 +1823,7 @@
 
     // controle de partida
     reset: () => {
+      activeLevel = 1;
       newGame();
       for (const n of NODES) n.taken = false;
       document.getElementById("overlay").classList.remove("show");
@@ -1842,6 +1890,14 @@
     mapId: () => currentMap,
     mapCount: () => MAPS.length,
     setMap: (id) => { Prefs.set("map", id); applyMap(id); return currentMap; },
+    // campanha
+    levelCount: () => LEVELS.length,
+    levelId: () => state.levelId,
+    startLevel: (id) => startLevel(id),
+    openLevels: () => openLevels(),
+    levelInfo: (id) => ({ ...Progress.get(id), unlocked: Progress.unlocked(id) }),
+    totalStars: () => Progress.totalStars(),
+    setScore: (n) => { state.score = n; updateHUD(); }, // p/ testar limiares de estrela
     enemyTypeCount: () => Object.keys(ENEMY_TYPES).length,
     useAbility: (k) => activateAbility(k),
     abilityCd: (k) => +(state.abilities[k] || 0).toFixed(1),

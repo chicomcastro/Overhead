@@ -830,3 +830,32 @@ html, body {
     transform: scale(0.97);
   }
 }
+
+/* ---------- Resultado: estrelas conquistadas ---------- */
+.result-stars { font-size: 38px; letter-spacing: 6px; margin: 4px 0 12px; color: rgba(255,255,255,0.18); }
+.result-stars .on { color: var(--score); text-shadow: 0 0 14px rgba(255,209,102,0.6); }
+
+/* ---------- Mapa de fases (campanha) ---------- */
+.levels-panel { width: min(440px, 94vw); max-height: 86vh; }
+.levels-head { display: flex; align-items: baseline; justify-content: center; gap: 10px; margin-bottom: 4px; }
+.levels-total { color: var(--score); font-weight: 700; font-size: 14px; }
+.levels-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; margin-bottom: 6px; }
+.level-card {
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  background: var(--panel-2); border: 1px solid rgba(110,231,255,0.18);
+  border-radius: 14px; padding: 12px 14px; color: var(--text); cursor: pointer; transition: 0.15s;
+}
+.level-card:not(.locked):hover { border-color: rgba(110,231,255,0.5); transform: translateY(-1px); }
+.level-card.locked { opacity: 0.55; cursor: default; }
+.level-card .lv-num {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--souls)); color: #06121e;
+}
+.level-card.locked .lv-num { background: #2a3550; color: var(--muted); }
+.level-card .lv-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.level-card .lv-name { font-weight: 700; font-size: 15px; }
+.level-card .lv-meta { font-size: 12px; color: var(--muted); }
+.level-card .lv-lock { font-size: 18px; }
+.lv-stars { letter-spacing: 2px; color: rgba(255,255,255,0.2); font-size: 16px; flex: 0 0 auto; }
+.lv-stars .on { color: var(--score); }
