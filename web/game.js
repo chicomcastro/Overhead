@@ -1609,25 +1609,25 @@
       list.appendChild(row);
     }
   }
-  // toggles recolhíveis do menu (opções / como jogar)
-  function toggleSection(btnId, panelId) {
-    const btn = document.getElementById(btnId);
-    const panel = document.getElementById(panelId);
-    btn.addEventListener("click", () => {
-      const open = panel.hidden;
-      panel.hidden = !open;
-      btn.classList.toggle("open", open);
-    });
+  // ----- Bottom sheets (Opções / Como jogar / Bestiário) -----
+  function openSheet(id) {
+    const s = document.getElementById(id);
+    if (id === "bestiary") renderBestiary();
+    s.classList.add("show");
   }
-  toggleSection("options-btn", "options-panel");
-  toggleSection("howto-btn", "how-to");
-
-  document.getElementById("bestiary-btn").addEventListener("click", () => {
-    renderBestiary();
-    document.getElementById("bestiary").classList.add("show");
-  });
-  document.getElementById("bestiary-close").addEventListener("click", () => {
-    document.getElementById("bestiary").classList.remove("show");
+  function closeSheet(s) { s.classList.remove("show"); }
+  document.getElementById("options-btn").addEventListener("click", () => openSheet("options-sheet"));
+  document.getElementById("howto-btn").addEventListener("click", () => openSheet("howto-sheet"));
+  document.getElementById("bestiary-btn").addEventListener("click", () => openSheet("bestiary"));
+  // fechar: botão [data-close] ou toque no fundo (fora do painel).
+  // No menu de pausa, fechar = continuar (precisa despausar o jogo).
+  document.querySelectorAll(".sheet").forEach((sheet) => {
+    sheet.addEventListener("click", (ev) => {
+      if (ev.target === sheet || ev.target.closest("[data-close]")) {
+        if (sheet.id === "pause-menu") setPaused(false);
+        else closeSheet(sheet);
+      }
+    });
   });
 
   document.getElementById("save-btn").addEventListener("click", () => {
@@ -1780,6 +1780,7 @@
       for (const n of NODES) n.taken = false;
       document.getElementById("overlay").classList.remove("show");
       document.getElementById("save-row").hidden = true;
+      const sp = document.getElementById("splash"); if (sp) sp.classList.add("hide"); // testes
       updateTowerButtons(); updateHUD();
     },
     startWave: () => startWave(),
@@ -1918,3 +1919,10 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker.register("service-worker.js").catch(() => {});
   });
 }
+
+// Splash de abertura (visível só no mobile via CSS): some sozinho após um instante.
+(function () {
+  const splash = document.getElementById("splash");
+  if (!splash) return;
+  setTimeout(() => splash.classList.add("hide"), 850);
+})();
