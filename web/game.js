@@ -121,22 +121,22 @@
   //  waves = duração; hp = escala de vida; reqStars = estrelas TOTAIS p/ destravar.
   const LEVELS = [
     { id: 1, name: "Despertar",     mapId: "serpent", waves: 5,  enemies: [], boss: false, hp: 0.9,
-      star2: 700,  star3: 1500, reqStars: 0,
+      star2: 500,  star3: 1000, reqStars: 0,
       intro: "Almas perdidas se aproximam do Núcleo. Erga esferas nos nós azuis e segure a linha." },
     { id: 2, name: "Sussurros",     mapId: "serpent", waves: 7,  enemies: ["fast"], boss: false, hp: 1.0,
-      star2: 1500, star3: 3000, reqStars: 2,
+      star2: 1000, star3: 1900, reqStars: 2,
       intro: "Espectros velozes surgem. A Esfera Gélida (lentidão) ajuda a contê-los." },
     { id: 3, name: "Encruzilhada",  mapId: "comb",    waves: 8,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
-      star2: 2400, star3: 4600, reqStars: 5,
+      star2: 1800, star3: 3400, reqStars: 4,
       intro: "Carrascos blindados avançam devagar. Concentre dano para derrubá-los." },
     { id: 4, name: "Céus Sombrios", mapId: "comb",    waves: 9,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
-      star2: 3400, star3: 6200, reqStars: 8,
+      star2: 2300, star3: 4500, reqStars: 6,
       intro: "Almas Aladas cortam reto até o Núcleo, ignorando o caminho. Cubra o ar." },
     { id: 5, name: "O Labirinto",   mapId: "ziggy",   waves: 10, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.1,
-      star2: 4400, star3: 8000, reqStars: 12,
+      star2: 3100, star3: 6000, reqStars: 8,
       intro: "Sacerdotes curam os inimigos próximos. Elimine-os primeiro." },
     { id: 6, name: "O Ceifador",    mapId: "ziggy",   waves: 12, enemies: ["fast", "tank", "flyer", "healer"], boss: true, hp: 1.15,
-      star2: 5600, star3: 9800, reqStars: 16,
+      star2: 5300, star3: 10200, reqStars: 10,
       intro: "O Ceifador desperta a cada 5 ondas. Tudo que você aprendeu será testado." },
   ];
   let activeLevel = 1;

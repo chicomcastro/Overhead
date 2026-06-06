@@ -1,34 +1,33 @@
 import { test } from "@playwright/test";
 
-// Ferramenta de balanceamento (NÃO é teste de regressão — sem asserts).
-// Joga as 20 ondas com uma estratégia fixa "razoável" e imprime a progressão
-// por onda, em cada dificuldade. Use para comparar números antes/depois de
-// ajustar o balanceamento.  Rodar:  npm run balance
+// Ferramenta de balanceamento da CAMPANHA (NÃO é teste de regressão — sem asserts).
+// Joga CADA fase com um build "razoável" e imprime: venceu?, onda final, score,
+// vidas restantes e total vazado. Use os números para calibrar os limiares de
+// estrela (star2/star3), a escala de HP e os requisitos por fase.
+//   Rodar:  npm run balance
 //
-// Estratégia do jogador-robô:
-//  - cobre os nós: 1 em cada 3 vira Esfera Fatal (doom), o resto Esfera de Alma;
-//  - melhora as torres em rodízio enquanto puder pagar;
-//  - despeja o excedente de almas em melhorias globais (dmg, depois rng).
+// Jogador-robô: cobre os nós (1 em cada 3 vira Esfera Fatal, resto Esfera de Alma),
+// melhora as torres em rodízio e despeja o excedente em melhorias globais.
 
-async function startWith(page, difficulty) {
+async function boot(page) {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__OVERHEAD);
-  await page.evaluate((d) => {
+  await page.evaluate(() => {
     localStorage.setItem("overhead_prefs_v1", JSON.stringify({
       sound: false, speed: 1, endless: false, seenTutorial: true,
-      difficulty: d, volume: 0, music: false, map: "serpent",
+      difficulty: "normal", volume: 0, music: false, map: "serpent",
     }));
-  }, difficulty);
+  });
   await page.reload();
   await page.waitForFunction(() => !!window.__OVERHEAD);
-  await page.locator("#overlay-btn").click();
 }
 
-async function simulate(page) {
-  return page.evaluate(() => {
+async function playLevel(page, id) {
+  return page.evaluate((id) => {
     const O = window.__OVERHEAD;
+    O.startLevel(id);
+    O.setSpeed(0);
     function manage() {
-      // 1) cobre nós livres (1 doom a cada 3, resto soul)
       let free = O.freeNodes();
       while (free.length) {
         const souls = O.snapshot().souls;
@@ -38,14 +37,12 @@ async function simulate(page) {
         else break;
         free = O.freeNodes();
       }
-      // 2) melhora torres em rodízio enquanto puder pagar
       for (let pass = 0; pass < 16; pass++) {
         const occ = O.nodes().filter((n) => n.taken).map((n) => n.i);
         let any = false;
         for (const i of occ) if (O.upgradeAt(i)) any = true;
         if (!any) break;
       }
-      // 3) excedente de almas -> melhorias globais
       let guard = 0;
       while (guard++ < 40) {
         const s = O.snapshot().souls;
@@ -54,43 +51,41 @@ async function simulate(page) {
         else break;
       }
     }
-    const log = [];
-    for (let w = 1; w <= 20; w++) {
+    let leaked = 0, guardW = 0;
+    while (guardW++ < 40) {
+      const s = O.snapshot();
+      if (s.gameOver) break;
       manage();
       const pre = O.snapshot();
       O.startWave();
-      let guard = 0;
-      while (guard++ < 800) {
+      let g = 0;
+      while (g++ < 1200) {
         O.step(0.5);
-        const s = O.snapshot();
-        if (s.gameOver) break;
-        if (!s.running && s.enemies === 0 && s.queued === 0) break;
+        const ss = O.snapshot();
+        if (ss.gameOver) break;
+        if (!ss.running && ss.enemies === 0 && ss.queued === 0) break;
       }
       const post = O.snapshot();
-      log.push({
-        w, leaked: pre.lives - post.lives, lives: post.lives, souls: post.souls,
-        towers: post.towers.length, lvls: post.towers.reduce((a, t) => a + t.level, 0),
-        g: post.globals.dmg + "/" + post.globals.rng, over: post.gameOver, won: post.won,
-      });
+      leaked += Math.max(0, pre.lives - post.lives);
       if (post.gameOver) break;
     }
-    return log;
-  });
+    const f = O.snapshot();
+    return { won: f.won, wave: f.wave, score: f.score, lives: f.lives, leaked };
+  }, id);
 }
 
-for (const diff of ["easy", "normal", "hard"]) {
-  test(`balance ${diff}`, async ({ page }) => {
-    await startWith(page, diff);
-    const log = await simulate(page);
-    const last = log[log.length - 1];
-    console.log(`\n===== ${diff.toUpperCase()} =====`);
-    console.log("onda | vazou | vidas | almas | torres | nivsoma | glob(dmg/rng)");
-    for (const r of log) {
-      console.log(
-        `${String(r.w).padStart(2)}   |  ${String(r.leaked).padStart(3)}  | ${String(r.lives).padStart(4)} | ${String(r.souls).padStart(5)} |   ${String(r.towers).padStart(2)}   |   ${String(r.lvls).padStart(3)}   | ${r.g}`
-      );
-    }
-    const res = last.won ? "VENCEU as 20 ondas" : "DERROTA na onda " + last.w;
-    console.log(`RESULTADO ${diff}: ${res} — vidas finais ${last.lives}`);
-  });
-}
+test("balance campanha (por fase)", async ({ page }) => {
+  await boot(page);
+  const n = await page.evaluate(() => window.__OVERHEAD.levelCount());
+  console.log("\n===== CAMPANHA (build razoável) =====");
+  console.log("fase | venceu | onda | score | vidas | vazou | sugestão 2★/3★");
+  for (let id = 1; id <= n; id++) {
+    const r = await playLevel(page, id);
+    // sugestão: 2★ ~ 70% do score do bot razoável; 3★ ~ 1.35× do bot
+    const s2 = Math.round((r.score * 0.7) / 100) * 100;
+    const s3 = Math.round((r.score * 1.35) / 100) * 100;
+    console.log(
+      `  ${id}  |  ${r.won ? "SIM" : "não"}  |  ${String(r.wave).padStart(2)}  | ${String(r.score).padStart(5)} |  ${String(r.lives).padStart(3)} |  ${String(r.leaked).padStart(3)} | ${s2}/${s3}`
+    );
+  }
+});
