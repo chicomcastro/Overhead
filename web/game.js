@@ -116,17 +116,35 @@
   }
   applyMap("serpent");
 
-  // ----- Campanha: fases com estrelas (1★ vencer, 2★/3★ por pontuação) -----
+  // ----- Campanha: fases com estrelas + introdução progressiva de mecânicas.
+  //  enemies = tipos liberados além da Alma comum; boss = chefe a cada 5 ondas;
+  //  waves = duração; hp = escala de vida; reqStars = estrelas TOTAIS p/ destravar.
   const LEVELS = [
-    { id: 1, name: "Despertar",    mapId: "serpent", star2: 1500, star3: 3200 },
-    { id: 2, name: "Encruzilhada", mapId: "comb",    star2: 2200, star3: 4500 },
-    { id: 3, name: "O Labirinto",  mapId: "ziggy",   star2: 3000, star3: 6000 },
+    { id: 1, name: "Despertar",     mapId: "serpent", waves: 5,  enemies: [], boss: false, hp: 0.9,
+      star2: 700,  star3: 1500, reqStars: 0,
+      intro: "Almas perdidas se aproximam do Núcleo. Erga esferas nos nós azuis e segure a linha." },
+    { id: 2, name: "Sussurros",     mapId: "serpent", waves: 7,  enemies: ["fast"], boss: false, hp: 1.0,
+      star2: 1500, star3: 3000, reqStars: 2,
+      intro: "Espectros velozes surgem. A Esfera Gélida (lentidão) ajuda a contê-los." },
+    { id: 3, name: "Encruzilhada",  mapId: "comb",    waves: 8,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
+      star2: 2400, star3: 4600, reqStars: 5,
+      intro: "Carrascos blindados avançam devagar. Concentre dano para derrubá-los." },
+    { id: 4, name: "Céus Sombrios", mapId: "comb",    waves: 9,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
+      star2: 3400, star3: 6200, reqStars: 8,
+      intro: "Almas Aladas cortam reto até o Núcleo, ignorando o caminho. Cubra o ar." },
+    { id: 5, name: "O Labirinto",   mapId: "ziggy",   waves: 10, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.1,
+      star2: 4400, star3: 8000, reqStars: 12,
+      intro: "Sacerdotes curam os inimigos próximos. Elimine-os primeiro." },
+    { id: 6, name: "O Ceifador",    mapId: "ziggy",   waves: 12, enemies: ["fast", "tank", "flyer", "healer"], boss: true, hp: 1.15,
+      star2: 5600, star3: 9800, reqStars: 16,
+      intro: "O Ceifador desperta a cada 5 ondas. Tudo que você aprendeu será testado." },
   ];
   let activeLevel = 1;
   const Progress = (() => {
     const KEY = "overhead_campaign_v1";
     const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
     const save = (o) => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} };
+    const total = () => Object.values(load()).reduce((s, e) => s + (e.stars || 0), 0);
     return {
       get(id) { return load()[id] || { best: 0, stars: 0 }; },
       record(id, score, stars) {
@@ -134,11 +152,13 @@
         all[id] = { best: Math.max(cur.best, score), stars: Math.max(cur.stars, stars) };
         save(all); return all[id];
       },
-      totalStars() { return Object.values(load()).reduce((s, e) => s + (e.stars || 0), 0); },
-      unlocked(id) { return id <= 1 || (load()[id - 1] || {}).stars >= 1; },
+      totalStars: total,
+      // desbloqueio por estrelas acumuladas (estilo Overcooked)
+      unlocked(id) { const lv = LEVELS.find((l) => l.id === id) || { reqStars: 0 }; return total() >= lv.reqStars; },
     };
   })();
   const levelById = (id) => LEVELS.find((l) => l.id === id) || LEVELS[0];
+  const levelWaves = () => levelById(activeLevel).waves || CONFIG.totalWaves;
   const starsFor = (lv, score, won) => (!won ? 0 : score >= lv.star3 ? 3 : score >= lv.star2 ? 2 : 1);
 
   // ----- Tipos de torre (esferas) -----
@@ -189,17 +209,19 @@
 
   // Composição de cada onda (lista de tipos de inimigo)
   function buildWave(n) {
+    const cfg = levelById(activeLevel);
+    const allow = cfg.enemies || [];
     const list = [];
-    const count = 6 + Math.floor(n * 1.9);
+    const count = 5 + Math.floor(n * 1.8);
     for (let i = 0; i < count; i++) {
       let t = "grunt";
-      if (n >= 2 && i % 4 === 0) t = "fast";     // espectros já na onda 2
-      if (n >= 4 && i % 6 === 0) t = "tank";     // carrascos a partir da onda 4
-      if (n >= 4 && i % 7 === 3) t = "flyer";    // voadores a partir da onda 4
-      if (n >= 6 && i % 9 === 4) t = "healer";   // curandeiros a partir da onda 6
+      if (allow.includes("fast")   && i % 4 === 0) t = "fast";
+      if (allow.includes("tank")   && i % 6 === 0) t = "tank";
+      if (allow.includes("flyer")  && i % 7 === 3) t = "flyer";
+      if (allow.includes("healer") && i % 9 === 4) t = "healer";
       list.push(t);
     }
-    if (n % 5 === 0) list.push("boss"); // chefe a cada 5 ondas
+    if (cfg.boss && n % 5 === 0) list.push("boss"); // chefe a cada 5 ondas (fases finais)
     return list;
   }
 
@@ -435,7 +457,7 @@
   function startWave() {
     if (state.running || state.gameOver) return;
     state.wave++;
-    if (!state.endless && state.wave > CONFIG.totalWaves) { winGame(); return; }
+    if (!state.endless && state.wave > levelWaves()) { winGame(); return; }
     state.running = true;
     state.betweenTimer = 0;
     state.spawnQueue = buildWave(state.wave);
@@ -452,7 +474,7 @@
 
   function spawnEnemy(typeId) {
     const t = ENEMY_TYPES[typeId];
-    const maxHP = waveHP() * t.hpMul * diffCfg().hpMul;
+    const maxHP = waveHP() * t.hpMul * diffCfg().hpMul * (levelById(activeLevel).hp || 1);
     state.enemies.push({
       type: typeId, def: t,
       x: PATH[0].x, y: PATH[0].y,
@@ -702,7 +724,7 @@
         // onda concluída
         state.running = false;
         state.betweenTimer = CONFIG.timeBetweenWaves;
-        if (!state.endless && state.wave >= CONFIG.totalWaves) winGame();
+        if (!state.endless && state.wave >= levelWaves()) winGame();
         updateHUD();
       }
     } else if (state.betweenTimer > 0 && state.wave > 0) {
@@ -1359,7 +1381,7 @@
     const el = document.getElementById("wave-preview");
     if (!el) return;
     const next = state.wave + 1;
-    const lastWave = !state.endless && state.wave >= CONFIG.totalWaves;
+    const lastWave = !state.endless && state.wave >= levelWaves();
     if (state.running || state.gameOver || lastWave) { el.hidden = true; return; }
 
     // conta inimigos por tipo, preservando a ordem de ENEMY_TYPES
@@ -1604,10 +1626,13 @@
       const p = Progress.get(lv.id);
       const card = document.createElement(open ? "button" : "div");
       card.className = "level-card" + (open ? "" : " locked");
+      const meta = open
+        ? (p.best > 0 ? "Melhor: " + p.best + " pts" : lv.intro)
+        : `🔒 Requer ${lv.reqStars}★`;
       card.innerHTML =
         `<span class="lv-num">${lv.id}</span>` +
         `<span class="lv-info"><span class="lv-name">${lv.name}</span>` +
-        `<span class="lv-meta">${open ? (p.best > 0 ? "Melhor: " + p.best + " pts" : "Não jogada") : "🔒 Zere a fase anterior"}</span></span>` +
+        `<span class="lv-meta">${meta}</span></span>` +
         (open ? starRow(p.stars) : `<span class="lv-lock">🔒</span>`);
       if (open) card.addEventListener("click", () => startLevel(lv.id));
       list.appendChild(card);

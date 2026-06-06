@@ -115,7 +115,8 @@ test.describe("campanha", () => {
     // "Jogar" abre o mapa de fases com as 3 fases; a 2 começa bloqueada
     await page.locator("#overlay-btn").click();
     await expect(page.locator("#levels")).toHaveClass(/show/);
-    await expect(page.locator(".level-card")).toHaveCount(3);
+    const total = await page.evaluate(() => window.__OVERHEAD.levelCount());
+    await expect(page.locator(".level-card")).toHaveCount(total);
     expect(await page.evaluate(() => window.__OVERHEAD.levelInfo(2).unlocked)).toBe(false);
 
     // joga a fase 1 e vence com pontuação alta → 3★
@@ -133,10 +134,10 @@ test.describe("campanha", () => {
     expect(await page.evaluate(() => window.__OVERHEAD.levelInfo(1).best)).toBeGreaterThanOrEqual(9999);
     expect(await page.evaluate(() => window.__OVERHEAD.levelInfo(2).unlocked)).toBe(true);
 
-    // voltar ao mapa de fases: agora só a fase 3 segue bloqueada (1 e 2 abertas)
+    // voltar ao mapa de fases: a fase 2 agora está aberta (desbloqueio acumulado)
     await page.locator("#overlay-btn").click();
     await expect(page.locator("#levels")).toHaveClass(/show/);
-    await expect(page.locator(".level-card.locked")).toHaveCount(1);
+    expect(await page.evaluate(() => window.__OVERHEAD.levelInfo(2).unlocked)).toBe(true);
   });
 });
 
