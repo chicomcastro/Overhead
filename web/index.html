@@ -115,7 +115,8 @@
         <p class="subtitle menu-only">Tower Defense — Web Edition</p>
         <p id="overlay-msg">Defenda a Torre Mestra das ondas de almas perdidas.</p>
 
-        <!-- resultado (vitória/derrota): mensagem + stats -->
+        <!-- resultado (vitória/derrota): estrelas + stats -->
+        <div id="result-stars" class="result-stars" hidden></div>
         <div id="best"></div>
         <div id="overlay-stats"></div>
         <div id="save-row" hidden>
@@ -145,14 +146,22 @@
       </div>
     </div>
 
+    <!-- Mapa de fases (campanha) -->
+    <div id="levels" class="sheet">
+      <div class="panel sheet-panel levels-panel">
+        <div class="levels-head">
+          <h2 class="sheet-title">Mapa de Fases</h2>
+          <span id="levels-total" class="levels-total"></span>
+        </div>
+        <div id="levels-list" class="levels-list"></div>
+        <button type="button" class="ghost-btn" data-close>Fechar</button>
+      </div>
+    </div>
+
     <!-- Sheet: Opções -->
     <div id="options-sheet" class="sheet">
       <div class="panel sheet-panel">
         <h2 class="sheet-title">Opções</h2>
-        <div id="map-row" class="seg-row">
-          <span class="seg-label">Mapa</span>
-          <div id="map-modes" class="seg-modes"></div>
-        </div>
         <div id="audio-row" class="seg-row">
           <span class="seg-label">Áudio</span>
           <input type="range" id="volume-slider" min="0" max="100" value="45" aria-label="Volume" />

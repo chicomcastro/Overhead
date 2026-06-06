@@ -137,8 +137,8 @@ test("tutorial de primeira jogada aparece uma vez", async ({ page }) => {
   await gotoFresh(page);
   await page.evaluate(() => window.__OVERHEAD.resetTutorial());
 
-  // 1ª jogada: o coach aparece e cabe na tela
-  await page.locator("#overlay-btn").click();
+  // 1ª jogada (inicia uma fase): o coach aparece e cabe na tela
+  await page.evaluate(() => window.__OVERHEAD.startLevel(1));
   expect(await page.evaluate(() => window.__OVERHEAD.coachVisible())).toBe(true);
   await expectInViewport(page, ".coach-card");
 
@@ -149,6 +149,6 @@ test("tutorial de primeira jogada aparece uma vez", async ({ page }) => {
   // recarrega (localStorage persiste) e joga de novo: não reaparece
   await page.reload();
   await page.waitForFunction(() => !!window.__OVERHEAD);
-  await page.locator("#overlay-btn").click();
+  await page.evaluate(() => window.__OVERHEAD.startLevel(1));
   expect(await page.evaluate(() => window.__OVERHEAD.coachVisible())).toBe(false);
 });
