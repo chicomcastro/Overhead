@@ -42,7 +42,9 @@ sobrando sem ralo. O HP crescia ~4× mais rápido que o teto de dano.
 ## 🗺️ Campanha — roadmap
 
 - [x] **Fundação** (PR #24): mapa de fases, estrelas, best por fase, desbloqueio, save.
+- [x] **Conteúdo** (PR #25): 6 fases com mecânicas/inimigos crescentes + intros; desbloqueio por estrelas acumuladas.
 - [ ] **Conteúdo**: ampliar p/ ~8–10 fases com ondas/mecânicas/inimigos crescentes + textos (história).
+- [ ] **Modo Livre** separado (dificuldade + mapa + infinito), tirando a dificuldade do fluxo da campanha.
 - [ ] **Fase de tutorial** dedicada como fase 1 (onboarding guiado).
 - [ ] **Polish**: visual do mapa (caminho entre fases, estrelas animadas), 'Próxima fase' direto no resultado.
 
