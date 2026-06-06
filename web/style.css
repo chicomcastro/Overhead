@@ -778,18 +778,23 @@ html, body {
     border-top-left-radius: 18px;
     border-top-right-radius: 18px;
   }
-  #start-btn { bottom: max(0px, env(safe-area-inset-bottom)); }
+  /* o espaço da safe-area vem do padding da loja; o botão sticky fica em
+     bottom:0 (offset levantaria o botão e cobriria a última melhoria global). */
+  #start-btn { bottom: 0; }
 
-  /* MENU = tela cheia de app (sem cartão flutuante) */
+  /* MENU = tela cheia de app (sem cartão flutuante); CTA ancorado embaixo */
   #overlay { padding: 0; align-items: stretch; }
   #overlay > .panel {
     width: 100%; max-width: 100%; min-height: 100%;
     border: none; border-radius: 0; box-shadow: none;
-    display: flex; flex-direction: column; justify-content: center;
+    display: flex; flex-direction: column; justify-content: flex-start;
     padding: calc(env(safe-area-inset-top) + 30px) 22px calc(env(safe-area-inset-bottom) + 26px);
     overflow-y: auto;
     animation: menu-in 0.4s ease both;
   }
+  /* empurra dificuldade + Jogar + ações para a base (zona do polegar);
+     hero e leaderboard ficam no topo. */
+  #overlay > .panel > #difficulty-row { margin-top: auto; }
   @keyframes menu-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
   /* ações do menu como lista (linhas) com chevron — padrão de app */
