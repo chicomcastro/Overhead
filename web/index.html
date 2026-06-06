@@ -134,57 +134,77 @@
         <button id="overlay-btn">Jogar</button>
         <button id="share-btn" class="share-btn" hidden>↗ Compartilhar resultado</button>
 
-        <!-- ações secundárias -->
+        <!-- ações secundárias (abrem bottom sheets) -->
         <div class="menu-actions">
-          <button type="button" id="options-btn" class="link-btn">⚙ Opções</button>
-          <button type="button" id="howto-btn" class="link-btn menu-only">❓ Como jogar</button>
-          <button type="button" id="bestiary-btn" class="link-btn">👹 Bestiário</button>
+          <button type="button" id="options-btn" class="link-btn"><span class="ic">⚙</span><span class="lbl">Opções</span><span class="chev">›</span></button>
+          <button type="button" id="howto-btn" class="link-btn menu-only"><span class="ic">❓</span><span class="lbl">Como jogar</span><span class="chev">›</span></button>
+          <button type="button" id="bestiary-btn" class="link-btn"><span class="ic">👹</span><span class="lbl">Bestiário</span><span class="chev">›</span></button>
         </div>
-
-        <!-- painel de opções (recolhível) -->
-        <div id="options-panel" hidden>
-          <div id="map-row" class="seg-row">
-            <span class="seg-label">Mapa</span>
-            <div id="map-modes" class="seg-modes"></div>
-          </div>
-          <div id="audio-row" class="seg-row">
-            <span class="seg-label">Áudio</span>
-            <input type="range" id="volume-slider" min="0" max="100" value="45" aria-label="Volume" />
-            <button type="button" id="music-toggle" class="seg-btn">♪ Música</button>
-          </div>
-          <label id="endless-row">
-            <input type="checkbox" id="endless-check" />
-            <span>Modo infinito <small>(sem fim na onda 20)</small></span>
-          </label>
-        </div>
-
-        <!-- como jogar (recolhível) -->
-        <ol id="how-to" class="menu-only" hidden>
-          <li><b>Escolha</b> uma esfera na loja</li>
-          <li><b>Toque num nó azul</b> do mapa para construí-la</li>
-          <li><b>Inicie a onda</b> e defenda a Torre Mestra</li>
-        </ol>
 
         <p class="credits menu-only">Remake web do original (Unity) por chicomcastro &amp; equipe.</p>
       </div>
     </div>
 
+    <!-- Sheet: Opções -->
+    <div id="options-sheet" class="sheet">
+      <div class="panel sheet-panel">
+        <h2 class="sheet-title">Opções</h2>
+        <div id="map-row" class="seg-row">
+          <span class="seg-label">Mapa</span>
+          <div id="map-modes" class="seg-modes"></div>
+        </div>
+        <div id="audio-row" class="seg-row">
+          <span class="seg-label">Áudio</span>
+          <input type="range" id="volume-slider" min="0" max="100" value="45" aria-label="Volume" />
+          <button type="button" id="music-toggle" class="seg-btn">♪ Música</button>
+        </div>
+        <label id="endless-row">
+          <input type="checkbox" id="endless-check" />
+          <span>Modo infinito <small>(sem fim na onda 20)</small></span>
+        </label>
+        <button type="button" class="ghost-btn" data-close>Pronto</button>
+      </div>
+    </div>
+
+    <!-- Sheet: Como jogar -->
+    <div id="howto-sheet" class="sheet">
+      <div class="panel sheet-panel">
+        <h2 class="sheet-title">Como jogar</h2>
+        <ol id="how-to">
+          <li><b>Escolha</b> uma esfera na loja</li>
+          <li><b>Toque num nó azul</b> do mapa para construí-la</li>
+          <li><b>Inicie a onda</b> e defenda a Torre Mestra</li>
+        </ol>
+        <button type="button" class="ghost-btn" data-close>Entendi</button>
+      </div>
+    </div>
+
     <!-- Bestiário (lista de inimigos) -->
-    <div id="bestiary">
-      <div class="panel bestiary-panel">
-        <h1>Bestiário</h1>
+    <div id="bestiary" class="sheet">
+      <div class="panel sheet-panel bestiary-panel">
+        <h2 class="sheet-title">Bestiário</h2>
         <div id="bestiary-list"></div>
-        <button id="bestiary-close" class="ghost-btn">Fechar</button>
+        <button id="bestiary-close" class="ghost-btn" data-close>Fechar</button>
       </div>
     </div>
 
     <!-- Menu de pausa -->
-    <div id="pause-menu">
-      <div class="panel pause-panel">
-        <h1>Pausado</h1>
+    <div id="pause-menu" class="sheet">
+      <div class="panel sheet-panel pause-panel">
+        <h2 class="sheet-title">Pausado</h2>
         <button id="resume-btn">▶ Continuar</button>
         <button id="restart-btn" class="ghost-btn">⟲ Reiniciar fase</button>
         <button id="menu-btn" class="ghost-btn">≡ Menu principal</button>
+      </div>
+    </div>
+
+    <!-- Splash de abertura (mobile) -->
+    <div id="splash">
+      <div class="splash-inner">
+        <img src="icon.svg" alt="" class="splash-logo" />
+        <div class="splash-title">OVERHEAD</div>
+        <div class="splash-sub">Tower Defense</div>
+        <div class="splash-bar"><span></span></div>
       </div>
     </div>
   </div>

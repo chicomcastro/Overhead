@@ -116,6 +116,7 @@ test.describe("variedade de mapa", () => {
     expect(await page.evaluate(() => window.__OVERHEAD.mapId())).toBe("serpent");
 
     await page.locator("#map-modes .seg-btn", { hasText: /^Pente$/ }).click();
+    await page.locator("#options-sheet [data-close]").click(); // fecha o sheet
     await page.locator("#overlay-btn").click();
     expect(await page.evaluate(() => window.__OVERHEAD.mapId())).toBe("comb");
 

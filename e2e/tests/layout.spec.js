@@ -40,13 +40,14 @@ test("menu: controles essenciais presentes e visíveis", async ({ page }) => {
   await expect(page.locator("#overlay")).toBeVisible();
   await expect(page.locator("#difficulty-modes .seg-btn")).toHaveCount(3); // escolha primária
   await expect(page.locator("#options-btn")).toBeVisible();    // acesso às opções
-  await expect(page.locator("#options-panel")).toBeHidden();   // recolhido por padrão
+  await expect(page.locator("#options-sheet")).not.toHaveClass(/show/); // sheet fechado
   await expect(page.locator("#save-row")).toBeHidden();        // só aparece ao pontuar
   await expect(page.locator("#overlay-btn")).toBeVisible();
   await expectInViewport(page, "#overlay-btn");                // botão Jogar acessível
 
-  // abrir Opções revela mapa/áudio/modo infinito
+  // abrir Opções (bottom sheet) revela mapa/áudio/modo infinito
   await page.locator("#options-btn").click();
+  await expect(page.locator("#options-sheet")).toHaveClass(/show/);
   await expect(page.locator("#endless-check")).toBeVisible();
 });
 
