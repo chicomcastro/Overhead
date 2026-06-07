@@ -105,16 +105,97 @@
       ],
     },
     {
-      // Mapa de DUAS entradas: inimigos vêm pela esquerda E pelo topo, convergindo no Núcleo.
+      // DUAS entradas (esquerda + topo) que se fundem num corredor até o Núcleo.
       id: "fork", name: "Bifurcação",
       paths: [
-        [ { x: -40, y: 200 }, { x: 280, y: 200 }, { x: 280, y: 400 }, { x: 660, y: 400 } ],
-        [ { x: 980, y: -40 }, { x: 980, y: 400 }, { x: 660, y: 400 } ],
+        [ { x: -40, y: 200 }, { x: 260, y: 200 }, { x: 260, y: 400 }, { x: 660, y: 400 }, { x: 660, y: 580 } ],
+        [ { x: 980, y: -40 }, { x: 980, y: 400 }, { x: 660, y: 400 }, { x: 660, y: 580 } ],
       ],
       nodes: [
-        { x: 140, y: 320 }, { x: 280, y: 300 }, { x: 430, y: 300 }, { x: 430, y: 500 },
-        { x: 660, y: 540 }, { x: 800, y: 300 }, { x: 980, y: 280 }, { x: 1120, y: 300 },
-        { x: 540, y: 200 }, { x: 140, y: 520 }, { x: 800, y: 520 }, { x: 1120, y: 520 },
+        { x: 560, y: 470 }, { x: 760, y: 470 }, { x: 560, y: 580 }, { x: 760, y: 580 },
+        { x: 460, y: 300 }, { x: 800, y: 280 }, { x: 260, y: 300 }, { x: 980, y: 280 },
+        { x: 140, y: 300 }, { x: 1120, y: 300 }, { x: 660, y: 260 }, { x: 900, y: 540 },
+      ],
+    },
+    {
+      // DUAS entradas opostas (esquerda + direita) que se fundem e descem ao Núcleo.
+      id: "cross", name: "Cruzamento",
+      paths: [
+        [ { x: -40, y: 180 }, { x: 440, y: 180 }, { x: 440, y: 360 }, { x: 640, y: 360 }, { x: 640, y: 620 } ],
+        [ { x: 1320, y: 180 }, { x: 840, y: 180 }, { x: 840, y: 360 }, { x: 640, y: 360 }, { x: 640, y: 620 } ],
+      ],
+      nodes: [
+        { x: 540, y: 460 }, { x: 740, y: 460 }, { x: 540, y: 580 }, { x: 740, y: 580 },
+        { x: 300, y: 180 }, { x: 980, y: 180 }, { x: 300, y: 360 }, { x: 980, y: 360 },
+        { x: 440, y: 500 }, { x: 840, y: 500 }, { x: 640, y: 260 }, { x: 1120, y: 360 },
+      ],
+    },
+    {
+      // DUAS entradas (topo + base) que se fundem num corredor horizontal até o Núcleo.
+      id: "gates", name: "Portões",
+      paths: [
+        [ { x: 500, y: -40 }, { x: 500, y: 360 }, { x: 1120, y: 360 } ],
+        [ { x: 500, y: 760 }, { x: 500, y: 360 }, { x: 1120, y: 360 } ],
+      ],
+      nodes: [
+        { x: 640, y: 280 }, { x: 640, y: 440 }, { x: 820, y: 280 }, { x: 820, y: 440 },
+        { x: 960, y: 280 }, { x: 960, y: 440 }, { x: 360, y: 300 }, { x: 360, y: 440 },
+        { x: 500, y: 180 }, { x: 500, y: 540 }, { x: 180, y: 360 }, { x: 1040, y: 200 },
+      ],
+    },
+    {
+      // TRÊS entradas pelo topo (esq, centro, dir) que se fundem e descem ao Núcleo.
+      id: "delta", name: "Delta",
+      paths: [
+        [ { x: 220, y: -40 }, { x: 220, y: 440 }, { x: 640, y: 440 }, { x: 640, y: 640 } ],
+        [ { x: 1060, y: -40 }, { x: 1060, y: 440 }, { x: 640, y: 440 }, { x: 640, y: 640 } ],
+        [ { x: 640, y: -40 }, { x: 640, y: 640 } ],
+      ],
+      nodes: [
+        { x: 540, y: 520 }, { x: 740, y: 520 }, { x: 540, y: 620 }, { x: 740, y: 620 },
+        { x: 420, y: 440 }, { x: 860, y: 440 }, { x: 220, y: 300 }, { x: 1060, y: 300 },
+        { x: 120, y: 500 }, { x: 1160, y: 500 }, { x: 400, y: 640 }, { x: 880, y: 640 },
+      ],
+    },
+    {
+      // UMA entrada, percurso em ferradura ao redor da arena.
+      id: "horseshoe", name: "Ferradura",
+      paths: [[
+        { x: -40, y: 120 }, { x: 1120, y: 120 }, { x: 1120, y: 600 },
+        { x: 160, y: 600 }, { x: 160, y: 360 }, { x: 640, y: 360 },
+      ]],
+      nodes: [
+        { x: 200, y: 240 }, { x: 460, y: 240 }, { x: 720, y: 240 }, { x: 980, y: 240 },
+        { x: 1000, y: 420 }, { x: 460, y: 470 }, { x: 720, y: 470 }, { x: 300, y: 260 },
+        { x: 500, y: 690 }, { x: 780, y: 690 }, { x: 1040, y: 690 }, { x: 640, y: 480 },
+      ],
+    },
+    {
+      // UMA entrada longa e sinuosa, atravessando "câmaras".
+      id: "chambers", name: "Câmaras",
+      paths: [[
+        { x: -40, y: 100 }, { x: 500, y: 100 }, { x: 500, y: 300 }, { x: 200, y: 300 },
+        { x: 200, y: 500 }, { x: 820, y: 500 }, { x: 820, y: 250 }, { x: 1120, y: 250 },
+        { x: 1120, y: 620 }, { x: 600, y: 620 },
+      ]],
+      nodes: [
+        { x: 180, y: 200 }, { x: 700, y: 200 }, { x: 350, y: 200 }, { x: 350, y: 400 },
+        { x: 1000, y: 150 }, { x: 1000, y: 400 }, { x: 660, y: 400 }, { x: 980, y: 560 },
+        { x: 660, y: 560 }, { x: 400, y: 620 }, { x: 200, y: 620 }, { x: 1180, y: 450 },
+      ],
+    },
+    {
+      // UMA entrada em espiral, fechando até o Núcleo no centro.
+      id: "spiral", name: "Espiral",
+      paths: [[
+        { x: -40, y: 60 }, { x: 1180, y: 60 }, { x: 1180, y: 660 }, { x: 120, y: 660 },
+        { x: 120, y: 200 }, { x: 900, y: 200 }, { x: 900, y: 520 }, { x: 420, y: 520 },
+        { x: 420, y: 360 }, { x: 620, y: 360 },
+      ]],
+      nodes: [
+        { x: 300, y: 130 }, { x: 600, y: 130 }, { x: 900, y: 130 }, { x: 50, y: 400 },
+        { x: 1060, y: 400 }, { x: 300, y: 590 }, { x: 660, y: 590 }, { x: 1040, y: 590 },
+        { x: 620, y: 260 }, { x: 760, y: 360 }, { x: 300, y: 360 }, { x: 990, y: 300 },
       ],
     },
   ];
@@ -134,24 +215,36 @@
   //  enemies = tipos liberados além da Alma comum; boss = chefe a cada 5 ondas;
   //  waves = duração; hp = escala de vida; reqStars = estrelas TOTAIS p/ destravar.
   const LEVELS = [
-    { id: 1, name: "Despertar",     mapId: "serpent", waves: 5,  enemies: [], boss: false, hp: 0.9,
+    { id: 1, name: "Despertar",     mapId: "serpent",   waves: 5,  enemies: [], boss: false, hp: 0.9,
       star2: 500,  star3: 1000, reqStars: 0, tutorial: true,
       intro: "Almas perdidas se aproximam do Núcleo. Erga esferas nos nós azuis e segure a linha." },
-    { id: 2, name: "Sussurros",     mapId: "serpent", waves: 7,  enemies: ["fast"], boss: false, hp: 1.0,
-      star2: 1000, star3: 1900, reqStars: 2,
-      intro: "Espectros velozes surgem. A Esfera Gélida (lentidão) ajuda a contê-los." },
-    { id: 3, name: "Encruzilhada",  mapId: "comb",    waves: 8,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
-      star2: 1800, star3: 3400, reqStars: 4,
-      intro: "Carrascos blindados avançam devagar. Concentre dano para derrubá-los." },
-    { id: 4, name: "Céus Sombrios", mapId: "comb",    waves: 9,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
-      star2: 2300, star3: 4500, reqStars: 6,
-      intro: "Almas Aladas cortam reto até o Núcleo, ignorando o caminho. Cubra o ar." },
-    { id: 5, name: "O Labirinto",   mapId: "ziggy",   waves: 10, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.1,
-      star2: 3100, star3: 6000, reqStars: 8,
-      intro: "Sacerdotes curam os inimigos próximos. Elimine-os primeiro." },
-    { id: 6, name: "O Ceifador",    mapId: "ziggy",   waves: 12, enemies: ["fast", "tank", "flyer", "healer"], boss: true, hp: 1.15,
-      star2: 5300, star3: 10200, reqStars: 10,
-      intro: "O Ceifador desperta a cada 5 ondas. Tudo que você aprendeu será testado." },
+    { id: 2, name: "Sussurros",     mapId: "comb",      waves: 6,  enemies: ["fast"], boss: false, hp: 1.0,
+      star2: 800,  star3: 1500, reqStars: 2,
+      intro: "Espectros velozes surgem entre os dentes do Pente. A Esfera Gélida ajuda a contê-los." },
+    { id: 3, name: "Encruzilhada",  mapId: "ziggy",     waves: 7,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
+      star2: 1300, star3: 2500, reqStars: 4,
+      intro: "Carrascos blindados sobem o ziguezague. Concentre dano para derrubá-los." },
+    { id: 4, name: "Duas Frentes",  mapId: "fork",      waves: 8,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
+      star2: 1800, star3: 3400, reqStars: 6,
+      intro: "O caminho se divide: as almas vêm por DUAS frentes. Não deixe nenhuma passar." },
+    { id: 5, name: "Céus Sombrios", mapId: "horseshoe", waves: 8,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
+      star2: 1800, star3: 3500, reqStars: 8,
+      intro: "Almas Aladas cortam reto ao Núcleo, ignorando a ferradura. Cubra o ar." },
+    { id: 6, name: "O Cerco",       mapId: "cross",     waves: 9,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
+      star2: 2300, star3: 4500, reqStars: 10,
+      intro: "Cerco! Inimigos avançam pela esquerda e pela direita ao mesmo tempo." },
+    { id: 7, name: "Procissão",     mapId: "chambers",  waves: 9,  enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.1,
+      star2: 2600, star3: 4900, reqStars: 12,
+      intro: "Sacerdotes curam os feridos pelas câmaras. Elimine-os primeiro." },
+    { id: 8, name: "Portões",       mapId: "gates",     waves: 10, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.05,
+      star2: 3100, star3: 6000, reqStars: 14,
+      intro: "Dois portões — um pelo céu, um pelas profundezas — despejam tudo sobre o Núcleo." },
+    { id: 9, name: "Espiral",       mapId: "spiral",    waves: 11, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.2,
+      star2: 4200, star3: 8000, reqStars: 16,
+      intro: "A espiral os traz devagar — mas em peso. Defenda em camadas." },
+    { id: 10, name: "O Ceifador",   mapId: "delta",     waves: 12, enemies: ["fast", "tank", "flyer", "healer"], boss: true, hp: 1.1,
+      star2: 5200, star3: 10100, reqStars: 18,
+      intro: "O Ceifador comanda TRÊS frentes e desperta a cada 5 ondas. O teste final." },
   ];
   let activeLevel = 1;
   let gameMode = "campaign"; // "campaign" (fases, sem dificuldade) | "free" (Modo Livre)
