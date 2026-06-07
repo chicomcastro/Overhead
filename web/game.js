@@ -432,6 +432,10 @@
       });
     }
   }
+  // anel de impacto que expande e some — base do "juice"
+  function spawnRing(x, y, color, maxR = 50, life = 0.45) {
+    state.particles.push({ x, y, vx: 0, vy: 0, life, maxLife: life, color, ring: true, maxR });
+  }
 
   // ===================================================================
   //  SOM — efeitos sintetizados via Web Audio (sem arquivos externos)
@@ -589,7 +593,18 @@
     state.spawnQueue = buildWave(state.wave);
     state.spawnTimer = 0;
     Sound.play("wave");
+    showWaveBanner(state.wave);
     updateHUD();
+  }
+
+  // banner "Onda N" que entra animado (juice)
+  function showWaveBanner(n) {
+    const b = document.getElementById("wave-banner");
+    if (!b) return;
+    b.textContent = "Onda " + n;
+    b.classList.remove("show");
+    void b.offsetWidth; // reinicia a animação CSS
+    b.classList.add("show");
   }
 
   function waveHP() {
@@ -641,6 +656,7 @@
     };
     state.towers.push(tower);
     spawnParticles(node.x, node.y, type.color, 12);
+    spawnRing(node.x, node.y, type.color, 46, 0.4);          // pop de construção
     spawnFloater(node.x, node.y - 22, "✓ " + type.name, type.color, 16); // confirmação
     Sound.play("build");
     buzz(18); // confirmação tátil
@@ -799,8 +815,11 @@
     } else {
       spawnFloater(e.x, e.y, "+" + reward, "#b388ff", 14);
     }
-    spawnParticles(e.x, e.y, e.def.color, 14, 130);
-    Sound.play(e.type === "boss" ? "boss_die" : "kill");
+    const boss = e.type === "boss";
+    spawnParticles(e.x, e.y, e.def.color, boss ? 40 : 16, boss ? 240 : 140);
+    spawnRing(e.x, e.y, e.def.color, boss ? 140 : 42, boss ? 0.7 : 0.4);
+    if (boss) state.shake = Math.max(state.shake, 0.35);
+    Sound.play(boss ? "boss_die" : "kill");
     updateHUD();
   }
 
@@ -901,6 +920,7 @@
           e.dead = true;
           state.lives--;
           spawnParticles(CORE.x, CORE.y, "#ff6b81", 18, 160);
+          spawnRing(CORE.x, CORE.y, "#ff6b81", 70, 0.5);
           spawnFloater(CORE.x, CORE.y - 40, "-1 ♥", "#ff6b81", 22);
           state.shake = 0.4;  // tremor + vinheta de dano
           state.flash = 0.6;
@@ -1211,9 +1231,16 @@
 
   function drawParticles() {
     for (const pt of state.particles) {
-      ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
-      ctx.fillStyle = pt.color;
-      ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2); ctx.fill();
+      const a = Math.max(0, pt.life / pt.maxLife);
+      ctx.globalAlpha = a;
+      if (pt.ring) {
+        const r = pt.maxR * (1 - a) + 6;
+        ctx.strokeStyle = pt.color; ctx.lineWidth = 3 * a + 0.5;
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2); ctx.stroke();
+      } else {
+        ctx.fillStyle = pt.color;
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2); ctx.fill();
+      }
     }
     ctx.globalAlpha = 1;
   }
@@ -1826,11 +1853,41 @@
         `<span class="lv-info"><span class="lv-name">${lv.name}${badge}</span>` +
         `<span class="lv-meta">${meta}</span></span>` +
         (open ? starRow(p.stars) : `<span class="lv-lock">🔒</span>`);
-      if (open) card.addEventListener("click", () => startLevel(lv.id));
+      if (open) card.addEventListener("click", () => openLevelIntro(lv.id));
       list.appendChild(card);
     }
   }
   function openLevels() { renderLevels(); document.getElementById("levels").classList.add("show"); }
+
+  // ----- Telinha de introdução da fase (história + o que esperar) -----
+  function mapEntrances(mapId) { const m = MAPS.find((x) => x.id === mapId); return m && m.paths ? m.paths.length : 1; }
+  function openLevelIntro(id) {
+    const lv = levelById(id);
+    const m = MAPS.find((x) => x.id === lv.mapId);
+    const ent = mapEntrances(lv.mapId);
+    const icons = ["grunt", ...(lv.enemies || []), ...(lv.boss ? ["boss"] : [])]
+      .map((t) => ENEMY_TYPES[t].icon).join(" ");
+    document.getElementById("li-num").textContent = "Fase " + lv.id + (lv.tutorial ? " · Tutorial" : "");
+    document.getElementById("li-name").textContent = lv.name;
+    document.getElementById("li-story").textContent = lv.intro;
+    document.getElementById("li-chips").innerHTML =
+      `<span class="li-chip">🗺 ${m ? m.name : ""}</span>` +
+      `<span class="li-chip">${ent > 1 ? "⚔ " + ent + " entradas" : "→ 1 entrada"}</span>` +
+      `<span class="li-chip">${icons}</span>`;
+    const ov = document.getElementById("level-intro");
+    ov.dataset.level = String(id);
+    document.getElementById("levels").classList.remove("show");
+    ov.classList.add("show");
+  }
+  document.getElementById("li-start").addEventListener("click", () => {
+    const id = +document.getElementById("level-intro").dataset.level || 1;
+    document.getElementById("level-intro").classList.remove("show");
+    startLevel(id);
+  });
+  document.getElementById("li-back").addEventListener("click", () => {
+    document.getElementById("level-intro").classList.remove("show");
+    openLevels();
+  });
   function startLevel(id) {
     Sound.init();
     gameMode = "campaign";
@@ -2005,7 +2062,7 @@
   document.getElementById("next-level-btn").addEventListener("click", () => {
     Sound.init();
     const nid = +document.getElementById("next-level-btn").dataset.next;
-    if (nid) startLevel(nid);
+    if (nid) openLevelIntro(nid);
   });
 
   // ----- Menu de pausa: continuar / reiniciar / menu principal -----
