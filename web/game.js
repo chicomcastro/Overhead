@@ -121,7 +121,7 @@
   //  waves = duração; hp = escala de vida; reqStars = estrelas TOTAIS p/ destravar.
   const LEVELS = [
     { id: 1, name: "Despertar",     mapId: "serpent", waves: 5,  enemies: [], boss: false, hp: 0.9,
-      star2: 500,  star3: 1000, reqStars: 0,
+      star2: 500,  star3: 1000, reqStars: 0, tutorial: true,
       intro: "Almas perdidas se aproximam do Núcleo. Erga esferas nos nós azuis e segure a linha." },
     { id: 2, name: "Sussurros",     mapId: "serpent", waves: 7,  enemies: ["fast"], boss: false, hp: 1.0,
       star2: 1000, star3: 1900, reqStars: 2,
@@ -1528,6 +1528,16 @@
       starsEl.hidden = true;
     }
 
+    // "Próxima fase": só em vitória de campanha com a fase seguinte já desbloqueada
+    const nextBtn = document.getElementById("next-level-btn");
+    let nextId = null;
+    if (isResult && state.won && lastResult.mode === "campaign") {
+      const nid = (lastResult.level ? lastResult.level.id : activeLevel) + 1;
+      if (LEVELS.some((l) => l.id === nid) && Progress.unlocked(nid)) nextId = nid;
+    }
+    if (nextId) { nextBtn.dataset.next = String(nextId); nextBtn.hidden = false; }
+    else nextBtn.hidden = true;
+
     // botão de compartilhar (só em resultado)
     const shareBtn = document.getElementById("share-btn");
     if (isResult) {
@@ -1667,21 +1677,30 @@
   // ----- Mapa de fases (campanha) -----
   const starRow = (n) => `<span class="lv-stars">` +
     [1, 2, 3].map((i) => `<span class="${i <= n ? "on" : ""}">★</span>`).join("") + `</span>`;
+  // próxima fase a jogar: 1ª desbloqueada ainda sem 3★ (destaque "atual")
+  function currentLevelId() {
+    for (const lv of LEVELS) {
+      if (Progress.unlocked(lv.id) && Progress.get(lv.id).stars < 3) return lv.id;
+    }
+    return null;
+  }
   function renderLevels() {
     const list = document.getElementById("levels-list");
     list.innerHTML = "";
     document.getElementById("levels-total").textContent = `⭐ ${Progress.totalStars()}/${LEVELS.length * 3}`;
+    const curId = currentLevelId();
     for (const lv of LEVELS) {
       const open = Progress.unlocked(lv.id);
       const p = Progress.get(lv.id);
       const card = document.createElement(open ? "button" : "div");
-      card.className = "level-card" + (open ? "" : " locked");
+      card.className = "level-card" + (open ? "" : " locked") + (lv.id === curId ? " current" : "");
+      const badge = lv.tutorial ? `<span class="lv-badge">Tutorial</span>` : "";
       const meta = open
         ? (p.best > 0 ? "Melhor: " + p.best + " pts" : lv.intro)
         : `🔒 Requer ${lv.reqStars}★`;
       card.innerHTML =
         `<span class="lv-num">${lv.id}</span>` +
-        `<span class="lv-info"><span class="lv-name">${lv.name}</span>` +
+        `<span class="lv-info"><span class="lv-name">${lv.name}${badge}</span>` +
         `<span class="lv-meta">${meta}</span></span>` +
         (open ? starRow(p.stars) : `<span class="lv-lock">🔒</span>`);
       if (open) card.addEventListener("click", () => startLevel(lv.id));
@@ -1696,7 +1715,9 @@
     Prefs.set("map", levelById(id).mapId);
     document.getElementById("levels").classList.remove("show");
     beginGame(false);
-    if (!Prefs.get("seenTutorial")) showCoach();
+    // guia: aparece na fase de tutorial enquanto ela não foi vencida, ou na 1ª jogada
+    const lv = levelById(id);
+    if ((lv.tutorial && !Progress.get(id).best) || !Prefs.get("seenTutorial")) showCoach();
   }
 
   // ----- Modo Livre: dificuldade + mapa + infinito, fora da campanha -----
@@ -1857,6 +1878,12 @@
   // Botões do Modo Livre
   document.getElementById("free-btn").addEventListener("click", () => { Sound.init(); openFreeSheet(); });
   document.getElementById("free-play").addEventListener("click", () => { Sound.init(); beginFreeGame(); });
+  // "Próxima fase" (resultado de vitória) inicia direto a fase seguinte
+  document.getElementById("next-level-btn").addEventListener("click", () => {
+    Sound.init();
+    const nid = +document.getElementById("next-level-btn").dataset.next;
+    if (nid) startLevel(nid);
+  });
 
   // ----- Menu de pausa: continuar / reiniciar / menu principal -----
   function setPaused(p) {
@@ -1883,6 +1910,7 @@
       "Defenda a Torre Mestra das ondas de almas perdidas.<br />Construa esferas, derrote os inimigos e sobreviva.";
     document.getElementById("overlay-btn").textContent = "Jogar";
     document.getElementById("share-btn").hidden = true;
+    document.getElementById("next-level-btn").hidden = true;
     document.getElementById("save-row").hidden = true;
     pendingScore = null;
     renderLeaderboard();
