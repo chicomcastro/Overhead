@@ -135,22 +135,26 @@ test("zoom: botões e setZoom alteram a escala e o reset enquadra", async ({ pag
   expect(await page.evaluate(() => window.__OVERHEAD.zoomState().zoom)).toBeLessThanOrEqual(3);
 });
 
-test("tutorial de primeira jogada aparece uma vez", async ({ page }) => {
+test("tutorial: o guia aparece na fase 1 até vencê-la, depois some", async ({ page }) => {
   await gotoFresh(page);
-  await page.evaluate(() => window.__OVERHEAD.resetTutorial());
+  await page.evaluate(() => { localStorage.removeItem("overhead_campaign_v1"); window.__OVERHEAD.resetTutorial(); });
 
-  // 1ª jogada (inicia uma fase): o coach aparece e cabe na tela
+  // 1ª jogada (fase-tutorial): o coach aparece e cabe na tela
   await page.evaluate(() => window.__OVERHEAD.startLevel(1));
   expect(await page.evaluate(() => window.__OVERHEAD.coachVisible())).toBe(true);
   await expectInViewport(page, ".coach-card");
-
-  // ao fechar, marca como visto (persistido)
   await page.locator("#coach-ok").click();
   expect(await page.evaluate(() => window.__OVERHEAD.coachVisible())).toBe(false);
 
-  // recarrega (localStorage persiste) e joga de novo: não reaparece
+  // ainda não venceu o tutorial: ao reentrar (mesmo após recarregar), o guia reaparece
   await page.reload();
   await page.waitForFunction(() => !!window.__OVERHEAD);
+  await page.evaluate(() => window.__OVERHEAD.startLevel(1));
+  expect(await page.evaluate(() => window.__OVERHEAD.coachVisible())).toBe(true);
+  await page.locator("#coach-ok").click();
+
+  // vence a fase 1 → o guia não reaparece mais
+  await page.evaluate(() => { window.__OVERHEAD.setScore(800); window.__OVERHEAD.endGame(true); });
   await page.evaluate(() => window.__OVERHEAD.startLevel(1));
   expect(await page.evaluate(() => window.__OVERHEAD.coachVisible())).toBe(false);
 });

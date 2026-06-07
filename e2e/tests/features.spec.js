@@ -152,6 +152,30 @@ test.describe("campanha", () => {
     await expect(page.locator("#levels")).toHaveClass(/show/);
     expect(await page.evaluate(() => window.__OVERHEAD.levelInfo(2).unlocked)).toBe(true);
   });
+
+  test("vitória oferece 'Próxima fase' que inicia a fase seguinte", async ({ page }) => {
+    await gotoFresh(page);
+    await page.evaluate(() => { localStorage.removeItem("overhead_campaign_v1"); window.__OVERHEAD.resetTutorial(); });
+    await page.reload();
+    await page.waitForFunction(() => !!window.__OVERHEAD);
+    // vence a fase 1 com 3★ → desbloqueia a fase 2
+    await page.evaluate(() => window.__OVERHEAD.startLevel(1));
+    if (await page.evaluate(() => window.__OVERHEAD.coachVisible())) await page.locator("#coach-ok").click();
+    await page.evaluate(() => { window.__OVERHEAD.setScore(9999); window.__OVERHEAD.endGame(true); });
+
+    const nextBtn = page.locator("#next-level-btn");
+    await expect(nextBtn).toBeVisible();
+    await nextBtn.click();
+    expect(await page.evaluate(() => window.__OVERHEAD.levelId())).toBe(2);
+    expect(await page.evaluate(() => window.__OVERHEAD.mode())).toBe("campaign");
+  });
+
+  test("fase 1 é o tutorial: abre o guia ao entrar", async ({ page }) => {
+    await gotoFresh(page);
+    await page.evaluate(() => { localStorage.removeItem("overhead_campaign_v1"); window.__OVERHEAD.dismissCoach(); });
+    await page.evaluate(() => window.__OVERHEAD.startLevel(1));
+    expect(await page.evaluate(() => window.__OVERHEAD.coachVisible())).toBe(true);
+  });
 });
 
 test.describe("feedback de dano no núcleo", () => {
