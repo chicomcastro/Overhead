@@ -1776,6 +1776,9 @@
     if (nextId) { nextBtn.dataset.next = String(nextId); nextBtn.hidden = false; }
     else nextBtn.hidden = true;
 
+    // "Repetir fase": em qualquer resultado de campanha (rejogar a fase atual)
+    document.getElementById("replay-btn").hidden = !(isResult && lastResult.mode === "campaign" && lastResult.level);
+
     // texto do compartilhamento (o gatilho agora é o ícone mini no detalhamento)
     if (isResult) {
       const lv = lastResult.level;
@@ -1797,7 +1800,17 @@
   function renderBest() {
     const el = document.getElementById("best");
     const total = Progress.totalStars(), max = LEVELS.length * 3;
-    el.textContent = total > 0 ? `⭐ ${total}/${max} estrelas` : "";
+    if (total <= 0) { el.innerHTML = ""; return; }
+    el.innerHTML =
+      `<button id="best-chip" class="best-chip" aria-expanded="false">⭐ ${total}/${max} <span class="best-i">ⓘ</span></button>` +
+      `<div id="best-info" class="best-info" hidden>` +
+      `Estrelas por fase: <b>★</b> vencer · <b>★★</b> invicto <i>ou</i> rápido · <b>★★★</b> invicto <i>e</i> rápido.</div>`;
+    const chip = document.getElementById("best-chip"), info = document.getElementById("best-info");
+    chip.addEventListener("click", () => {
+      const open = info.hidden;
+      info.hidden = !open;
+      chip.setAttribute("aria-expanded", String(open));
+    });
   }
 
   function renderLeaderboard(highlightDate) {
@@ -2146,6 +2159,11 @@
     const nid = +document.getElementById("next-level-btn").dataset.next;
     if (nid) openLevelIntro(nid);
   });
+  // "Repetir fase" (resultado) reinicia a fase atual direto
+  document.getElementById("replay-btn").addEventListener("click", () => {
+    Sound.init();
+    startLevel((lastResult.level && lastResult.level.id) || activeLevel);
+  });
 
   // ----- Menu de pausa: continuar / reiniciar / menu principal -----
   function setPaused(p) {
@@ -2173,6 +2191,7 @@
     document.getElementById("overlay-btn").textContent = "Jogar";
     document.getElementById("share-btn").hidden = true;
     document.getElementById("next-level-btn").hidden = true;
+    document.getElementById("replay-btn").hidden = true;
     document.getElementById("save-row").hidden = true;
     pendingScore = null;
     renderLeaderboard();

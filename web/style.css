@@ -697,7 +697,20 @@ html, body {
 }
 #endless-row input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
 #endless-row small { color: var(--muted); }
-#best { color: var(--score); font-weight: 700; margin-bottom: 12px; min-height: 0; }
+#best { margin-bottom: 12px; min-height: 0; }
+.best-chip {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  background: rgba(255,209,102,0.1); border: 1px solid rgba(255,209,102,0.3);
+  color: var(--score); font-weight: 700; font-size: 14px; border-radius: 999px; padding: 6px 14px;
+  transition: background 0.15s;
+}
+.best-chip:hover { background: rgba(255,209,102,0.18); }
+.best-chip .best-i { color: var(--muted); font-weight: 400; }
+.best-info {
+  max-width: 320px; margin: 8px auto 0; color: var(--muted); font-size: 12.5px; line-height: 1.5;
+  animation: intro-rise 0.25s ease both;
+}
+.best-info b { color: var(--score); }
 
 /* =====================================================================
  * MOBILE / telas estreitas — empilha o layout e torna a loja uma barra
@@ -909,12 +922,12 @@ html, body {
   /* hero no topo; ações ancoradas embaixo (zona do polegar), com o Jogar por
      ÚLTIMO botão. Só no menu — no resultado a ordem natural é mantida. */
   #overlay:not(.result) .menu-actions { order: 10; margin-top: auto; }
-  #overlay:not(.result) #free-btn { order: 11; }
-  #overlay:not(.result) #overlay-btn { order: 12; }
-  #overlay:not(.result) .credits { order: 13; }
+  #overlay:not(.result) #free-btn { order: 11; margin-top: 10px; }
+  #overlay:not(.result) #overlay-btn { order: 12; margin-top: 10px; }
   /* no RESULTADO: ações ancoradas embaixo, "Próxima fase" como principal (polegar) */
   #overlay.result #overlay-btn { order: 11; margin-top: auto; margin-bottom: 10px; }
-  #overlay.result #next-level-btn { order: 12; }
+  #overlay.result #replay-btn { order: 12; margin-bottom: 10px; }
+  #overlay.result #next-level-btn { order: 13; }
   @keyframes menu-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
   /* ações do menu como lista (linhas) com chevron — padrão de app */
