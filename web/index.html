@@ -125,14 +125,9 @@
         </div>
         <div id="leaderboard"></div>
 
-        <!-- escolha primária: dificuldade -->
-        <div id="difficulty-row" class="seg-row">
-          <span class="seg-label">Dificuldade</span>
-          <div id="difficulty-modes" class="seg-modes"></div>
-        </div>
-
-        <!-- ação principal -->
+        <!-- ações principais: Campanha (Jogar) + Modo Livre -->
         <button id="overlay-btn">Jogar</button>
+        <button type="button" id="free-btn" class="secondary-btn menu-only">🎮 Modo Livre</button>
         <button id="share-btn" class="share-btn" hidden>↗ Compartilhar resultado</button>
 
         <!-- ações secundárias (abrem bottom sheets) -->
@@ -159,6 +154,28 @@
       </div>
     </div>
 
+    <!-- Sheet: Modo Livre (dificuldade + mapa + infinito) -->
+    <div id="free-sheet" class="sheet">
+      <div class="panel sheet-panel">
+        <button type="button" class="sheet-close" data-close aria-label="Fechar">×</button>
+        <h2 class="sheet-title">Modo Livre</h2>
+        <p class="sheet-sub">Jogo avulso (sem progresso de estrelas): escolha a dificuldade, o mapa e se quer o modo infinito.</p>
+        <div id="difficulty-row" class="seg-row">
+          <span class="seg-label">Dificuldade</span>
+          <div id="difficulty-modes" class="seg-modes"></div>
+        </div>
+        <div id="map-row" class="seg-row">
+          <span class="seg-label">Mapa</span>
+          <div id="map-modes" class="seg-modes"></div>
+        </div>
+        <label id="endless-row">
+          <input type="checkbox" id="endless-check" />
+          <span>Modo infinito <small>(sem fim na onda 20)</small></span>
+        </label>
+        <button type="button" id="free-play">▶ Jogar</button>
+      </div>
+    </div>
+
     <!-- Sheet: Opções -->
     <div id="options-sheet" class="sheet">
       <div class="panel sheet-panel">
@@ -169,10 +186,6 @@
           <input type="range" id="volume-slider" min="0" max="100" value="45" aria-label="Volume" />
           <button type="button" id="music-toggle" class="seg-btn">♪ Música</button>
         </div>
-        <label id="endless-row">
-          <input type="checkbox" id="endless-check" />
-          <span>Modo infinito <small>(sem fim na onda 20)</small></span>
-        </label>
         <button type="button" class="ghost-btn" data-close>Pronto</button>
       </div>
     </div>

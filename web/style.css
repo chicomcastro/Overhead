@@ -423,6 +423,37 @@ html, body {
 #overlay-btn:hover { transform: scale(1.04); }
 .credits { color: var(--muted); font-size: 11px; margin-top: 22px; line-height: 1.5; }
 
+/* Botão secundário (Modo Livre, no menu) */
+.secondary-btn {
+  margin-top: 10px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  border: 1px solid rgba(110,231,255,0.3);
+  border-radius: 12px;
+  padding: 13px 30px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.secondary-btn:hover { background: rgba(110,231,255,0.12); }
+
+/* "Jogar" do Modo Livre = mesmo destaque do CTA principal */
+#free-play {
+  margin-top: 4px;
+  background: linear-gradient(90deg, var(--accent), #4ea8ff);
+  color: #04222c;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.15s;
+}
+#free-play:hover { transform: scale(1.02); }
+.sheet-sub { color: var(--muted); font-size: 13px; line-height: 1.45; text-align: center; margin: -4px 0 6px; }
+
 /* ---------- Estado de resultado (vitória / derrota) ---------- */
 #overlay.result .menu-only { display: none; }       /* esconde subtítulo/como-jogar/créditos */
 #overlay.result.win .panel h1 { background: linear-gradient(90deg, var(--score), #ffb347); -webkit-background-clip: text; background-clip: text; }

@@ -140,6 +140,7 @@
       intro: "O Ceifador desperta a cada 5 ondas. Tudo que você aprendeu será testado." },
   ];
   let activeLevel = 1;
+  let gameMode = "campaign"; // "campaign" (fases, sem dificuldade) | "free" (Modo Livre)
   const Progress = (() => {
     const KEY = "overhead_campaign_v1";
     const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
@@ -158,7 +159,8 @@
     };
   })();
   const levelById = (id) => LEVELS.find((l) => l.id === id) || LEVELS[0];
-  const levelWaves = () => levelById(activeLevel).waves || CONFIG.totalWaves;
+  const isFree = () => !!state && state.mode === "free";
+  const levelWaves = () => isFree() ? CONFIG.totalWaves : (levelById(activeLevel).waves || CONFIG.totalWaves);
   const starsFor = (lv, score, won) => (!won ? 0 : score >= lv.star3 ? 3 : score >= lv.star2 ? 2 : 1);
 
   // ----- Tipos de torre (esferas) -----
@@ -209,9 +211,24 @@
 
   // Composição de cada onda (lista de tipos de inimigo)
   function buildWave(n) {
+    const list = [];
+    // Modo Livre: progressão clássica (todos os inimigos liberados por onda).
+    if (isFree()) {
+      const count = 6 + Math.floor(n * 1.9);
+      for (let i = 0; i < count; i++) {
+        let t = "grunt";
+        if (n >= 2 && i % 4 === 0) t = "fast";
+        if (n >= 4 && i % 6 === 0) t = "tank";
+        if (n >= 4 && i % 7 === 3) t = "flyer";
+        if (n >= 6 && i % 9 === 4) t = "healer";
+        list.push(t);
+      }
+      if (n % 5 === 0) list.push("boss");
+      return list;
+    }
+    // Campanha: cada fase libera seus inimigos progressivamente (config da fase).
     const cfg = levelById(activeLevel);
     const allow = cfg.enemies || [];
-    const list = [];
     const count = 5 + Math.floor(n * 1.8);
     for (let i = 0; i < count; i++) {
       let t = "grunt";
@@ -233,6 +250,7 @@
     const diff = DIFFICULTIES[(state && state.difficulty)] || DIFFICULTIES.normal;
     state = {
       difficulty: (state && state.difficulty) || "normal",
+      mode: gameMode,
       levelId: activeLevel,
       souls: diff.souls,
       lives: diff.lives,
@@ -474,7 +492,7 @@
 
   function spawnEnemy(typeId) {
     const t = ENEMY_TYPES[typeId];
-    const maxHP = waveHP() * t.hpMul * diffCfg().hpMul * (levelById(activeLevel).hp || 1);
+    const maxHP = waveHP() * t.hpMul * diffCfg().hpMul * (isFree() ? 1 : (levelById(activeLevel).hp || 1));
     state.enemies.push({
       type: typeId, def: t,
       x: PATH[0].x, y: PATH[0].y,
@@ -1455,9 +1473,15 @@
   function loseGame() {
     state.gameOver = true; state.won = false; state.running = false;
     Sound.play("lose");
+    if (isFree()) {
+      lastResult = { stars: 0, level: null, mode: "free" };
+      showOverlay("💀 Derrota", `A Torre Mestra caiu na <b>onda ${state.wave}</b>.`,
+        `★ ${state.score} pontos`, true);
+      return;
+    }
     const lv = levelById(activeLevel);
     Progress.record(lv.id, state.score, 0);
-    lastResult = { stars: 0, level: lv };
+    lastResult = { stars: 0, level: lv, mode: "campaign" };
     showOverlay("💀 Derrota", `A Torre Mestra caiu na <b>onda ${state.wave}</b>.`,
       `★ ${state.score} pontos`, true);
   }
@@ -1465,10 +1489,16 @@
     if (state.gameOver) return;
     state.gameOver = true; state.won = true; state.running = false;
     Sound.play("win");
+    if (isFree()) {
+      lastResult = { stars: 0, level: null, mode: "free" };
+      showOverlay("🏆 Vitória!", `Você sobreviveu às <b>${CONFIG.totalWaves} ondas</b>!`,
+        `★ ${state.score} pontos · ${state.lives} vidas`, true);
+      return;
+    }
     const lv = levelById(activeLevel);
     const stars = starsFor(lv, state.score, true);
     Progress.record(lv.id, state.score, stars);
-    lastResult = { stars, level: lv };
+    lastResult = { stars, level: lv, mode: "campaign" };
     showOverlay("🏆 Fase concluída!", `Fase ${lv.id} — <b>${lv.name}</b>`,
       `★ ${state.score} pontos · ${state.lives} vidas`, true);
   }
@@ -1480,7 +1510,8 @@
     ov.querySelector("h1").textContent = title;
     document.getElementById("overlay-msg").innerHTML = msg;
     document.getElementById("overlay-stats").textContent = stats || "";
-    document.getElementById("overlay-btn").textContent = isResult ? "🗺 Mapa de fases" : "Jogar";
+    document.getElementById("overlay-btn").textContent =
+      isResult ? (lastResult.mode === "free" ? "🎮 Modo Livre" : "🗺 Mapa de fases") : "Jogar";
 
     // estado visual: menu × resultado (vitória/derrota)
     ov.classList.toggle("result", !!isResult);
@@ -1501,9 +1532,11 @@
     const shareBtn = document.getElementById("share-btn");
     if (isResult) {
       const lv = lastResult.level;
-      lastShareText = state.won
-        ? `Overhead 🏰 — ${lastResult.stars}★ na fase ${lv ? lv.id : "?"} (${state.score} pts)!`
-        : `Overhead 🏰 — caí na onda ${state.wave} (${state.score} pts).`;
+      lastShareText = lastResult.mode === "free"
+        ? `Overhead 🏰 — Modo Livre: onda ${state.wave} (${state.score} pts)!`
+        : (state.won
+          ? `Overhead 🏰 — ${lastResult.stars}★ na fase ${lv ? lv.id : "?"} (${state.score} pts)!`
+          : `Overhead 🏰 — caí na onda ${state.wave} (${state.score} pts).`);
       shareBtn.hidden = false;
     } else {
       shareBtn.hidden = true;
@@ -1614,6 +1647,23 @@
   }
   renderDifficulty();
 
+  // seletor de mapa (Modo Livre) — a campanha escolhe o mapa pela fase
+  function renderMaps() {
+    const box = document.getElementById("map-modes");
+    if (!box) return;
+    const cur = Prefs.get("map") || "serpent";
+    box.innerHTML = "";
+    for (const m of MAPS) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "seg-btn" + (cur === m.id ? " active" : "");
+      b.textContent = m.name;
+      b.addEventListener("click", () => { Prefs.set("map", m.id); renderMaps(); });
+      box.appendChild(b);
+    }
+  }
+  renderMaps();
+
   // ----- Mapa de fases (campanha) -----
   const starRow = (n) => `<span class="lv-stars">` +
     [1, 2, 3].map((i) => `<span class="${i <= n ? "on" : ""}">★</span>`).join("") + `</span>`;
@@ -1641,11 +1691,25 @@
   function openLevels() { renderLevels(); document.getElementById("levels").classList.add("show"); }
   function startLevel(id) {
     Sound.init();
+    gameMode = "campaign";
     activeLevel = id;
     Prefs.set("map", levelById(id).mapId);
     document.getElementById("levels").classList.remove("show");
     beginGame(false);
     if (!Prefs.get("seenTutorial")) showCoach();
+  }
+
+  // ----- Modo Livre: dificuldade + mapa + infinito, fora da campanha -----
+  function beginFreeGame() {
+    gameMode = "free";
+    document.getElementById("free-sheet").classList.remove("show");
+    beginGame(document.getElementById("endless-check").checked);
+  }
+  function openFreeSheet() {
+    renderDifficulty();
+    renderMaps();
+    document.getElementById("endless-check").checked = !!Prefs.get("endless");
+    openSheet("free-sheet");
   }
 
   // controles de áudio (volume + música)
@@ -1762,7 +1826,9 @@
 
   // Inicia uma partida do zero (usado pelo menu e pelo "Reiniciar fase").
   function beginGame(endless) {
-    state.difficulty = Prefs.get("difficulty") || "normal"; // newGame usa p/ recursos iniciais
+    // campanha não tem dificuldade (sempre "normal" + ajuste de HP por fase);
+    // a dificuldade só vale no Modo Livre.
+    state.difficulty = gameMode === "free" ? (Prefs.get("difficulty") || "normal") : "normal";
     applyMap(Prefs.get("map") || "serpent");                // carrega o mapa escolhido
     newGame();
     resetView();
@@ -1780,11 +1846,17 @@
     updateHUD();
   }
 
-  // "Jogar" (menu) e "Mapa de fases" (resultado) abrem o mapa de fases
+  // "Jogar" (menu) e "Mapa de fases" (resultado) abrem o mapa de fases;
+  // no resultado do Modo Livre, reabre o painel do Modo Livre.
   document.getElementById("overlay-btn").addEventListener("click", () => {
     Sound.init();
-    openLevels();
+    const ov = document.getElementById("overlay");
+    if (ov.classList.contains("result") && lastResult.mode === "free") openFreeSheet();
+    else openLevels();
   });
+  // Botões do Modo Livre
+  document.getElementById("free-btn").addEventListener("click", () => { Sound.init(); openFreeSheet(); });
+  document.getElementById("free-play").addEventListener("click", () => { Sound.init(); beginFreeGame(); });
 
   // ----- Menu de pausa: continuar / reiniciar / menu principal -----
   function setPaused(p) {
@@ -1880,6 +1952,7 @@
 
     // controle de partida
     reset: () => {
+      gameMode = "campaign";
       activeLevel = 1;
       newGame();
       for (const n of NODES) n.taken = false;
@@ -1951,6 +2024,8 @@
     levelCount: () => LEVELS.length,
     levelId: () => state.levelId,
     startLevel: (id) => startLevel(id),
+    startFree: () => beginFreeGame(),
+    mode: () => state.mode,
     openLevels: () => openLevels(),
     levelInfo: (id) => ({ ...Progress.get(id), unlocked: Progress.unlocked(id) }),
     totalStars: () => Progress.totalStars(),

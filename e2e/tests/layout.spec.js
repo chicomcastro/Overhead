@@ -38,16 +38,18 @@ async function expectInViewport(page, selector) {
 test("menu: controles essenciais presentes e visíveis", async ({ page }) => {
   await gotoFresh(page);
   await expect(page.locator("#overlay")).toBeVisible();
-  await expect(page.locator("#difficulty-modes .seg-btn")).toHaveCount(3); // escolha primária
+  await expect(page.locator("#overlay-btn")).toBeVisible();    // Jogar (campanha)
+  await expectInViewport(page, "#overlay-btn");                // botão Jogar acessível
+  await expect(page.locator("#free-btn")).toBeVisible();       // Modo Livre
   await expect(page.locator("#options-btn")).toBeVisible();    // acesso às opções
   await expect(page.locator("#options-sheet")).not.toHaveClass(/show/); // sheet fechado
   await expect(page.locator("#save-row")).toBeHidden();        // só aparece ao pontuar
-  await expect(page.locator("#overlay-btn")).toBeVisible();
-  await expectInViewport(page, "#overlay-btn");                // botão Jogar acessível
 
-  // abrir Opções (bottom sheet) revela mapa/áudio/modo infinito
-  await page.locator("#options-btn").click();
-  await expect(page.locator("#options-sheet")).toHaveClass(/show/);
+  // abrir Modo Livre (bottom sheet) revela dificuldade/mapa/modo infinito
+  await page.locator("#free-btn").click();
+  await expect(page.locator("#free-sheet")).toHaveClass(/show/);
+  await expect(page.locator("#difficulty-modes .seg-btn")).toHaveCount(3);
+  await expect(page.locator("#map-modes .seg-btn")).toHaveCount(3);
   await expect(page.locator("#endless-check")).toBeVisible();
 });
 
