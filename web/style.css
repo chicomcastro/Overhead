@@ -481,6 +481,8 @@ html, body {
 }
 .share-mini:hover { background: rgba(110,231,255,0.18); }
 .share-mini:active { transform: scale(0.9); }
+.share-mini.copied { background: rgba(110,231,255,0.32); border-color: var(--accent); }
+.share-mini svg { width: 15px; height: 15px; fill: currentColor; display: block; }
 .score-total .total-val { display: inline-flex; align-items: center; gap: 10px; }
 .lose-stat { display: flex; align-items: center; justify-content: center; gap: 12px; }
 /* título numa única linha + menor que o "OVERHEAD" do menu */
@@ -911,7 +913,7 @@ html, body {
   #overlay:not(.result) #overlay-btn { order: 12; }
   #overlay:not(.result) .credits { order: 13; }
   /* no RESULTADO: ações ancoradas embaixo, "Próxima fase" como principal (polegar) */
-  #overlay.result #overlay-btn { order: 11; margin-top: auto; }
+  #overlay.result #overlay-btn { order: 11; margin-top: auto; margin-bottom: 10px; }
   #overlay.result #next-level-btn { order: 12; }
   @keyframes menu-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
