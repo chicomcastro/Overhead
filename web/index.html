@@ -45,6 +45,7 @@
     <div id="stage">
       <div id="playfield">
         <canvas id="canvas"></canvas>
+        <div id="wave-banner" aria-hidden="true"></div>
         <div id="zoom-ctrls">
           <button id="zoom-in" title="Aproximar">+</button>
           <button id="zoom-out" title="Afastar" disabled>−</button>
@@ -139,6 +140,18 @@
         </div>
 
         <p class="credits menu-only">Remake web do original (Unity) por chicomcastro &amp; equipe.</p>
+      </div>
+    </div>
+
+    <!-- Telinha de introdução da fase (história + o que esperar) -->
+    <div id="level-intro" class="sheet">
+      <div class="panel sheet-panel intro-panel">
+        <span id="li-num" class="li-num"></span>
+        <h2 id="li-name" class="li-name"></h2>
+        <p id="li-story" class="li-story"></p>
+        <div id="li-chips" class="li-chips"></div>
+        <button type="button" id="li-start" class="intro-start">▶ Começar</button>
+        <button type="button" id="li-back" class="ghost-btn">Voltar ao mapa</button>
       </div>
     </div>
 

@@ -167,8 +167,26 @@ test.describe("campanha", () => {
     const nextBtn = page.locator("#next-level-btn");
     await expect(nextBtn).toBeVisible();
     await nextBtn.click();
+    // "Próxima fase" abre a intro da fase 2 → "Começar" inicia
+    await expect(page.locator("#level-intro")).toHaveClass(/show/);
+    await expect(page.locator("#li-name")).toHaveText("Sussurros");
+    await page.locator("#li-start").click();
     expect(await page.evaluate(() => window.__OVERHEAD.levelId())).toBe(2);
     expect(await page.evaluate(() => window.__OVERHEAD.mode())).toBe("campaign");
+  });
+
+  test("clicar numa fase abre a intro (história) e 'Começar' inicia", async ({ page }) => {
+    await gotoFresh(page);
+    await page.evaluate(() => { localStorage.removeItem("overhead_campaign_v1"); window.__OVERHEAD.resetTutorial(); });
+    await page.reload();
+    await page.waitForFunction(() => !!window.__OVERHEAD);
+    await page.locator("#overlay-btn").click();                 // abre o mapa de fases
+    await page.locator(".level-card").first().click();          // clica na fase 1
+    await expect(page.locator("#level-intro")).toHaveClass(/show/);
+    await expect(page.locator("#li-name")).toHaveText("Despertar");
+    await expect(page.locator("#li-chips .li-chip")).toHaveCount(3);
+    await page.locator("#li-start").click();
+    expect(await page.evaluate(() => window.__OVERHEAD.levelId())).toBe(1);
   });
 
   test("fase 1 é o tutorial: abre o guia ao entrar", async ({ page }) => {

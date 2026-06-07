@@ -900,6 +900,43 @@ html, body {
   background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid rgba(110,231,255,0.3);
 }
 
+/* ---------- Telinha de introdução da fase ---------- */
+.intro-panel { width: min(440px, 92vw); text-align: center; align-items: center; }
+.intro-panel > * { animation: intro-rise 0.4s cubic-bezier(0.2,0.8,0.2,1) both; }
+.intro-panel > *:nth-child(2) { animation-delay: 0.06s; }
+.intro-panel > *:nth-child(3) { animation-delay: 0.12s; }
+.intro-panel > *:nth-child(4) { animation-delay: 0.18s; }
+.intro-panel > *:nth-child(5) { animation-delay: 0.26s; }
+.intro-panel > *:nth-child(6) { animation-delay: 0.32s; }
+@keyframes intro-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.li-num { color: var(--accent); font-size: 13px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+.li-name { font-size: 28px; font-weight: 800; margin: 2px 0 6px; }
+.li-story { color: var(--muted); font-size: 14px; line-height: 1.5; margin-bottom: 4px; }
+.li-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 4px 0 6px; }
+.li-chip { background: rgba(110,231,255,0.1); border: 1px solid rgba(110,231,255,0.25); color: var(--text);
+  border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+.intro-start {
+  background: linear-gradient(90deg, var(--accent), #4ea8ff); color: #04222c; border: none;
+  border-radius: 12px; padding: 14px 40px; font-size: 18px; font-weight: 800; cursor: pointer; transition: 0.15s;
+}
+.intro-start:hover { transform: scale(1.04); }
+
+/* ---------- Banner "Onda N" (juice) ---------- */
+#wave-banner {
+  position: absolute; top: 16%; left: 50%; transform: translateX(-50%);
+  font-size: clamp(28px, 6vw, 52px); font-weight: 900; letter-spacing: 4px;
+  color: #fff; text-shadow: 0 0 22px rgba(110,231,255,0.8), 0 2px 8px rgba(0,0,0,0.6);
+  pointer-events: none; opacity: 0; z-index: 8; white-space: nowrap;
+}
+#wave-banner.show { animation: wave-pop 1.5s ease-out both; }
+@keyframes wave-pop {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.6); }
+  18% { opacity: 1; transform: translateX(-50%) scale(1.12); }
+  32% { transform: translateX(-50%) scale(1); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) scale(1); }
+}
+
 /* ---------- Mapa de fases (campanha) ---------- */
 .levels-panel { width: min(440px, 94vw); max-height: 86vh; }
 .levels-head { display: flex; align-items: baseline; justify-content: center; gap: 10px; margin-bottom: 4px; }
