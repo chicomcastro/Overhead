@@ -857,9 +857,12 @@ html, body {
     overflow-y: auto;
     animation: menu-in 0.4s ease both;
   }
-  /* empurra dificuldade + Jogar + ações para a base (zona do polegar);
-     hero e leaderboard ficam no topo. */
-  #overlay > .panel > #difficulty-row { margin-top: auto; }
+  /* hero no topo; ações ancoradas embaixo (zona do polegar), com o Jogar por
+     ÚLTIMO botão. Só no menu — no resultado a ordem natural é mantida. */
+  #overlay:not(.result) .menu-actions { order: 10; margin-top: auto; }
+  #overlay:not(.result) #free-btn { order: 11; }
+  #overlay:not(.result) #overlay-btn { order: 12; }
+  #overlay:not(.result) .credits { order: 13; }
   @keyframes menu-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
   /* ações do menu como lista (linhas) com chevron — padrão de app */
