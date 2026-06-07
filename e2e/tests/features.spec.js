@@ -81,27 +81,40 @@ test.describe("tela de fim de jogo", () => {
   });
 });
 
-test.describe("dificuldade", () => {
-  test("escolher Fácil/Difícil ajusta recursos iniciais e HP", async ({ page }) => {
+test.describe("Modo Livre", () => {
+  test("dificuldade + mapa ajustam o jogo livre; a campanha ignora dificuldade", async ({ page }) => {
     await gotoFresh(page);
+    // abre o Modo Livre pelo menu
+    await page.locator("#free-btn").click();
+    await expect(page.locator("#free-sheet")).toHaveClass(/show/);
     await expect(page.locator("#difficulty-modes .seg-btn")).toHaveCount(3);
+    await expect(page.locator("#map-modes .seg-btn")).toHaveCount(3);
 
-    // Fácil: mais almas/vidas (Jogar → mapa de fases → inicia a fase 1)
+    // Fácil → mais almas/vidas; o jogo entra em modo "free"
     await page.locator("#difficulty-modes .seg-btn", { hasText: "Fácil" }).click();
-    await page.evaluate(() => window.__OVERHEAD.startLevel(1));
+    await page.locator("#free-play").click();
     let s = await page.evaluate(() => window.__OVERHEAD.snapshot());
     expect(s.souls).toBe(50);
     expect(s.lives).toBe(25);
+    expect(await page.evaluate(() => window.__OVERHEAD.mode())).toBe("free");
     expect(await page.evaluate(() => window.__OVERHEAD.difficulty())).toBe("easy");
 
-    // Difícil (via menu de pausa → menu principal → trocar)
+    // Difícil (volta ao menu → Modo Livre → trocar)
     await page.locator("#pause-btn").click();
     await page.locator("#menu-btn").click();
+    await page.locator("#free-btn").click();
     await page.locator("#difficulty-modes .seg-btn", { hasText: "Difícil" }).click();
-    await page.evaluate(() => window.__OVERHEAD.startLevel(1));
+    await page.locator("#free-play").click();
     s = await page.evaluate(() => window.__OVERHEAD.snapshot());
     expect(s.souls).toBe(30);
     expect(s.lives).toBe(15);
+
+    // campanha NÃO usa dificuldade: a fase 1 sempre roda em "normal"
+    await page.locator("#pause-btn").click();
+    await page.locator("#menu-btn").click();
+    await page.evaluate(() => window.__OVERHEAD.startLevel(1));
+    expect(await page.evaluate(() => window.__OVERHEAD.mode())).toBe("campaign");
+    expect(await page.evaluate(() => window.__OVERHEAD.difficulty())).toBe("normal");
   });
 });
 
@@ -275,7 +288,7 @@ test.describe("menu de pausa", () => {
     await expect(ov).toHaveClass(/show/);
     await expect(ov).not.toHaveClass(/result/);
     await expect(page.locator("#overlay-btn")).toHaveText("Jogar");
-    await expect(page.locator("#difficulty-modes")).toBeVisible(); // controles de menu voltam
+    await expect(page.locator("#free-btn")).toBeVisible(); // controles de menu voltam (Modo Livre)
   });
 });
 
