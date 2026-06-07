@@ -85,7 +85,7 @@ test("modo infinito continua além da onda 20 (sem vitória)", async ({ page }) 
 test("novos inimigos (voador e curandeiro) aparecem nas ondas", async ({ page }) => {
   const r = await page.evaluate(() => {
     const O = window.__OVERHEAD;
-    O.startLevel(5); O.setSpeed(0); // fase 5 libera voador + curandeiro
+    O.startLevel(7); O.setSpeed(0); // fase 7 (Procissão) libera voador + curandeiro
     // board forte pra sobreviver até as ondas que introduzem os novos tipos
     for (const [t, n] of [["doom", 3], ["doom", 4], ["doom", 5], ["soul", 0], ["soul", 1]]) O.build(t, n);
     const nodeCount = O.nodeCount();
