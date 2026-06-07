@@ -1694,13 +1694,45 @@
   document.getElementById("bestiary-btn").addEventListener("click", () => openSheet("bestiary"));
   // fechar: botão [data-close] ou toque no fundo (fora do painel).
   // No menu de pausa, fechar = continuar (precisa despausar o jogo).
+  function dismissSheet(sheet) {
+    if (sheet.id === "pause-menu") setPaused(false);
+    else closeSheet(sheet);
+  }
   document.querySelectorAll(".sheet").forEach((sheet) => {
     sheet.addEventListener("click", (ev) => {
-      if (ev.target === sheet || ev.target.closest("[data-close]")) {
-        if (sheet.id === "pause-menu") setPaused(false);
-        else closeSheet(sheet);
-      }
+      if (ev.target === sheet || ev.target.closest("[data-close]")) dismissSheet(sheet);
     });
+  });
+
+  // Arrastar pra baixo a partir do topo (o "puxador") fecha o sheet — gesto de app.
+  document.querySelectorAll(".sheet").forEach((sheet) => {
+    const panel = sheet.querySelector(".panel");
+    if (!panel) return;
+    let startY = 0, dy = 0, dragging = false;
+    panel.addEventListener("pointerdown", (ev) => {
+      if (panel.scrollTop > 0) return;                                  // só no topo do scroll
+      if (ev.clientY - panel.getBoundingClientRect().top > 60) return;  // só na faixa do puxador
+      if (ev.target.closest("button, input, a, label, [data-close]")) return; // não rouba controles
+      dragging = true; startY = ev.clientY; dy = 0;
+      panel.style.transition = "none";
+      panel.style.touchAction = "none";
+      try { panel.setPointerCapture(ev.pointerId); } catch (e) {}
+    });
+    panel.addEventListener("pointermove", (ev) => {
+      if (!dragging) return;
+      dy = Math.max(0, ev.clientY - startY);
+      panel.style.transform = `translateY(${dy}px)`;
+    });
+    const finish = () => {
+      if (!dragging) return;
+      dragging = false;
+      panel.style.transition = "";
+      panel.style.transform = "";
+      panel.style.touchAction = "";
+      if (dy > 90) dismissSheet(sheet);   // arrastou o suficiente → fecha
+    };
+    panel.addEventListener("pointerup", finish);
+    panel.addEventListener("pointercancel", finish);
   });
 
   document.getElementById("save-btn").addEventListener("click", () => {
