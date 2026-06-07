@@ -59,7 +59,7 @@ test.describe("tela de fim de jogo", () => {
     const ov = page.locator("#overlay");
     await expect(ov).toHaveClass(/result/);
     await expect(ov).toHaveClass(/lose/);
-    await expect(page.locator("#share-btn")).toBeVisible();
+    await expect(page.locator(".share-mini")).toBeVisible(); // compartilhar = ícone minimalista
     await expect(page.locator("#overlay-btn")).toContainText("Mapa de fases");
     // conteúdo de menu fica escondido no resultado
     await expect(page.locator("#how-to")).toBeHidden();
@@ -70,7 +70,9 @@ test.describe("tela de fim de jogo", () => {
     await page.evaluate(() => window.__OVERHEAD.endGame(true));
     const ov = page.locator("#overlay");
     await expect(ov).toHaveClass(/win/);
-    await expect(page.locator("#share-btn")).toBeVisible();
+    await expect(page.locator(".share-mini")).toBeVisible(); // compartilhar = ícone minimalista
+    // só 2 ações no resultado (sem Opções/Bestiário)
+    await expect(page.locator("#overlay .menu-actions")).toBeHidden();
   });
 
   test("'Mapa de fases' (resultado) reabre o mapa de fases", async ({ page }) => {

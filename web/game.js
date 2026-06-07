@@ -1699,26 +1699,32 @@
   let lastShareText = "";
 
   // Mostra os stats do resultado: string simples (derrota) ou breakdown animado (vitória).
+  const shareIcon = `<button class="share-mini" title="Compartilhar resultado" aria-label="Compartilhar">↗</button>`;
   function renderResultStats(stats) {
     const el = document.getElementById("overlay-stats");
     if (!stats) { el.innerHTML = ""; return; }
-    if (typeof stats === "string") { el.textContent = stats; return; }
-    const b = stats; // { kills, livesBonus, speedBonus, total }
-    el.innerHTML =
-      `<div class="score-row"><span>Mortes</span><b data-v="${b.kills}">0</b></div>` +
-      `<div class="score-row"><span>Bônus de vidas</span><b data-v="${b.livesBonus}" data-plus="1">+0</b></div>` +
-      `<div class="score-row"><span>Bônus de rapidez</span><b data-v="${b.speedBonus}" data-plus="1">+0</b></div>` +
-      `<div class="score-total"><span>Total</span><b data-v="${b.total}">0</b></div>`;
-    // cada número sobe (cascata), o total por último — juice
-    el.querySelectorAll("b[data-v]").forEach((bEl, i) => {
-      const target = +bEl.dataset.v, plus = bEl.dataset.plus ? "+" : "";
-      const t0 = performance.now() + i * 110, dur = 600;
-      (function tick(now) {
-        const k = Math.max(0, Math.min(1, (now - t0) / dur));
-        bEl.textContent = plus + Math.round(target * (1 - Math.pow(1 - k, 3)));
-        if (k < 1) requestAnimationFrame(tick);
-      })(performance.now());
-    });
+    if (typeof stats === "string") {
+      el.innerHTML = `<div class="lose-stat"><span>${stats}</span>${shareIcon}</div>`;
+    } else {
+      const b = stats; // { kills, livesBonus, speedBonus, total }
+      el.innerHTML =
+        `<div class="score-row"><span>Mortes</span><b data-v="${b.kills}">0</b></div>` +
+        `<div class="score-row"><span>Bônus de vidas</span><b data-v="${b.livesBonus}" data-plus="1">+0</b></div>` +
+        `<div class="score-row"><span>Bônus de rapidez</span><b data-v="${b.speedBonus}" data-plus="1">+0</b></div>` +
+        `<div class="score-total"><span>Total</span><span class="total-val"><b data-v="${b.total}">0</b>${shareIcon}</span></div>`;
+      // cada número sobe (cascata), o total por último — juice
+      el.querySelectorAll("b[data-v]").forEach((bEl, i) => {
+        const target = +bEl.dataset.v, plus = bEl.dataset.plus ? "+" : "";
+        const t0 = performance.now() + i * 110, dur = 600;
+        (function tick(now) {
+          const k = Math.max(0, Math.min(1, (now - t0) / dur));
+          bEl.textContent = plus + Math.round(target * (1 - Math.pow(1 - k, 3)));
+          if (k < 1) requestAnimationFrame(tick);
+        })(performance.now());
+      });
+    }
+    const mini = el.querySelector(".share-mini");
+    if (mini) mini.addEventListener("click", (e) => shareResult(e.currentTarget));
   }
 
   function showOverlay(title, msg, stats, isResult) {
@@ -1770,8 +1776,7 @@
     if (nextId) { nextBtn.dataset.next = String(nextId); nextBtn.hidden = false; }
     else nextBtn.hidden = true;
 
-    // botão de compartilhar (só em resultado)
-    const shareBtn = document.getElementById("share-btn");
+    // texto do compartilhamento (o gatilho agora é o ícone mini no detalhamento)
     if (isResult) {
       const lv = lastResult.level;
       lastShareText = lastResult.mode === "free"
@@ -1779,9 +1784,6 @@
         : (state.won
           ? `Overhead 🏰 — ${lastResult.stars}★ na fase ${lv ? lv.id : "?"} (${state.score} pts)!`
           : `Overhead 🏰 — caí na onda ${state.wave} (${state.score} pts).`);
-      shareBtn.hidden = false;
-    } else {
-      shareBtn.hidden = true;
     }
 
     pendingScore = null;
@@ -2092,20 +2094,18 @@
     Sound.play("upgrade");
   });
 
-  document.getElementById("share-btn").addEventListener("click", async () => {
+  async function shareResult(iconEl) {
     const text = lastShareText || "Overhead 🏰 — tower defense web!";
     const url = location.href;
-    const btn = document.getElementById("share-btn");
     try {
       if (navigator.share) {
         await navigator.share({ title: "Overhead", text, url });
       } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(`${text} ${url}`);
-        btn.textContent = "✓ Copiado!";
-        setTimeout(() => { btn.textContent = "↗ Compartilhar resultado"; }, 1800);
+        if (iconEl) { iconEl.textContent = "✓"; setTimeout(() => { iconEl.textContent = "↗"; }, 1500); }
       }
     } catch (e) { /* usuário cancelou o compartilhamento — ignora */ }
-  });
+  }
 
   // Inicia uma partida do zero (usado pelo menu e pelo "Reiniciar fase").
   function beginGame(endless) {
