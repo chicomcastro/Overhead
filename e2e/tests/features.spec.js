@@ -401,3 +401,21 @@ test.describe("pontuação e HUD", () => {
     await expect(page.locator("#overlay-stats .score-total")).toBeVisible();
   });
 });
+
+test.describe("estrelas por desempenho", () => {
+  test("invicto + rápido = 3★; invicto mas lento = 2★ (com selos)", async ({ page }) => {
+    await boot(page);
+    // sem jogar: vidas cheias + tempo ~0 → invicto e rápido → 3★
+    await page.evaluate(() => { window.__OVERHEAD.startLevel(1); window.__OVERHEAD.endGame(true); });
+    expect(await page.evaluate(() => window.__OVERHEAD.lastResultInfo()))
+      .toMatchObject({ stars: 3, flawless: true, fast: true });
+    await expect(page.locator("#result-flags .flag")).toHaveCount(2);
+
+    // invicto porém LENTO (tempo acima do par) → cai pra 2★
+    await page.evaluate(() => { window.__OVERHEAD.startLevel(1); window.__OVERHEAD.step(400); window.__OVERHEAD.endGame(true); });
+    const ri = await page.evaluate(() => window.__OVERHEAD.lastResultInfo());
+    expect(ri.stars).toBe(2);
+    expect(ri.fast).toBe(false);
+    expect(ri.flawless).toBe(true);
+  });
+});

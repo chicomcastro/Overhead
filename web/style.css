@@ -473,6 +473,21 @@ html, body {
 #overlay.result #best { display: none; }             /* progresso global não faz sentido aqui */
 /* título numa única linha + menor que o "OVERHEAD" do menu */
 #overlay.result h1 { font-size: clamp(26px, 7vw, 34px); white-space: nowrap; letter-spacing: 1px; margin: 0; }
+/* selos de desempenho no resultado (Invicto / Rápido) */
+.result-flags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 0 0 14px; }
+.result-flags .flag {
+  font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+  color: var(--muted); opacity: 0.55;
+}
+.result-flags .flag.on {
+  color: var(--score); border-color: rgba(255,209,102,0.5);
+  background: rgba(255,209,102,0.12); opacity: 1;
+  animation: trophy-pulse 0.5s ease;
+}
+.result-flags .flag-hint { flex-basis: 100%; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.result-flags .flag-hint b { color: var(--text); }
+
 /* emblema (troféu/caveira) grande acima do título — só no resultado */
 .result-emblem { display: none; font-size: 60px; line-height: 1; margin-bottom: 6px; }
 #overlay.result .result-emblem { display: block; }
