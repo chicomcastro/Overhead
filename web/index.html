@@ -63,7 +63,7 @@
       <!-- Coach de primeira jogada (mostrado uma vez) -->
       <div id="coach" hidden>
         <div class="coach-card">
-          <button id="coach-close" aria-label="Fechar">×</button>
+          <button id="coach-close" class="sheet-close" aria-label="Fechar">×</button>
           <h3>Como jogar</h3>
           <ol>
             <li><b>Toque numa esfera</b> na loja</li>
@@ -149,6 +149,7 @@
     <!-- Mapa de fases (campanha) -->
     <div id="levels" class="sheet">
       <div class="panel sheet-panel levels-panel">
+        <button type="button" class="sheet-close" data-close aria-label="Fechar">×</button>
         <div class="levels-head">
           <h2 class="sheet-title">Mapa de Fases</h2>
           <span id="levels-total" class="levels-total"></span>
@@ -161,6 +162,7 @@
     <!-- Sheet: Opções -->
     <div id="options-sheet" class="sheet">
       <div class="panel sheet-panel">
+        <button type="button" class="sheet-close" data-close aria-label="Fechar">×</button>
         <h2 class="sheet-title">Opções</h2>
         <div id="audio-row" class="seg-row">
           <span class="seg-label">Áudio</span>
@@ -178,6 +180,7 @@
     <!-- Sheet: Como jogar -->
     <div id="howto-sheet" class="sheet">
       <div class="panel sheet-panel">
+        <button type="button" class="sheet-close" data-close aria-label="Fechar">×</button>
         <h2 class="sheet-title">Como jogar</h2>
         <ol id="how-to">
           <li><b>Escolha</b> uma esfera na loja</li>
@@ -191,6 +194,7 @@
     <!-- Bestiário (lista de inimigos) -->
     <div id="bestiary" class="sheet">
       <div class="panel sheet-panel bestiary-panel">
+        <button type="button" class="sheet-close" data-close aria-label="Fechar">×</button>
         <h2 class="sheet-title">Bestiário</h2>
         <div id="bestiary-list"></div>
         <button id="bestiary-close" class="ghost-btn" data-close>Fechar</button>
@@ -200,6 +204,7 @@
     <!-- Menu de pausa -->
     <div id="pause-menu" class="sheet">
       <div class="panel sheet-panel pause-panel">
+        <button type="button" class="sheet-close" data-close aria-label="Fechar">×</button>
         <h2 class="sheet-title">Pausado</h2>
         <button id="resume-btn">▶ Continuar</button>
         <button id="restart-btn" class="ghost-btn">⟲ Reiniciar fase</button>

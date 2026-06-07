@@ -278,3 +278,35 @@ test.describe("menu de pausa", () => {
     await expect(page.locator("#difficulty-modes")).toBeVisible(); // controles de menu voltam
   });
 });
+
+test.describe("bottom sheets (polish)", () => {
+  test("× padronizado fecha cada sheet e todos têm o botão", async ({ page }) => {
+    await gotoFresh(page);
+    // todo sheet (exceto o overlay de menu) tem um .sheet-close
+    const sheets = ["levels", "options-sheet", "howto-sheet", "bestiary", "pause-menu"];
+    for (const id of sheets) {
+      expect(await page.locator(`#${id} .sheet-close`).count()).toBe(1);
+    }
+    // abrir Opções e fechar pelo ×
+    await page.locator("#options-btn").click();
+    await expect(page.locator("#options-sheet")).toHaveClass(/show/);
+    await page.locator("#options-sheet .sheet-close").click();
+    await expect(page.locator("#options-sheet")).not.toHaveClass(/show/);
+  });
+
+  test("arrastar pra baixo a partir do topo fecha o sheet", async ({ page }) => {
+    await gotoFresh(page);
+    await page.locator("#options-btn").click();
+    const sheet = page.locator("#options-sheet");
+    await expect(sheet).toHaveClass(/show/);
+    await page.waitForTimeout(400); // deixa a animação de subida do sheet assentar
+    const box = await sheet.locator(".panel").boundingBox();
+    const x = box.x + box.width / 2;
+    // pointerdown na faixa do puxador (topo) → arrasta pra baixo → solta
+    await page.mouse.move(x, box.y + 12);
+    await page.mouse.down();
+    for (const dy of [40, 100, 160, 230]) await page.mouse.move(x, box.y + dy, { steps: 4 });
+    await page.mouse.up();
+    await expect(sheet).not.toHaveClass(/show/);
+  });
+});

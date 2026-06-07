@@ -460,7 +460,7 @@ html, body {
 .sheet.show { display: flex; animation: sheet-fade 0.2s ease; }
 @keyframes sheet-fade { from { opacity: 0; } to { opacity: 1; } }
 .sheet-title { font-size: 20px; font-weight: 800; letter-spacing: 1px; color: var(--accent); margin-bottom: 14px; text-align: center; }
-.sheet-panel { display: flex; flex-direction: column; gap: 12px; }
+.sheet-panel { display: flex; flex-direction: column; gap: 12px; position: relative; }
 
 /* ---------- Bestiário ---------- */
 .bestiary-panel { width: min(440px, 92vw); max-height: 86vh; }
@@ -711,19 +711,29 @@ html, body {
   font-size: 15px;
   cursor: pointer;
 }
-#coach-close {
+/* Botão de fechar padronizado (×) — mesmo visual em todos os sheets e no coach */
+.sheet-close {
   position: absolute;
-  top: 8px;
-  right: 10px;
-  width: 30px;
-  height: 30px;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
-  background: transparent;
+  background: rgba(255,255,255,0.07);
   color: var(--muted);
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1;
+  padding: 0;
   cursor: pointer;
+  z-index: 4;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
 }
+.sheet-close:hover { background: rgba(255,255,255,0.14); color: var(--text); }
+.sheet-close:active { transform: scale(0.92); }
 
 /* ---------- Alvos de toque maiores no mobile ---------- */
 @media (max-width: 820px), (orientation: portrait) {
@@ -774,13 +784,21 @@ html, body {
     padding-right: max(10px, env(safe-area-inset-right));
   }
   #shop {
-    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    position: relative;
+    /* reserva a altura do botão fixo de "Iniciar onda" pra ele nunca cobrir
+       a prévia da próxima onda nem as melhorias globais */
+    padding-bottom: calc(66px + max(10px, env(safe-area-inset-bottom)));
     border-top-left-radius: 18px;
     border-top-right-radius: 18px;
   }
-  /* o espaço da safe-area vem do padding da loja; o botão sticky fica em
-     bottom:0 (offset levantaria o botão e cobriria a última melhoria global). */
-  #start-btn { bottom: 0; }
+  /* "Iniciar onda" ancorado no rodapé, FORA do scroll da loja — assim some a
+     sobreposição com a prévia/globais (o sticky flutuava por cima do conteúdo). */
+  #start-btn {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 12;
+    order: 0; margin: 0; border-radius: 0;
+    padding: 14px; padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    box-shadow: 0 -12px 24px -10px rgba(8,12,22,0.98);
+  }
 
   /* MENU = tela cheia de app (sem cartão flutuante); CTA ancorado embaixo */
   #overlay { padding: 0; align-items: stretch; }
