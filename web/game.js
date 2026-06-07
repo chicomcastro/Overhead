@@ -1639,7 +1639,7 @@
     Sound.play("lose");
     if (isFree()) {
       lastResult = { stars: 0, level: null, mode: "free" };
-      showOverlay("💀 Derrota", `A Torre Mestra caiu na <b>onda ${state.wave}</b>.`,
+      showOverlay("Derrota", `A Torre Mestra caiu na <b>onda ${state.wave}</b>.`,
         `★ ${state.score} pontos`, true);
       return;
     }
@@ -1683,7 +1683,7 @@
     const stars = lv ? starsFor(lv, b.total, true) : 0;
     if (lv) Progress.record(lv.id, b.total, stars);
     lastResult = { stars, level: lv, mode: isFree() ? "free" : "campaign", breakdown: b };
-    const title = isFree() ? "🏆 Vitória!" : "🏆 Fase concluída!";
+    const title = isFree() ? "Vitória!" : "Fase concluída!";
     const msg = isFree()
       ? `Você sobreviveu às <b>${CONFIG.totalWaves} ondas</b>!`
       : `Fase ${lv.id} — <b>${lv.name}</b>`;
@@ -1700,23 +1700,30 @@
     if (typeof stats === "string") { el.textContent = stats; return; }
     const b = stats; // { kills, livesBonus, speedBonus, total }
     el.innerHTML =
-      `<div class="score-row"><span>Mortes</span><b>${b.kills}</b></div>` +
-      `<div class="score-row"><span>Bônus de vidas <small>(invicto rende mais)</small></span><b>+${b.livesBonus}</b></div>` +
-      `<div class="score-row"><span>Bônus de rapidez</span><b>+${b.speedBonus}</b></div>` +
-      `<div class="score-total"><span>Total</span><b id="score-total-val">0</b></div>`;
-    const valEl = document.getElementById("score-total-val");
-    const t0 = performance.now(), dur = 750;
-    (function tick(now) {
-      const k = Math.min(1, (now - t0) / dur);
-      valEl.textContent = Math.round(b.total * (1 - Math.pow(1 - k, 3)));
-      if (k < 1) requestAnimationFrame(tick);
-    })(performance.now());
+      `<div class="score-row"><span>Mortes</span><b data-v="${b.kills}">0</b></div>` +
+      `<div class="score-row"><span>Bônus de vidas</span><b data-v="${b.livesBonus}" data-plus="1">+0</b></div>` +
+      `<div class="score-row"><span>Bônus de rapidez</span><b data-v="${b.speedBonus}" data-plus="1">+0</b></div>` +
+      `<div class="score-total"><span>Total</span><b data-v="${b.total}">0</b></div>`;
+    // cada número sobe (cascata), o total por último — juice
+    el.querySelectorAll("b[data-v]").forEach((bEl, i) => {
+      const target = +bEl.dataset.v, plus = bEl.dataset.plus ? "+" : "";
+      const t0 = performance.now() + i * 110, dur = 600;
+      (function tick(now) {
+        const k = Math.max(0, Math.min(1, (now - t0) / dur));
+        bEl.textContent = plus + Math.round(target * (1 - Math.pow(1 - k, 3)));
+        if (k < 1) requestAnimationFrame(tick);
+      })(performance.now());
+    });
   }
 
   function showOverlay(title, msg, stats, isResult) {
     const ov = document.getElementById("overlay");
     ov.querySelector("h1").textContent = title;
     document.getElementById("overlay-msg").innerHTML = msg;
+    // emblema (troféu na vitória, caveira na derrota) — só no resultado
+    const emblem = document.getElementById("result-emblem");
+    emblem.textContent = isResult ? (state.won ? "🏆" : "💀") : "";
+    emblem.hidden = !isResult;
     renderResultStats(stats);
     document.getElementById("overlay-btn").textContent =
       isResult ? (lastResult.mode === "free" ? "🎮 Modo Livre" : "🗺 Mapa de fases") : "Jogar";
