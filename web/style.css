@@ -505,6 +505,22 @@ html, body {
 
 /* ---------- Menu de pausa ---------- */
 .pause-panel { min-width: 250px; }
+/* Botão secundário padrão (fechar/voltar no rodapé dos modais, etc.) */
+.ghost-btn {
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+}
+.ghost-btn:hover { background: rgba(255,255,255,0.09); color: var(--text); border-color: rgba(255,255,255,0.2); }
+.ghost-btn:active { transform: scale(0.98); }
+
 .pause-panel button {
   padding: 14px;
   border-radius: 12px;
@@ -956,7 +972,11 @@ html, body {
   background: rgba(110,231,255,0.22);
 }
 /* fase atual (próxima a jogar): destaque pulsante */
-.level-card.current { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(110,231,255,0.35), 0 0 18px -6px rgba(110,231,255,0.55); }
+.level-card.current { border-color: var(--accent); animation: card-pulse 2.2s ease-in-out infinite; }
+@keyframes card-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(110,231,255,0.3), 0 0 14px -8px rgba(110,231,255,0.4); }
+  50%      { box-shadow: 0 0 0 1px rgba(110,231,255,0.6), 0 0 22px -4px rgba(110,231,255,0.75); }
+}
 .lv-badge {
   display: inline-block; margin-left: 8px; font-size: 10px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent);
