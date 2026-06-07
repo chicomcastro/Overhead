@@ -1748,18 +1748,13 @@
       starsEl.hidden = true;
     }
 
-    // selos de desempenho (Invicto / Rápido) + dica de como subir de estrela
+    // selos de desempenho (Invicto / Rápido)
     const flagsEl = document.getElementById("result-flags");
     if (isResult && state.won && lastResult.mode === "campaign") {
       const fl = lastResult.flawless, fa = lastResult.fast;
-      let hint = "";
-      if (!fl && !fa) hint = "Sem vazar <b>e</b> mais rápido → ★★★";
-      else if (!fl) hint = "Termine <b>sem vazar</b> → ★★★";
-      else if (!fa) hint = "Termine <b>mais rápido</b> → ★★★";
       flagsEl.innerHTML =
         `<span class="flag ${fl ? "on" : ""}">🛡 Invicto</span>` +
-        `<span class="flag ${fa ? "on" : ""}">⚡ Rápido</span>` +
-        (hint ? `<div class="flag-hint">${hint}</div>` : "");
+        `<span class="flag ${fa ? "on" : ""}">⚡ Rápido</span>`;
       flagsEl.hidden = false;
     } else {
       flagsEl.hidden = true;
