@@ -485,8 +485,6 @@ html, body {
   background: rgba(255,209,102,0.12); opacity: 1;
   animation: trophy-pulse 0.5s ease;
 }
-.result-flags .flag-hint { flex-basis: 100%; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
-.result-flags .flag-hint b { color: var(--text); }
 
 /* emblema (troféu/caveira) grande acima do título — só no resultado */
 .result-emblem { display: none; font-size: 60px; line-height: 1; margin-bottom: 6px; }
