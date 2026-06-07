@@ -999,10 +999,11 @@ html, body {
 .li-chip { background: rgba(110,231,255,0.1); border: 1px solid rgba(110,231,255,0.25); color: var(--text);
   border-radius: 999px; padding: 6px 12px; font-size: 13px; }
 .intro-start {
+  width: 100%;
   background: linear-gradient(90deg, var(--accent), #4ea8ff); color: #04222c; border: none;
-  border-radius: 12px; padding: 14px 40px; font-size: 18px; font-weight: 800; cursor: pointer; transition: 0.15s;
+  border-radius: 12px; padding: 14px; font-size: 18px; font-weight: 800; cursor: pointer; transition: 0.15s;
 }
-.intro-start:hover { transform: scale(1.04); }
+.intro-start:hover { transform: scale(1.02); }
 
 /* ---------- Banner "Onda N" (juice) ---------- */
 #wave-banner {
