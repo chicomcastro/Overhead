@@ -67,11 +67,11 @@
   const MAPS = [
     {
       id: "serpent", name: "Serpente",
-      path: [
+      paths: [[
         { x: -40, y: 140 }, { x: 300, y: 140 }, { x: 300, y: 420 },
         { x: 620, y: 420 }, { x: 620, y: 160 }, { x: 900, y: 160 },
         { x: 900, y: 560 }, { x: 640, y: 560 },
-      ],
+      ]],
       nodes: [
         { x: 180, y: 280 }, { x: 430, y: 280 }, { x: 460, y: 540 },
         { x: 470, y: 300 }, { x: 760, y: 300 }, { x: 780, y: 420 },
@@ -81,10 +81,10 @@
     },
     {
       id: "comb", name: "Pente",
-      path: [
+      paths: [[
         { x: -40, y: 120 }, { x: 1120, y: 120 }, { x: 1120, y: 330 },
         { x: 160, y: 330 }, { x: 160, y: 540 }, { x: 1120, y: 540 },
-      ],
+      ]],
       nodes: [
         { x: 160, y: 225 }, { x: 380, y: 225 }, { x: 600, y: 225 }, { x: 820, y: 225 }, { x: 1040, y: 225 },
         { x: 380, y: 435 }, { x: 600, y: 435 }, { x: 820, y: 435 }, { x: 1040, y: 435 },
@@ -93,25 +93,39 @@
     },
     {
       id: "ziggy", name: "Ziguezague",
-      path: [
+      paths: [[
         { x: -40, y: 150 }, { x: 280, y: 150 }, { x: 280, y: 470 },
         { x: 560, y: 470 }, { x: 560, y: 150 }, { x: 840, y: 150 },
         { x: 840, y: 470 }, { x: 1100, y: 470 }, { x: 1100, y: 250 }, { x: 760, y: 250 },
-      ],
+      ]],
       nodes: [
         { x: 120, y: 310 }, { x: 420, y: 150 }, { x: 420, y: 320 }, { x: 700, y: 320 },
         { x: 700, y: 470 }, { x: 970, y: 150 }, { x: 970, y: 360 }, { x: 120, y: 480 },
         { x: 120, y: 630 }, { x: 420, y: 630 }, { x: 700, y: 630 }, { x: 970, y: 630 },
       ],
     },
+    {
+      // Mapa de DUAS entradas: inimigos vêm pela esquerda E pelo topo, convergindo no Núcleo.
+      id: "fork", name: "Bifurcação",
+      paths: [
+        [ { x: -40, y: 200 }, { x: 280, y: 200 }, { x: 280, y: 400 }, { x: 660, y: 400 } ],
+        [ { x: 980, y: -40 }, { x: 980, y: 400 }, { x: 660, y: 400 } ],
+      ],
+      nodes: [
+        { x: 140, y: 320 }, { x: 280, y: 300 }, { x: 430, y: 300 }, { x: 430, y: 500 },
+        { x: 660, y: 540 }, { x: 800, y: 300 }, { x: 980, y: 280 }, { x: 1120, y: 300 },
+        { x: 540, y: 200 }, { x: 140, y: 520 }, { x: 800, y: 520 }, { x: 1120, y: 520 },
+      ],
+    },
   ];
 
-  let PATH, CORE, NODES, currentMap;
+  let PATHS, CORE, NODES, currentMap;
   function applyMap(id) {
     const m = MAPS.find((x) => x.id === id) || MAPS[0];
     currentMap = m.id;
-    PATH = m.path;
-    CORE = PATH[PATH.length - 1];
+    // cada mapa tem 1+ caminhos (entradas); todos terminam no Núcleo.
+    PATHS = m.paths || [m.path];
+    CORE = PATHS[0][PATHS[0].length - 1];
     NODES = m.nodes.map((n) => ({ x: n.x, y: n.y, taken: false }));
   }
   applyMap("serpent");
@@ -273,6 +287,7 @@
       particles: [],
       floaters: [],        // textos de dano
       spawnQueue: [],
+      spawnIx: 0,            // round-robin de entradas (mapas com 2+ caminhos)
       spawnTimer: 0,
       betweenTimer: 0,     // contagem entre ondas
       selectedType: null,  // tipo escolhido na loja p/ construir
@@ -490,18 +505,19 @@
   }
   function waveSpeed() { return CONFIG.baseSpeed * Math.pow(CONFIG.speedWaveConst, state.wave - 1); }
 
-  function spawnEnemy(typeId) {
+  function spawnEnemy(typeId, pathIx = 0) {
     const t = ENEMY_TYPES[typeId];
     const maxHP = waveHP() * t.hpMul * diffCfg().hpMul * (isFree() ? 1 : (levelById(activeLevel).hp || 1));
+    const P = PATHS[pathIx] || PATHS[0];
     state.enemies.push({
       type: typeId, def: t,
-      x: PATH[0].x, y: PATH[0].y,
+      x: P[0].x, y: P[0].y,
       hp: maxHP, maxHP,
       baseSpeed: waveSpeed() * t.speedMul,
       slowUntil: 0, slowFactor: 1,
       burn: 0, burnUntil: 0, burnTick: 0,
       healTick: t.healInterval || 0,
-      wp: 1, radius: t.radius, dead: false,
+      path: pathIx, wp: 1, radius: t.radius, dead: false,
     });
   }
 
@@ -735,7 +751,9 @@
       if (state.spawnQueue.length > 0) {
         state.spawnTimer -= dt;
         if (state.spawnTimer <= 0) {
-          spawnEnemy(state.spawnQueue.shift());
+          // distribui os inimigos pelas entradas do mapa (round-robin)
+          spawnEnemy(state.spawnQueue.shift(), state.spawnIx % PATHS.length);
+          state.spawnIx++;
           state.spawnTimer = CONFIG.spawnDelay;
         }
       } else if (state.enemies.length === 0) {
@@ -780,11 +798,12 @@
       }
 
       const speed = e.baseSpeed * e.slowFactor;
-      // voadores vão direto ao núcleo; os demais seguem o caminho
-      const tgt = e.def.flying ? CORE : PATH[e.wp];
+      // voadores vão direto ao núcleo; os demais seguem o caminho da sua entrada
+      const P = PATHS[e.path] || PATHS[0];
+      const tgt = e.def.flying ? CORE : P[e.wp];
       const d = dist(e, tgt);
       if (d <= speed * dt + 1) {
-        if (e.def.flying || e.wp >= PATH.length - 1) {
+        if (e.def.flying || e.wp >= P.length - 1) {
           // chegou ao alvo final -> atacou a Torre Mestra
           e.dead = true;
           state.lives--;
@@ -927,24 +946,35 @@
     for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
   }
 
+  function tracePath(P) {
+    ctx.moveTo(P[0].x, P[0].y);
+    for (let i = 1; i < P.length; i++) ctx.lineTo(P[i].x, P[i].y);
+  }
   function drawPath() {
     ctx.lineCap = "round"; ctx.lineJoin = "round";
+    // leito largo de cada caminho
     ctx.strokeStyle = "rgba(110,231,255,0.10)";
     ctx.lineWidth = 46;
-    ctx.beginPath();
-    ctx.moveTo(PATH[0].x, PATH[0].y);
-    for (let i = 1; i < PATH.length; i++) ctx.lineTo(PATH[i].x, PATH[i].y);
-    ctx.stroke();
-
+    for (const P of PATHS) { ctx.beginPath(); tracePath(P); ctx.stroke(); }
+    // linha tracejada animada por cima
     ctx.strokeStyle = "rgba(110,231,255,0.35)";
     ctx.lineWidth = 3;
     ctx.setLineDash([14, 14]);
     ctx.lineDashOffset = -pulse * 20;
-    ctx.beginPath();
-    ctx.moveTo(PATH[0].x, PATH[0].y);
-    for (let i = 1; i < PATH.length; i++) ctx.lineTo(PATH[i].x, PATH[i].y);
-    ctx.stroke();
+    for (const P of PATHS) { ctx.beginPath(); tracePath(P); ctx.stroke(); }
     ctx.setLineDash([]);
+    // marcador de entrada (portal pulsante) onde cada caminho entra na tela
+    for (const P of PATHS) {
+      const a = P[0];
+      const px = Math.max(0, Math.min(1280, a.x));
+      const py = Math.max(0, Math.min(720, a.y));
+      const rr = 22 + Math.sin(pulse * 1.5) * 4;
+      const g = ctx.createRadialGradient(px, py, 2, px, py, rr);
+      g.addColorStop(0, "rgba(110,231,255,0.5)");
+      g.addColorStop(1, "rgba(110,231,255,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(px, py, rr, 0, Math.PI * 2); ctx.fill();
+    }
   }
 
   function drawNodes() {
@@ -2053,6 +2083,10 @@
     levelId: () => state.levelId,
     startLevel: (id) => startLevel(id),
     startFree: () => beginFreeGame(),
+    setMap: (id) => { Prefs.set("map", id); },
+    mapCount: () => MAPS.length,
+    pathCount: () => PATHS.length,
+    enemyPaths: () => [...new Set(state.enemies.map((e) => e.path))].sort(),
     mode: () => state.mode,
     openLevels: () => openLevels(),
     levelInfo: (id) => ({ ...Progress.get(id), unlocked: Progress.unlocked(id) }),

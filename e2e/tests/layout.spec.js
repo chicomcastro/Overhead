@@ -49,7 +49,8 @@ test("menu: controles essenciais presentes e visíveis", async ({ page }) => {
   await page.locator("#free-btn").click();
   await expect(page.locator("#free-sheet")).toHaveClass(/show/);
   await expect(page.locator("#difficulty-modes .seg-btn")).toHaveCount(3);
-  await expect(page.locator("#map-modes .seg-btn")).toHaveCount(3);
+  await expect(page.locator("#map-modes .seg-btn")).toHaveCount(
+    await page.evaluate(() => window.__OVERHEAD.mapCount()));
   await expect(page.locator("#endless-check")).toBeVisible();
 });
 
