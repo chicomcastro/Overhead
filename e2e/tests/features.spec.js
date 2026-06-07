@@ -385,3 +385,19 @@ test.describe("mapas multi-entrada", () => {
     expect(paths).toContain(1); // inimigos chegaram pela 2ª entrada
   });
 });
+
+test.describe("pontuação e HUD", () => {
+  test("HUD mostra a onda atual e o total da fase (X/Y)", async ({ page }) => {
+    await boot(page); // campanha fase 1 (5 ondas)
+    await expect(page.locator("#wave")).toHaveText("0/5");
+  });
+
+  test("resultado detalha a pontuação: mortes + bônus de invicto + rapidez", async ({ page }) => {
+    await boot(page);
+    await page.evaluate(() => window.__OVERHEAD.startLevel(1));
+    if (await page.evaluate(() => window.__OVERHEAD.coachVisible())) await page.locator("#coach-ok").click();
+    await page.evaluate(() => window.__OVERHEAD.endGame(true));
+    await expect(page.locator("#overlay-stats .score-row")).toHaveCount(3); // mortes, vidas, rapidez
+    await expect(page.locator("#overlay-stats .score-total")).toBeVisible();
+  });
+});

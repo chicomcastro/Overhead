@@ -216,34 +216,34 @@
   //  waves = duração; hp = escala de vida; reqStars = estrelas TOTAIS p/ destravar.
   const LEVELS = [
     { id: 1, name: "Despertar",     mapId: "serpent",   waves: 5,  enemies: [], boss: false, hp: 0.9,
-      star2: 500,  star3: 1000, reqStars: 0, tutorial: true,
+      star2: 1000, star3: 1650, reqStars: 0, tutorial: true,
       intro: "Almas perdidas se aproximam do Núcleo. Erga esferas nos nós azuis e segure a linha." },
     { id: 2, name: "Sussurros",     mapId: "comb",      waves: 6,  enemies: ["fast"], boss: false, hp: 1.0,
-      star2: 800,  star3: 1500, reqStars: 2,
+      star2: 1200, star3: 1950, reqStars: 2,
       intro: "Espectros velozes surgem entre os dentes do Pente. A Esfera Gélida ajuda a contê-los." },
     { id: 3, name: "Encruzilhada",  mapId: "ziggy",     waves: 7,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
-      star2: 1300, star3: 2500, reqStars: 4,
+      star2: 1400, star3: 2150, reqStars: 4,
       intro: "Carrascos blindados sobem o ziguezague. Concentre dano para derrubá-los." },
     { id: 4, name: "Duas Frentes",  mapId: "fork",      waves: 8,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
-      star2: 1800, star3: 3400, reqStars: 6,
+      star2: 1900, star3: 3050, reqStars: 6,
       intro: "O caminho se divide: as almas vêm por DUAS frentes. Não deixe nenhuma passar." },
     { id: 5, name: "Céus Sombrios", mapId: "horseshoe", waves: 8,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
-      star2: 1800, star3: 3500, reqStars: 8,
+      star2: 1950, star3: 3100, reqStars: 8,
       intro: "Almas Aladas cortam reto ao Núcleo, ignorando a ferradura. Cubra o ar." },
     { id: 6, name: "O Cerco",       mapId: "cross",     waves: 9,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
-      star2: 2300, star3: 4500, reqStars: 10,
+      star2: 2350, star3: 3700, reqStars: 10,
       intro: "Cerco! Inimigos avançam pela esquerda e pela direita ao mesmo tempo." },
     { id: 7, name: "Procissão",     mapId: "chambers",  waves: 9,  enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.1,
-      star2: 2600, star3: 4900, reqStars: 12,
+      star2: 2450, star3: 3900, reqStars: 12,
       intro: "Sacerdotes curam os feridos pelas câmaras. Elimine-os primeiro." },
     { id: 8, name: "Portões",       mapId: "gates",     waves: 10, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.05,
-      star2: 3100, star3: 6000, reqStars: 14,
+      star2: 3100, star3: 4900, reqStars: 14,
       intro: "Dois portões — um pelo céu, um pelas profundezas — despejam tudo sobre o Núcleo." },
     { id: 9, name: "Espiral",       mapId: "spiral",    waves: 11, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.2,
-      star2: 4200, star3: 8000, reqStars: 16,
+      star2: 3700, star3: 5800, reqStars: 16,
       intro: "A espiral os traz devagar — mas em peso. Defenda em camadas." },
     { id: 10, name: "O Ceifador",   mapId: "delta",     waves: 12, enemies: ["fast", "tank", "flyer", "healer"], boss: true, hp: 1.1,
-      star2: 5200, star3: 10100, reqStars: 18,
+      star2: 4500, star3: 7200, reqStars: 18,
       intro: "O Ceifador comanda TRÊS frentes e desperta a cada 5 ondas. O teste final." },
   ];
   let activeLevel = 1;
@@ -372,6 +372,7 @@
       flash: 0,            // vinheta vermelha ao tomar dano no núcleo
       abilities: { freeze: 0, storm: 0 }, // cooldown restante (s) de cada habilidade
       time: 0,             // relógio de jogo (s), avança com dt — base dos timers de efeito
+      victoryPending: false, victoryTimer: 0, // sequência animada de vitória antes do modal
       endless: false,      // modo infinito: sem vitória na onda 20
       globals: { dmg: 0, rng: 0 }, // melhorias globais compradas (ralo de almas)
       enemies: [],
@@ -585,9 +586,9 @@
   //  ONDAS
   // ===================================================================
   function startWave() {
-    if (state.running || state.gameOver) return;
+    if (state.running || state.gameOver || state.victoryPending) return;
     state.wave++;
-    if (!state.endless && state.wave > levelWaves()) { winGame(); return; }
+    if (!state.endless && state.wave > levelWaves()) { triggerVictory(); return; }
     state.running = true;
     state.betweenTimer = 0;
     state.spawnQueue = buildWave(state.wave);
@@ -872,9 +873,21 @@
         // onda concluída
         state.running = false;
         state.betweenTimer = CONFIG.timeBetweenWaves;
-        if (!state.endless && state.wave >= levelWaves()) winGame();
+        if (!state.endless && state.wave >= levelWaves()) triggerVictory(); // → animação → modal
         updateHUD();
       }
+    } else if (state.victoryPending) {
+      // sequência de vitória: brilho saindo das torres antes de abrir o modal
+      state.victoryTimer -= dt;
+      state.victoryGlow = (state.victoryGlow || 0) - dt;
+      if (state.victoryGlow <= 0 && state.towers.length) {
+        const t = state.towers[(Math.random() * state.towers.length) | 0];
+        spawnRing(t.x, t.y, "#ffd166", 70, 0.8);
+        spawnParticles(t.x, t.y, "#ffd166", 8, 120);
+        state.victoryGlow = 0.12;
+        Sound.play("kill");
+      }
+      if (state.victoryTimer <= 0) { state.victoryPending = false; winGame(); }
     } else if (state.betweenTimer > 0 && state.wave > 0) {
       state.betweenTimer -= dt;
       if (state.betweenTimer <= 0) startWave();
@@ -1526,7 +1539,8 @@
   function updateHUD() {
     document.getElementById("souls").textContent = Math.floor(state.souls);
     document.getElementById("lives").textContent = state.lives;
-    document.getElementById("wave").textContent = state.wave;
+    const total = state.endless ? null : levelWaves();
+    document.getElementById("wave").textContent = total ? state.wave + "/" + total : state.wave;
     document.getElementById("score").textContent = state.score;
 
     const status = document.getElementById("wave-status");
@@ -1536,7 +1550,7 @@
     else status.textContent = state.wave === 0 ? "Prepare suas defesas…" : "Onda concluída! Inicie a próxima.";
 
     const startBtn = document.getElementById("start-btn");
-    startBtn.disabled = state.running || state.gameOver;
+    startBtn.disabled = state.running || state.gameOver || state.victoryPending;
     startBtn.textContent = state.betweenTimer > 0 ? "▶ Pular espera" : "▶ Iniciar onda";
     if (state.selectedTower) updateTowerButtons();
     updateGlobals();
@@ -1635,31 +1649,75 @@
     showOverlay("💀 Derrota", `A Torre Mestra caiu na <b>onda ${state.wave}</b>.`,
       `★ ${state.score} pontos`, true);
   }
+  // Dispara a sequência animada de vitória (brilho no mapa) antes do modal.
+  function triggerVictory() {
+    if (state.gameOver || state.victoryPending) return;
+    state.victoryPending = true;
+    state.running = false;
+    state.betweenTimer = 0;
+    state.victoryTimer = 1.4;
+    state.victoryGlow = 0;
+    state.shake = Math.max(state.shake, 0.25);
+    Sound.play("win");
+    for (const t of state.towers) spawnRing(t.x, t.y, "#ffd166", 60, 0.9);
+    spawnRing(CORE.x, CORE.y, "#ffd166", 220, 1.3);
+  }
+
+  // Pontuação final = mortes + bônus por vidas restantes (invicto) + rapidez.
+  function finalizeScore() {
+    const kills = state.score;
+    const livesBonus = state.lives * 40;                 // sobreviver/invicto vale muito
+    const par = (levelWaves() + 1) * 26;                 // tempo "alvo" da fase (s)
+    const speedBonus = Math.max(0, Math.round((par - state.time) * 5)); // mais rápido = mais
+    const total = kills + livesBonus + speedBonus;
+    return { kills, livesBonus, speedBonus, total };
+  }
+
   function winGame() {
     if (state.gameOver) return;
-    state.gameOver = true; state.won = true; state.running = false;
+    state.gameOver = true; state.won = true; state.running = false; state.victoryPending = false;
     Sound.play("win");
-    if (isFree()) {
-      lastResult = { stars: 0, level: null, mode: "free" };
-      showOverlay("🏆 Vitória!", `Você sobreviveu às <b>${CONFIG.totalWaves} ondas</b>!`,
-        `★ ${state.score} pontos · ${state.lives} vidas`, true);
-      return;
-    }
-    const lv = levelById(activeLevel);
-    const stars = starsFor(lv, state.score, true);
-    Progress.record(lv.id, state.score, stars);
-    lastResult = { stars, level: lv, mode: "campaign" };
-    showOverlay("🏆 Fase concluída!", `Fase ${lv.id} — <b>${lv.name}</b>`,
-      `★ ${state.score} pontos · ${state.lives} vidas`, true);
+    const b = finalizeScore();
+    state.score = b.total; // placar final consolidado
+    const lv = isFree() ? null : levelById(activeLevel);
+    const stars = lv ? starsFor(lv, b.total, true) : 0;
+    if (lv) Progress.record(lv.id, b.total, stars);
+    lastResult = { stars, level: lv, mode: isFree() ? "free" : "campaign", breakdown: b };
+    const title = isFree() ? "🏆 Vitória!" : "🏆 Fase concluída!";
+    const msg = isFree()
+      ? `Você sobreviveu às <b>${CONFIG.totalWaves} ondas</b>!`
+      : `Fase ${lv.id} — <b>${lv.name}</b>`;
+    showOverlay(title, msg, b, true);
+    updateHUD();
   }
 
   let lastShareText = "";
+
+  // Mostra os stats do resultado: string simples (derrota) ou breakdown animado (vitória).
+  function renderResultStats(stats) {
+    const el = document.getElementById("overlay-stats");
+    if (!stats) { el.innerHTML = ""; return; }
+    if (typeof stats === "string") { el.textContent = stats; return; }
+    const b = stats; // { kills, livesBonus, speedBonus, total }
+    el.innerHTML =
+      `<div class="score-row"><span>Mortes</span><b>${b.kills}</b></div>` +
+      `<div class="score-row"><span>Bônus de vidas <small>(invicto rende mais)</small></span><b>+${b.livesBonus}</b></div>` +
+      `<div class="score-row"><span>Bônus de rapidez</span><b>+${b.speedBonus}</b></div>` +
+      `<div class="score-total"><span>Total</span><b id="score-total-val">0</b></div>`;
+    const valEl = document.getElementById("score-total-val");
+    const t0 = performance.now(), dur = 750;
+    (function tick(now) {
+      const k = Math.min(1, (now - t0) / dur);
+      valEl.textContent = Math.round(b.total * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(tick);
+    })(performance.now());
+  }
 
   function showOverlay(title, msg, stats, isResult) {
     const ov = document.getElementById("overlay");
     ov.querySelector("h1").textContent = title;
     document.getElementById("overlay-msg").innerHTML = msg;
-    document.getElementById("overlay-stats").textContent = stats || "";
+    renderResultStats(stats);
     document.getElementById("overlay-btn").textContent =
       isResult ? (lastResult.mode === "free" ? "🎮 Modo Livre" : "🗺 Mapa de fases") : "Jogar";
 
