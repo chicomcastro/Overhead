@@ -88,7 +88,8 @@ test.describe("Modo Livre", () => {
     await page.locator("#free-btn").click();
     await expect(page.locator("#free-sheet")).toHaveClass(/show/);
     await expect(page.locator("#difficulty-modes .seg-btn")).toHaveCount(3);
-    await expect(page.locator("#map-modes .seg-btn")).toHaveCount(3);
+    await expect(page.locator("#map-modes .seg-btn")).toHaveCount(
+      await page.evaluate(() => window.__OVERHEAD.mapCount()));
 
     // Fácil → mais almas/vidas; o jogo entra em modo "free"
     await page.locator("#difficulty-modes .seg-btn", { hasText: "Fácil" }).click();
@@ -345,5 +346,24 @@ test.describe("bottom sheets (polish)", () => {
     for (const dy of [40, 100, 160, 230]) await page.mouse.move(x, box.y + dy, { steps: 4 });
     await page.mouse.up();
     await expect(sheet).not.toHaveClass(/show/);
+  });
+});
+
+test.describe("mapas multi-entrada", () => {
+  test("mapa com 2 entradas faz inimigos virem por ambos os caminhos", async ({ page }) => {
+    await boot(page);
+    const paths = await page.evaluate(() => {
+      const O = window.__OVERHEAD;
+      O.setMap("fork");
+      O.startFree();        // Modo Livre no mapa de bifurcação
+      O.setSpeed(0);
+      O.startWave();
+      // avança o suficiente pra sair vários inimigos das duas entradas
+      for (let i = 0; i < 120; i++) O.step(0.3);
+      return O.enemyPaths();
+    });
+    expect(await page.evaluate(() => window.__OVERHEAD.pathCount())).toBe(2);
+    expect(paths).toContain(0);
+    expect(paths).toContain(1); // inimigos chegaram pela 2ª entrada
   });
 });
