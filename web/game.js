@@ -216,34 +216,34 @@
   //  waves = duração; hp = escala de vida; reqStars = estrelas TOTAIS p/ destravar.
   const LEVELS = [
     { id: 1, name: "Despertar",     mapId: "serpent",   waves: 5,  enemies: [], boss: false, hp: 0.9,
-      star2: 1000, star3: 1650, reqStars: 0, tutorial: true,
+      par: 110, reqStars: 0, tutorial: true,
       intro: "Almas perdidas se aproximam do Núcleo. Erga esferas nos nós azuis e segure a linha." },
     { id: 2, name: "Sussurros",     mapId: "comb",      waves: 6,  enemies: ["fast"], boss: false, hp: 1.0,
-      star2: 1200, star3: 1950, reqStars: 2,
+      par: 130, reqStars: 2,
       intro: "Espectros velozes surgem entre os dentes do Pente. A Esfera Gélida ajuda a contê-los." },
     { id: 3, name: "Encruzilhada",  mapId: "ziggy",     waves: 7,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
-      star2: 1400, star3: 2150, reqStars: 4,
+      par: 330, reqStars: 4,
       intro: "Carrascos blindados sobem o ziguezague. Concentre dano para derrubá-los." },
     { id: 4, name: "Duas Frentes",  mapId: "fork",      waves: 8,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
-      star2: 1900, star3: 3050, reqStars: 6,
+      par: 225, reqStars: 6,
       intro: "O caminho se divide: as almas vêm por DUAS frentes. Não deixe nenhuma passar." },
     { id: 5, name: "Céus Sombrios", mapId: "horseshoe", waves: 8,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
-      star2: 1950, star3: 3100, reqStars: 8,
+      par: 220, reqStars: 8,
       intro: "Almas Aladas cortam reto ao Núcleo, ignorando a ferradura. Cubra o ar." },
     { id: 6, name: "O Cerco",       mapId: "cross",     waves: 9,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
-      star2: 2350, star3: 3700, reqStars: 10,
+      par: 285, reqStars: 10,
       intro: "Cerco! Inimigos avançam pela esquerda e pela direita ao mesmo tempo." },
     { id: 7, name: "Procissão",     mapId: "chambers",  waves: 9,  enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.1,
-      star2: 2450, star3: 3900, reqStars: 12,
+      par: 345, reqStars: 12,
       intro: "Sacerdotes curam os feridos pelas câmaras. Elimine-os primeiro." },
     { id: 8, name: "Portões",       mapId: "gates",     waves: 10, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.05,
-      star2: 3100, star3: 4900, reqStars: 14,
+      par: 230, reqStars: 14,
       intro: "Dois portões — um pelo céu, um pelas profundezas — despejam tudo sobre o Núcleo." },
     { id: 9, name: "Espiral",       mapId: "spiral",    waves: 11, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.2,
-      star2: 3700, star3: 5800, reqStars: 16,
+      par: 615, reqStars: 16,
       intro: "A espiral os traz devagar — mas em peso. Defenda em camadas." },
     { id: 10, name: "O Ceifador",   mapId: "delta",     waves: 12, enemies: ["fast", "tank", "flyer", "healer"], boss: true, hp: 1.1,
-      star2: 4500, star3: 7200, reqStars: 18,
+      par: 355, reqStars: 18,
       intro: "O Ceifador comanda TRÊS frentes e desperta a cada 5 ondas. O teste final." },
   ];
   let activeLevel = 1;
@@ -268,7 +268,9 @@
   const levelById = (id) => LEVELS.find((l) => l.id === id) || LEVELS[0];
   const isFree = () => !!state && state.mode === "free";
   const levelWaves = () => isFree() ? CONFIG.totalWaves : (levelById(activeLevel).waves || CONFIG.totalWaves);
-  const starsFor = (lv, score, won) => (!won ? 0 : score >= lv.star3 ? 3 : score >= lv.star2 ? 2 : 1);
+  // Estrelas por DESEMPENHO: ★ vencer · ★★ invicto OU rápido · ★★★ invicto E rápido.
+  const starsForResult = (won, flawless, fast) =>
+    !won ? 0 : (flawless && fast ? 3 : (flawless || fast ? 2 : 1));
 
   // ----- Tipos de torre (esferas) -----
   const TOWER_TYPES = [
@@ -361,6 +363,7 @@
       levelId: activeLevel,
       souls: diff.souls,
       lives: diff.lives,
+      maxLives: diff.lives,   // p/ saber se terminou invicto (sem vazar)
       score: 0,
       wave: 0,
       running: false,      // true durante uma onda
@@ -1680,9 +1683,11 @@
     const b = finalizeScore();
     state.score = b.total; // placar final consolidado
     const lv = isFree() ? null : levelById(activeLevel);
-    const stars = lv ? starsFor(lv, b.total, true) : 0;
+    const flawless = state.lives >= state.maxLives;            // não vazou nenhuma vida
+    const fast = !!lv && state.time <= (lv.par || Infinity);   // limpou dentro do tempo "rápido"
+    const stars = lv ? starsForResult(true, flawless, fast) : 0;
     if (lv) Progress.record(lv.id, b.total, stars);
-    lastResult = { stars, level: lv, mode: isFree() ? "free" : "campaign", breakdown: b };
+    lastResult = { stars, level: lv, mode: isFree() ? "free" : "campaign", breakdown: b, flawless, fast };
     const title = isFree() ? "Vitória!" : "Fase concluída!";
     const msg = isFree()
       ? `Você sobreviveu às <b>${CONFIG.totalWaves} ondas</b>!`
@@ -1741,6 +1746,23 @@
       starsEl.hidden = false;
     } else {
       starsEl.hidden = true;
+    }
+
+    // selos de desempenho (Invicto / Rápido) + dica de como subir de estrela
+    const flagsEl = document.getElementById("result-flags");
+    if (isResult && state.won && lastResult.mode === "campaign") {
+      const fl = lastResult.flawless, fa = lastResult.fast;
+      let hint = "";
+      if (!fl && !fa) hint = "Sem vazar <b>e</b> mais rápido → ★★★";
+      else if (!fl) hint = "Termine <b>sem vazar</b> → ★★★";
+      else if (!fa) hint = "Termine <b>mais rápido</b> → ★★★";
+      flagsEl.innerHTML =
+        `<span class="flag ${fl ? "on" : ""}">🛡 Invicto</span>` +
+        `<span class="flag ${fa ? "on" : ""}">⚡ Rápido</span>` +
+        (hint ? `<div class="flag-hint">${hint}</div>` : "");
+      flagsEl.hidden = false;
+    } else {
+      flagsEl.hidden = true;
     }
 
     // "Próxima fase": só em vitória de campanha com a fase seguinte já desbloqueada
@@ -2303,6 +2325,8 @@
     pathCount: () => PATHS.length,
     enemyPaths: () => [...new Set(state.enemies.map((e) => e.path))].sort(),
     mode: () => state.mode,
+    lastStars: () => lastResult.stars,
+    lastResultInfo: () => ({ stars: lastResult.stars, flawless: !!lastResult.flawless, fast: !!lastResult.fast }),
     openLevels: () => openLevels(),
     levelInfo: (id) => ({ ...Progress.get(id), unlocked: Progress.unlocked(id) }),
     totalStars: () => Progress.totalStars(),

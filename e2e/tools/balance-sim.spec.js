@@ -70,22 +70,20 @@ async function playLevel(page, id) {
       if (post.gameOver) break;
     }
     const f = O.snapshot();
-    return { won: f.won, wave: f.wave, score: f.score, lives: f.lives, leaked };
+    const ri = O.lastResultInfo ? O.lastResultInfo() : { stars: 0, flawless: false, fast: false };
+    return { won: f.won, wave: f.wave, score: f.score, lives: f.lives, leaked, time: f.time, ri };
   }, id);
 }
 
 test("balance campanha (por fase)", async ({ page }) => {
   await boot(page);
   const n = await page.evaluate(() => window.__OVERHEAD.levelCount());
-  console.log("\n===== CAMPANHA (build razoável) =====");
-  console.log("fase | venceu | onda | score | vidas | vazou | sugestão 2★/3★");
+  console.log("\n===== CAMPANHA (bot razoável: build forte + ondas no ritmo) =====");
+  console.log("fase | venceu | onda | vidas | vazou | tempo(s) | invicto | rápido | ★ bot");
   for (let id = 1; id <= n; id++) {
     const r = await playLevel(page, id);
-    // sugestão: 2★ ~ 70% do score do bot razoável; 3★ ~ 1.35× do bot
-    const s2 = Math.round((r.score * 0.7) / 100) * 100;
-    const s3 = Math.round((r.score * 1.35) / 100) * 100;
     console.log(
-      `  ${id}  |  ${r.won ? "SIM" : "não"}  |  ${String(r.wave).padStart(2)}  | ${String(r.score).padStart(5)} |  ${String(r.lives).padStart(3)} |  ${String(r.leaked).padStart(3)} | ${s2}/${s3}`
+      `  ${id}  |  ${r.won ? "SIM" : "não"}  |  ${String(r.wave).padStart(2)} | ${String(r.lives).padStart(3)} | ${String(r.leaked).padStart(3)} | ${String(r.time.toFixed(0)).padStart(4)} |   ${r.ri.flawless ? "✓" : "·"}    |   ${r.ri.fast ? "✓" : "·"}   | ${r.ri.stars}★`
     );
   }
 });
