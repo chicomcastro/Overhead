@@ -1776,6 +1776,9 @@
     if (nextId) { nextBtn.dataset.next = String(nextId); nextBtn.hidden = false; }
     else nextBtn.hidden = true;
 
+    // "Repetir fase": em qualquer resultado de campanha (rejogar a fase atual)
+    document.getElementById("replay-btn").hidden = !(isResult && lastResult.mode === "campaign" && lastResult.level);
+
     // texto do compartilhamento (o gatilho agora é o ícone mini no detalhamento)
     if (isResult) {
       const lv = lastResult.level;
@@ -2156,6 +2159,11 @@
     const nid = +document.getElementById("next-level-btn").dataset.next;
     if (nid) openLevelIntro(nid);
   });
+  // "Repetir fase" (resultado) reinicia a fase atual direto
+  document.getElementById("replay-btn").addEventListener("click", () => {
+    Sound.init();
+    startLevel((lastResult.level && lastResult.level.id) || activeLevel);
+  });
 
   // ----- Menu de pausa: continuar / reiniciar / menu principal -----
   function setPaused(p) {
@@ -2183,6 +2191,7 @@
     document.getElementById("overlay-btn").textContent = "Jogar";
     document.getElementById("share-btn").hidden = true;
     document.getElementById("next-level-btn").hidden = true;
+    document.getElementById("replay-btn").hidden = true;
     document.getElementById("save-row").hidden = true;
     pendingScore = null;
     renderLeaderboard();

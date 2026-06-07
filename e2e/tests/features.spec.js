@@ -421,3 +421,18 @@ test.describe("estrelas por desempenho", () => {
     expect(ri.flawless).toBe(true);
   });
 });
+
+test.describe("repetir fase", () => {
+  test("resultado tem 'Repetir fase' que reinicia a fase atual", async ({ page }) => {
+    await boot(page);
+    await page.evaluate(() => window.__OVERHEAD.startLevel(2));
+    if (await page.evaluate(() => window.__OVERHEAD.coachVisible())) await page.locator("#coach-ok").click();
+    await page.evaluate(() => window.__OVERHEAD.endGame(true));
+    await expect(page.locator("#replay-btn")).toBeVisible();
+    await page.locator("#replay-btn").click();
+    const s = await page.evaluate(() => window.__OVERHEAD.snapshot());
+    expect(await page.evaluate(() => window.__OVERHEAD.levelId())).toBe(2); // mesma fase
+    expect(s.gameOver).toBe(false);  // jogo reiniciado
+    expect(s.wave).toBe(0);
+  });
+});
