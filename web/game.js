@@ -1797,7 +1797,17 @@
   function renderBest() {
     const el = document.getElementById("best");
     const total = Progress.totalStars(), max = LEVELS.length * 3;
-    el.textContent = total > 0 ? `⭐ ${total}/${max} estrelas` : "";
+    if (total <= 0) { el.innerHTML = ""; return; }
+    el.innerHTML =
+      `<button id="best-chip" class="best-chip" aria-expanded="false">⭐ ${total}/${max} <span class="best-i">ⓘ</span></button>` +
+      `<div id="best-info" class="best-info" hidden>` +
+      `Estrelas por fase: <b>★</b> vencer · <b>★★</b> invicto <i>ou</i> rápido · <b>★★★</b> invicto <i>e</i> rápido.</div>`;
+    const chip = document.getElementById("best-chip"), info = document.getElementById("best-info");
+    chip.addEventListener("click", () => {
+      const open = info.hidden;
+      info.hidden = !open;
+      chip.setAttribute("aria-expanded", String(open));
+    });
   }
 
   function renderLeaderboard(highlightDate) {
