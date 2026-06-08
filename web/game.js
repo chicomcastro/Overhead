@@ -216,7 +216,7 @@
   //  waves = duração; hp = escala de vida; reqStars = estrelas TOTAIS p/ destravar.
   const LEVELS = [
     { id: 1, name: "Despertar",     mapId: "serpent",   waves: 5,  enemies: [], boss: false, hp: 0.9,
-      par: 110, reqStars: 0, tutorial: true,
+      par: 120, reqStars: 0, tutorial: true,
       intro: "Almas perdidas se aproximam do Núcleo. Erga esferas nos nós azuis e segure a linha." },
     { id: 2, name: "Sussurros",     mapId: "comb",      waves: 6,  enemies: ["fast"], boss: false, hp: 1.0,
       par: 130, reqStars: 2,
@@ -228,7 +228,7 @@
       par: 225, reqStars: 6,
       intro: "O caminho se divide: as almas vêm por DUAS frentes. Não deixe nenhuma passar." },
     { id: 5, name: "Céus Sombrios", mapId: "horseshoe", waves: 8,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
-      par: 220, reqStars: 8,
+      par: 245, reqStars: 8,
       intro: "Almas Aladas cortam reto ao Núcleo, ignorando a ferradura. Cubra o ar." },
     { id: 6, name: "O Cerco",       mapId: "cross",     waves: 9,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
       par: 285, reqStars: 10,
@@ -1667,11 +1667,14 @@
   }
 
   // Pontuação final = mortes + bônus por vidas restantes (invicto) + rapidez.
+  const SPEED_PER_SEC = 8; // pontos por segundo abaixo do par (cada segundo conta)
   function finalizeScore() {
     const kills = state.score;
     const livesBonus = state.lives * 40;                 // sobreviver/invicto vale muito
-    const par = (levelWaves() + 1) * 26;                 // tempo "alvo" da fase (s)
-    const speedBonus = Math.max(0, Math.round((par - state.time) * 5)); // mais rápido = mais
+    // mesmo "par" da estrela ⚡ Rápido: dentro do par rende pontos E a estrela.
+    const lv = isFree() ? null : levelById(activeLevel);
+    const par = lv ? lv.par : (levelWaves() + 1) * 26;
+    const speedBonus = Math.max(0, Math.round((par - state.time) * SPEED_PER_SEC));
     const total = kills + livesBonus + speedBonus;
     return { kills, livesBonus, speedBonus, total };
   }
