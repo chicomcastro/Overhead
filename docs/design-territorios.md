@@ -122,16 +122,20 @@ atacam a fortaleza do Bruxo pela costa.
 ## Progressão entre territórios
 
 ```
-O Reino (30★ max) → A Floresta (30★) → O Vulcão (30★) → O Oceano (30★)
-                                                         Total: 120★
+O Reino (30★ max) →25★→ A Floresta (30★) →25★→ O Vulcão (30★) →25★→ O Oceano (30★)
+                                                                     Total: 120★
 ```
 
-- Cada território desbloqueia com **X estrelas totais** do anterior
-  (ex: Floresta requer 15★ do Reino = ~metade).
+- Cada território tem **contador de estrelas separado** (0–30★).
+- Desbloqueia o próximo com **25★ no território atual** (~83%).
+- **Inimigos isolados:** cada território usa exclusivamente seus próprios
+  inimigos — não há mistura cross-território.
+- **Modo Livre por território:** cada território tem seu próprio Modo Livre
+  com dificuldade, mapas e inimigos daquele território.
 - A torre nova de cada território fica disponível em **todos os modos**
-  uma vez desbloqueada (Modo Livre e territórios anteriores também ganham).
-- O bestiário cresce: inimigos de territórios anteriores podem aparecer em
-  fases tardias dos novos (ex: Cavaleiro na Floresta fase 8).
+  uma vez desbloqueada.
+- **Ilustrações via SVGs custom** — cada fase e território terá assets SVG
+  próprios (não emoji).
 
 ---
 
@@ -188,15 +192,13 @@ para suportar múltiplos territórios visualmente.
 
 ---
 
-## Decisões em aberto
+## Decisões tomadas
 
-1. **Quantas fases por território?** 10 (atual) ou reduzir para 8 e ter mais
-   territórios?
-2. **Inimigos cross-território:** aparecem misturados nas fases tardias ou cada
-   território é isolado?
-3. **Dificuldade no Modo Livre:** se aplica aos territórios novos ou só ao
-   primeiro?
-4. **Meta-progression:** estrelas de todos os territórios somam num total global
-   ou cada um tem contador separado?
-5. **Visual do mapa:** ilustrações via emoji/CSS (viável agora) ou SVGs custom
-   (requer assets)?
+| Questão | Decisão |
+|---------|---------|
+| Fases por território | **10** |
+| Inimigos cross-território | **Não** — cada território isolado |
+| Modo Livre | **Um por território** (dificuldade + mapas + inimigos daquele território) |
+| Estrelas | **Contador separado** por território (0–30★) |
+| Desbloqueio | **25★** no território atual abre o próximo |
+| Ilustrações | **SVGs custom** por fase e território |
