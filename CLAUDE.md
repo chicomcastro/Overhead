@@ -17,7 +17,7 @@ web/
   service-worker.js
   manifest.webmanifest
 e2e/               # testes Playwright (desktop + mobile)
-Assets/            # assets Unity legados (não usados pela versão web)
+unity/             # projeto Unity original (legado, não usado pela versão web)
 BACKLOG.md         # fonte de verdade do backlog (sem issues no GH)
 ```
 
