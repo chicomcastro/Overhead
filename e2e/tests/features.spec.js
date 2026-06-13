@@ -23,9 +23,9 @@ test.describe("prioridade de alvo", () => {
 
     const modes = page.locator("#tp-target-modes .tp-mode");
     await expect(modes).toHaveCount(4);
-    // começa em "Núcleo" (core) ativo
+    // começa em "Torre" (core) ativo
     expect(await page.evaluate((n) => window.__OVERHEAD.targetModeAt(n), node)).toBe("core");
-    await expect(page.locator("#tp-target-modes .tp-mode.active")).toHaveText("Núcleo");
+    await expect(page.locator("#tp-target-modes .tp-mode.active")).toHaveText("Torre");
 
     // clica em "Forte" → muda o modo da torre
     await page.locator("#tp-target-modes .tp-mode", { hasText: "Forte" }).click();
