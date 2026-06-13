@@ -26,5 +26,5 @@ test("tocar num nó com esfera selecionada constrói a torre", async ({ page }) 
 
   const after = await snap(page);
   expect(after.towers.length).toBe(before.towers.length + 1); // torre construída
-  expect(after.souls).toBeLessThan(before.souls);             // almas descontadas
+  expect(after.mana).toBeLessThan(before.mana);             // mana descontadas
 });

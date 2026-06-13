@@ -22,7 +22,7 @@ test("evidências visuais da partida", async ({ page }, testInfo) => {
   // 2) Campo com torres construídas
   await page.evaluate(() => window.__OVERHEAD.reset());
   await page.evaluate(() => window.__OVERHEAD.setSpeed(0));
-  for (const [t, n] of [["soul", 0], ["frost", 3], ["doom", 4], ["blast", 5]]) {
+  for (const [t, n] of [["arcane", 0], ["frost", 3], ["doom", 4], ["blast", 5]]) {
     await api(page, "build", t, n);
   }
   await shot(page, testInfo, "02-torres-construidas");

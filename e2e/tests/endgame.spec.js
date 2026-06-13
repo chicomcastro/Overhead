@@ -1,4 +1,4 @@
-// Testa as features de endgame/conteúdo: melhorias globais (ralo de almas),
+// Testa as features de endgame/conteúdo: melhorias globais (ralo de mana),
 // modo infinito e os novos inimigos (voador, curandeiro).
 import { test, expect } from "@playwright/test";
 import { boot } from "./helpers.js";
@@ -9,12 +9,12 @@ test.beforeEach(async ({ page }, testInfo) => {
   await boot(page);
 });
 
-test("melhorias globais funcionam como ralo de almas", async ({ page }) => {
+test("melhorias globais funcionam como ralo de mana", async ({ page }) => {
   const r = await page.evaluate(() => {
     const O = window.__OVERHEAD;
     O.reset(); O.setSpeed(0);
-    // banca almas jogando algumas ondas com torres baratas
-    for (const n of [0, 1, 3, 4, 5]) O.build("soul", n);
+    // banca mana jogando algumas ondas com torres baratas
+    for (const n of [0, 1, 3, 4, 5]) O.build("arcane", n);
     for (let w = 0; w < 8; w++) {
       const s = O.snapshot();
       if (s.gameOver) break;
@@ -23,23 +23,23 @@ test("melhorias globais funcionam como ralo de almas", async ({ page }) => {
     }
     const cost0 = O.globalCost("dmg");
     const before = O.snapshot();
-    // garante almas suficientes avançando mais, se preciso
+    // garante mana suficientes avançando mais, se preciso
     let guard = 0;
-    while (O.snapshot().souls < cost0 && guard++ < 400) {
+    while (O.snapshot().mana < cost0 && guard++ < 400) {
       const s = O.snapshot();
       if (s.gameOver) break;
       if (!s.running) O.startWave();
       O.step(0.5);
     }
-    const soulsBefore = O.snapshot().souls;
+    const manaBefore = O.snapshot().mana;
     const bought = O.buyGlobal("dmg");
     const after = O.snapshot();
     const cost1 = O.globalCost("dmg");
-    return { cost0, soulsBefore, bought, after, cost1 };
+    return { cost0, manaBefore, bought, after, cost1 };
   });
   expect(r.bought).toBe(true);
   expect(r.after.globals.dmg).toBe(1);
-  expect(r.after.souls).toBe(r.soulsBefore - r.cost0); // gastou as almas
+  expect(r.after.mana).toBe(r.manaBefore - r.cost0); // gastou as mana
   expect(r.cost1).toBeGreaterThan(r.cost0);            // próximo nível custa mais
 });
 
@@ -51,7 +51,7 @@ test("modo infinito continua além da onda 20 (sem vitória)", async ({ page }) 
     const mainType = "doom";
     for (const [t, n] of [["doom", 3], ["doom", 4], ["doom", 5], ["frost", 0], ["frost", 1]]) O.build(t, n);
     const nodeCount = O.nodeCount();
-    // board esmagadora: constrói tudo, sobe níveis e despeja almas em
+    // board esmagadora: constrói tudo, sobe níveis e despeja mana em
     // melhorias globais — isola o teste do balanceamento (queremos só provar
     // que passar da onda 20 não dispara vitória no modo infinito).
     const spend = () => {
@@ -87,7 +87,7 @@ test("novos inimigos (voador e curandeiro) aparecem nas ondas", async ({ page })
     const O = window.__OVERHEAD;
     O.startLevel(7); O.setSpeed(0); // fase 7 (Procissão) libera voador + curandeiro
     // board forte pra sobreviver até as ondas que introduzem os novos tipos
-    for (const [t, n] of [["doom", 3], ["doom", 4], ["doom", 5], ["soul", 0], ["soul", 1]]) O.build(t, n);
+    for (const [t, n] of [["doom", 3], ["doom", 4], ["doom", 5], ["arcane", 0], ["arcane", 1]]) O.build(t, n);
     const nodeCount = O.nodeCount();
     const spend = () => {
       let acted = true;

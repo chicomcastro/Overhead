@@ -9,9 +9,9 @@ async function gotoFresh(page) {
 }
 
 async function buildSoul(page) {
-  await page.evaluate(() => window.__OVERHEAD.addSouls(500));
+  await page.evaluate(() => window.__OVERHEAD.addMana(500));
   const node = await page.evaluate(() => window.__OVERHEAD.freeNodes()[0]);
-  await page.evaluate((n) => window.__OVERHEAD.build("soul", n), node);
+  await page.evaluate((n) => window.__OVERHEAD.build("arcane", n), node);
   return node;
 }
 
@@ -93,11 +93,11 @@ test.describe("Modo Livre", () => {
     await expect(page.locator("#map-modes .seg-btn")).toHaveCount(
       await page.evaluate(() => window.__OVERHEAD.mapCount()));
 
-    // Fácil → mais almas/vidas; o jogo entra em modo "free"
+    // Fácil → mais mana/vidas; o jogo entra em modo "free"
     await page.locator("#difficulty-modes .seg-btn", { hasText: "Fácil" }).click();
     await page.locator("#free-play").click();
     let s = await page.evaluate(() => window.__OVERHEAD.snapshot());
-    expect(s.souls).toBe(50);
+    expect(s.mana).toBe(50);
     expect(s.lives).toBe(25);
     expect(await page.evaluate(() => window.__OVERHEAD.mode())).toBe("free");
     expect(await page.evaluate(() => window.__OVERHEAD.difficulty())).toBe("easy");
@@ -109,7 +109,7 @@ test.describe("Modo Livre", () => {
     await page.locator("#difficulty-modes .seg-btn", { hasText: "Difícil" }).click();
     await page.locator("#free-play").click();
     s = await page.evaluate(() => window.__OVERHEAD.snapshot());
-    expect(s.souls).toBe(30);
+    expect(s.mana).toBe(30);
     expect(s.lives).toBe(15);
 
     // campanha NÃO usa dificuldade: a fase 1 sempre roda em "normal"
@@ -310,9 +310,9 @@ test.describe("menu de pausa", () => {
 
   test("reiniciar zera a fase (torres e onda)", async ({ page }) => {
     await boot(page);
-    await page.evaluate(() => window.__OVERHEAD.addSouls(500));
+    await page.evaluate(() => window.__OVERHEAD.addMana(500));
     const node = await page.evaluate(() => window.__OVERHEAD.freeNodes()[0]);
-    await page.evaluate((n) => window.__OVERHEAD.build("soul", n), node);
+    await page.evaluate((n) => window.__OVERHEAD.build("arcane", n), node);
     await page.evaluate(() => window.__OVERHEAD.startWave());
 
     await page.locator("#pause-btn").click();

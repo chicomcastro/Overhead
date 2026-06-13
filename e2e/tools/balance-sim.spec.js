@@ -6,7 +6,7 @@ import { test } from "@playwright/test";
 // estrela (star2/star3), a escala de HP e os requisitos por fase.
 //   Rodar:  npm run balance
 //
-// Jogador-robô: cobre os nós (1 em cada 3 vira Esfera Fatal, resto Esfera de Alma),
+// Jogador-robô: cobre os nós (1 em cada 3 vira Esfera Fatal, resto Esfera Arcana),
 // melhora as torres em rodízio e despeja o excedente em melhorias globais.
 
 async function boot(page) {
@@ -30,10 +30,10 @@ async function playLevel(page, id) {
     function manage() {
       let free = O.freeNodes();
       while (free.length) {
-        const souls = O.snapshot().souls;
+        const mana = O.snapshot().mana;
         const built = O.nodes().filter((n) => n.taken).length;
-        if (built % 3 === 2 && souls >= 34) O.build("doom", free[0]);
-        else if (souls >= 14) O.build("soul", free[0]);
+        if (built % 3 === 2 && mana >= 34) O.build("doom", free[0]);
+        else if (mana >= 14) O.build("arcane", free[0]);
         else break;
         free = O.freeNodes();
       }
@@ -45,7 +45,7 @@ async function playLevel(page, id) {
       }
       let guard = 0;
       while (guard++ < 40) {
-        const s = O.snapshot().souls;
+        const s = O.snapshot().mana;
         if (s >= O.globalCost("dmg") + 80) O.buyGlobal("dmg");
         else if (s >= O.globalCost("rng") + 80) O.buyGlobal("rng");
         else break;

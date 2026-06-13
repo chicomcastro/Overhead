@@ -4,7 +4,7 @@
 
 <img src="https://media.giphy.com/media/QvdtfdGUijNjRjVJks/giphy.gif" width="400">  <img src="https://media.giphy.com/media/Md4kdHRfcWkaPgJbFv/giphy.gif" width="400">
 
-Tower defense game — defend the Master Tower from escalating waves of souls, build defensive spheres along the path, and use each sphere's special effects to survive.
+Tower defense game — you are the Wizard. Defend your tower from waves of knights trying to rescue the princess. Build magical spheres along the path to stop them.
 
 ## Play
 

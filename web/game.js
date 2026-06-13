@@ -4,11 +4,11 @@
  *
  * Mecânicas fiéis ao original:
  *   - Torre Mestra (core) central com vidas; inimigos que chegam atacam.
- *   - "Almas" (souls) como moeda: matar inimigos rende almas; torres custam almas.
+ *   - "Mana" como moeda: derrotar inimigos rende mana; torres custam mana.
  *   - Ondas com dificuldade escalante (HP e velocidade x constante por onda).
  *   - Torres (esferas) miram automaticamente e disparam projéteis teleguiados.
  *   - Efeitos especiais: slow/freeze, fatal hit (crit instantâneo),
- *     bônus de alma, dano em área e queimadura (burn DoT).
+ *     bônus de mana, dano em área e queimadura (burn DoT).
  * ===================================================================== */
 
 (() => {
@@ -24,7 +24,7 @@
   //  CONFIG — espelha as constantes do WaveSpawner / SoulsCounter Unity
   // ===================================================================
   const CONFIG = {
-    initialSouls: 40,
+    initialMana: 40,
     initialLives: 20,
     baseHP: 58,            // baseHPConst
     baseSpeed: 54,         // px/s (baseSpeedConst escalado p/ tela)
@@ -34,12 +34,12 @@
     spawnDelay: 0.6,       // s entre inimigos
     totalWaves: 20,
     // ----- Upgrades (skill tree do original, simplificado por torre) -----
-    maxLevel: 6,           // nível 1 (base) -> 6; teto de dano + ralo de almas
+    maxLevel: 6,           // nível 1 (base) -> 6; teto de dano + ralo de mana
     upgradeCostMul: 1.6,   // custo do próx. nível = base * mul^nível
     lvlDamageMul: 1.4,     // +40% dano por nível
     lvlRangeMul: 1.12,     // +12% alcance por nível
     lvlCooldownMul: 0.88,  // -12% recarga por nível
-    // ----- Melhorias globais (ralo de almas do endgame, sem teto) -----
+    // ----- Melhorias globais (ralo de mana do endgame, sem teto) -----
     globalDmgStep: 0.07,   // +7% dano por nível de Foco Arcano
     globalRngStep: 0.06,   // +6% alcance por nível de Lentes Rúnicas
   };
@@ -48,14 +48,14 @@
   // hpMul = HP base por dificuldade; hpRamp = quão rápido o HP cresce por onda
   // (escala o expoente da rampa) — diferencia a CURVA, não só os recursos.
   const DIFFICULTIES = {
-    easy:   { label: "Fácil",   souls: 50, lives: 25, hpMul: 0.90, hpRamp: 0.82, rewardMul: 1.15 },
-    normal: { label: "Normal",  souls: 40, lives: 20, hpMul: 1.0,  hpRamp: 1.0,  rewardMul: 1.0 },
-    hard:   { label: "Difícil", souls: 30, lives: 15, hpMul: 1.10, hpRamp: 1.22, rewardMul: 0.9 },
+    easy:   { label: "Fácil",   mana: 50, lives: 25, hpMul: 0.90, hpRamp: 0.82, rewardMul: 1.15 },
+    normal: { label: "Normal",  mana: 40, lives: 20, hpMul: 1.0,  hpRamp: 1.0,  rewardMul: 1.0 },
+    hard:   { label: "Difícil", mana: 30, lives: 15, hpMul: 1.10, hpRamp: 1.22, rewardMul: 0.9 },
   };
   const DIFFICULTY_ORDER = ["easy", "normal", "hard"];
   const diffCfg = () => DIFFICULTIES[state.difficulty] || DIFFICULTIES.normal;
 
-  // Habilidades ativas (cooldown global, sem custo de almas).
+  // Habilidades ativas (cooldown global, sem custo de mana).
   const ABILITIES = {
     freeze: { icon: "❄", name: "Congelar", cd: 24, dur: 3.5, factor: 0.15 },          // congela todos
     storm:  { icon: "⚡", name: "Tempestade", cd: 34, dmgPct: 0.32, dmgFlat: 30 },     // dano em área
@@ -63,7 +63,7 @@
   const ABILITY_ORDER = ["freeze", "storm"];
 
   // ----- Mapas: cada um tem um caminho (waypoints) e nós de construção -----
-  // O mundo é 1280×720; o último ponto do caminho é o núcleo (Torre Mestra).
+  // O mundo é 1280×720; o último ponto do caminho é a torre (Torre Mestra).
   const MAPS = [
     {
       id: "serpent", name: "Serpente",
@@ -105,7 +105,7 @@
       ],
     },
     {
-      // DUAS entradas (esquerda + topo) que se fundem num corredor até o Núcleo.
+      // DUAS entradas (esquerda + topo) que se fundem num corredor até a Torre.
       id: "fork", name: "Bifurcação",
       paths: [
         [ { x: -40, y: 200 }, { x: 260, y: 200 }, { x: 260, y: 400 }, { x: 660, y: 400 }, { x: 660, y: 580 } ],
@@ -118,7 +118,7 @@
       ],
     },
     {
-      // DUAS entradas opostas (esquerda + direita) que se fundem e descem ao Núcleo.
+      // DUAS entradas opostas (esquerda + direita) que se fundem e descem à Torre.
       id: "cross", name: "Cruzamento",
       paths: [
         [ { x: -40, y: 180 }, { x: 440, y: 180 }, { x: 440, y: 360 }, { x: 640, y: 360 }, { x: 640, y: 620 } ],
@@ -131,7 +131,7 @@
       ],
     },
     {
-      // DUAS entradas (topo + base) que se fundem num corredor horizontal até o Núcleo.
+      // DUAS entradas (topo + base) que se fundem num corredor horizontal até a Torre.
       id: "gates", name: "Portões",
       paths: [
         [ { x: 500, y: -40 }, { x: 500, y: 360 }, { x: 1120, y: 360 } ],
@@ -144,7 +144,7 @@
       ],
     },
     {
-      // TRÊS entradas pelo topo (esq, centro, dir) que se fundem e descem ao Núcleo.
+      // TRÊS entradas pelo topo (esq, centro, dir) que se fundem e descem à Torre.
       id: "delta", name: "Delta",
       paths: [
         [ { x: 220, y: -40 }, { x: 220, y: 440 }, { x: 640, y: 440 }, { x: 640, y: 640 } ],
@@ -185,7 +185,7 @@
       ],
     },
     {
-      // UMA entrada em espiral, fechando até o Núcleo no centro.
+      // UMA entrada em espiral, fechando até a Torre no centro.
       id: "spiral", name: "Espiral",
       paths: [[
         { x: -40, y: 60 }, { x: 1180, y: 60 }, { x: 1180, y: 660 }, { x: 120, y: 660 },
@@ -204,7 +204,7 @@
   function applyMap(id) {
     const m = MAPS.find((x) => x.id === id) || MAPS[0];
     currentMap = m.id;
-    // cada mapa tem 1+ caminhos (entradas); todos terminam no Núcleo.
+    // cada mapa tem 1+ caminhos (entradas); todos terminam na Torre.
     PATHS = m.paths || [m.path];
     CORE = PATHS[0][PATHS[0].length - 1];
     NODES = m.nodes.map((n) => ({ x: n.x, y: n.y, taken: false }));
@@ -212,39 +212,39 @@
   applyMap("serpent");
 
   // ----- Campanha: fases com estrelas + introdução progressiva de mecânicas.
-  //  enemies = tipos liberados além da Alma comum; boss = chefe a cada 5 ondas;
+  //  enemies = tipos liberados além do Soldado comum; boss = chefe a cada 5 ondas;
   //  waves = duração; hp = escala de vida; reqStars = estrelas TOTAIS p/ destravar.
   const LEVELS = [
     { id: 1, name: "Despertar",     mapId: "serpent",   waves: 5,  enemies: [], boss: false, hp: 0.9,
       par: 120, reqStars: 0, tutorial: true,
-      intro: "Almas perdidas se aproximam do Núcleo. Erga esferas nos nós azuis e segure a linha." },
+      intro: "Soldados do reino se aproximam da sua Torre. Erga esferas nos nós azuis e segure a linha." },
     { id: 2, name: "Sussurros",     mapId: "comb",      waves: 6,  enemies: ["fast"], boss: false, hp: 1.0,
       par: 130, reqStars: 2,
-      intro: "Espectros velozes surgem entre os dentes do Pente. A Esfera Gélida ajuda a contê-los." },
+      intro: "Batedores velozes surgem entre os dentes do Pente. A Esfera Gélida ajuda a contê-los." },
     { id: 3, name: "Encruzilhada",  mapId: "ziggy",     waves: 7,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
       par: 330, reqStars: 4,
-      intro: "Carrascos blindados sobem o ziguezague. Concentre dano para derrubá-los." },
+      intro: "Cavaleiros blindados sobem o ziguezague. Concentre dano para derrubá-los." },
     { id: 4, name: "Duas Frentes",  mapId: "fork",      waves: 8,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
       par: 225, reqStars: 6,
-      intro: "O caminho se divide: as almas vêm por DUAS frentes. Não deixe nenhuma passar." },
+      intro: "O caminho se divide: os invasores vêm por DUAS frentes. Não deixe nenhum passar." },
     { id: 5, name: "Céus Sombrios", mapId: "horseshoe", waves: 8,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
       par: 245, reqStars: 8,
-      intro: "Almas Aladas cortam reto ao Núcleo, ignorando a ferradura. Cubra o ar." },
+      intro: "Grifos cortam reto à Torre, ignorando a ferradura. Cubra o ar." },
     { id: 6, name: "O Cerco",       mapId: "cross",     waves: 9,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
       par: 285, reqStars: 10,
-      intro: "Cerco! Inimigos avançam pela esquerda e pela direita ao mesmo tempo." },
+      intro: "Cerco! O exército avança pela esquerda e pela direita ao mesmo tempo." },
     { id: 7, name: "Procissão",     mapId: "chambers",  waves: 9,  enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.1,
       par: 345, reqStars: 12,
-      intro: "Sacerdotes curam os feridos pelas câmaras. Elimine-os primeiro." },
+      intro: "Clérigos curam os feridos pelas câmaras. Elimine-os primeiro." },
     { id: 8, name: "Portões",       mapId: "gates",     waves: 10, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.05,
       par: 230, reqStars: 14,
-      intro: "Dois portões — um pelo céu, um pelas profundezas — despejam tudo sobre o Núcleo." },
+      intro: "Dois portões — um pelo céu, um por terra — despejam tudo sobre a Torre." },
     { id: 9, name: "Espiral",       mapId: "spiral",    waves: 11, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.2,
       par: 615, reqStars: 16,
       intro: "A espiral os traz devagar — mas em peso. Defenda em camadas." },
-    { id: 10, name: "O Ceifador",   mapId: "delta",     waves: 12, enemies: ["fast", "tank", "flyer", "healer"], boss: true, hp: 1.1,
+    { id: 10, name: "O Paladino",   mapId: "delta",     waves: 12, enemies: ["fast", "tank", "flyer", "healer"], boss: true, hp: 1.1,
       par: 355, reqStars: 18,
-      intro: "O Ceifador comanda TRÊS frentes e desperta a cada 5 ondas. O teste final." },
+      intro: "O Paladino comanda TRÊS frentes e ressurge a cada 5 ondas. O teste final." },
   ];
   let activeLevel = 1;
   let gameMode = "campaign"; // "campaign" (fases, sem dificuldade) | "free" (Modo Livre)
@@ -275,10 +275,10 @@
   // ----- Tipos de torre (esferas) -----
   const TOWER_TYPES = [
     {
-      id: "soul", name: "Esfera de Alma", color: "#6ee7ff", cost: 14,
+      id: "arcane", name: "Esfera Arcana", color: "#6ee7ff", cost: 14,
       damage: 18, range: 150, cooldown: 0.6, projSpeed: 520,
       desc: "Disparo rápido e equilibrado. Boa contra grupos.",
-      soulBonus: 0.10, // chance de alma extra ao matar
+      manaBonus: 0.10, // chance de mana extra ao derrotar
     },
     {
       id: "frost", name: "Esfera Gélida", color: "#7ad7ff", cost: 22,
@@ -302,20 +302,20 @@
 
   // ----- Tipos de inimigo -----
   const ENEMY_TYPES = {
-    grunt: { name: "Alma", icon: "👻", hpMul: 1.0, speedMul: 1.0, reward: 4, color: "#cdd6f4", radius: 13,
-             desc: "Inimigo comum, equilibrado. Aparece desde a 1ª onda." },
-    fast:  { name: "Espectro", icon: "💨", hpMul: 0.6, speedMul: 1.7, reward: 5, color: "#a6e3a1", radius: 11,
+    grunt: { name: "Soldado", icon: "⚔️", hpMul: 1.0, speedMul: 1.0, reward: 4, color: "#cdd6f4", radius: 13,
+             desc: "Soldado comum do reino. Aparece desde a 1ª onda." },
+    fast:  { name: "Batedor", icon: "💨", hpMul: 0.6, speedMul: 1.7, reward: 5, color: "#a6e3a1", radius: 11,
              desc: "Frágil, mas muito veloz. Bom alvo para torres de lentidão." },
-    tank:  { name: "Carrasco", icon: "🪨", hpMul: 3.2, speedMul: 0.6, reward: 9, color: "#f38ba8", radius: 19,
-             desc: "Lento e resistente. Exige dano concentrado para derrubar." },
-    // Voa em linha reta até o núcleo, ignorando o caminho.
-    flyer: { name: "Alma Alada", icon: "🦇", hpMul: 0.85, speedMul: 1.15, reward: 6, color: "#89dceb", radius: 12, flying: true,
-             desc: "Voa em linha reta até o núcleo, ignorando o caminho." },
+    tank:  { name: "Cavaleiro", icon: "🛡️", hpMul: 3.2, speedMul: 0.6, reward: 9, color: "#f38ba8", radius: 19,
+             desc: "Blindado e resistente. Exige dano concentrado para derrubar." },
+    // Voa em linha reta até a Torre, ignorando o caminho.
+    flyer: { name: "Grifo", icon: "🦅", hpMul: 0.85, speedMul: 1.15, reward: 6, color: "#89dceb", radius: 12, flying: true,
+             desc: "Voa em linha reta até a Torre, ignorando o caminho." },
     // Cura inimigos próximos periodicamente.
-    healer:{ name: "Sacerdote", icon: "✚", hpMul: 1.7, speedMul: 0.8, reward: 8, color: "#94e2d5", radius: 15, heal: 22, healRange: 95, healInterval: 1.1,
-             desc: "Cura inimigos próximos periodicamente. Elimine-o primeiro." },
-    boss:  { name: "Ceifador", icon: "💀", hpMul: 14, speedMul: 0.5, reward: 40, color: "#f9e2af", radius: 26,
-             desc: "Chefe colossal a cada 5 ondas. Recompensa generosa." },
+    healer:{ name: "Clérigo", icon: "✚", hpMul: 1.7, speedMul: 0.8, reward: 8, color: "#94e2d5", radius: 15, heal: 22, healRange: 95, healInterval: 1.1,
+             desc: "Cura aliados próximos periodicamente. Elimine-o primeiro." },
+    boss:  { name: "Paladino", icon: "👑", hpMul: 14, speedMul: 0.5, reward: 40, color: "#f9e2af", radius: 26,
+             desc: "Líder sagrado a cada 5 ondas. Recompensa generosa." },
   };
 
   // Composição de cada onda (lista de tipos de inimigo)
@@ -361,7 +361,7 @@
       difficulty: (state && state.difficulty) || "normal",
       mode: gameMode,
       levelId: activeLevel,
-      souls: diff.souls,
+      mana: diff.mana,
       lives: diff.lives,
       maxLives: diff.lives,   // p/ saber se terminou invicto (sem vazar)
       score: 0,
@@ -371,13 +371,13 @@
       gameOver: false,
       won: false,
       speed: 1,
-      shake: 0,            // tremor de tela ao tomar dano no núcleo
-      flash: 0,            // vinheta vermelha ao tomar dano no núcleo
+      shake: 0,            // tremor de tela ao tomar dano no torre
+      flash: 0,            // vinheta vermelha ao tomar dano no torre
       abilities: { freeze: 0, storm: 0 }, // cooldown restante (s) de cada habilidade
       time: 0,             // relógio de jogo (s), avança com dt — base dos timers de efeito
       victoryPending: false, victoryTimer: 0, // sequência animada de vitória antes do modal
       endless: false,      // modo infinito: sem vitória na onda 20
-      globals: { dmg: 0, rng: 0 }, // melhorias globais compradas (ralo de almas)
+      globals: { dmg: 0, rng: 0 }, // melhorias globais compradas (ralo de mana)
       enemies: [],
       towers: [],
       projectiles: [],
@@ -407,7 +407,7 @@
   function effCooldown(tw) { return tw.type.cooldown * Math.pow(CONFIG.lvlCooldownMul, tw.level - 1); }
   function upgradeCost(tw) { return Math.round(tw.type.cost * Math.pow(CONFIG.upgradeCostMul, tw.level)); }
 
-  // Melhorias globais — ralo de almas sem teto (custo escala com o nível atual)
+  // Melhorias globais — ralo de mana sem teto (custo escala com o nível atual)
   const GLOBALS = {
     dmg: { name: "Foco Arcano", desc: "+dano de todas as torres", base: 60, mul: 1.55, color: "#ffd166" },
     rng: { name: "Lentes Rúnicas", desc: "+alcance de todas as torres", base: 50, mul: 1.5, color: "#6ee7ff" },
@@ -415,8 +415,8 @@
   function globalCost(kind) { return Math.round(GLOBALS[kind].base * Math.pow(GLOBALS[kind].mul, state.globals[kind])); }
   function buyGlobal(kind) {
     const cost = globalCost(kind);
-    if (state.souls < cost) return false;
-    state.souls -= cost;
+    if (state.mana < cost) return false;
+    state.mana -= cost;
     state.globals[kind]++;
     Sound.play("upgrade");
     updateHUD();
@@ -514,7 +514,7 @@
       osc.start(t0); osc.stop(t0 + dur + 0.02);
     }
     const SFX = {
-      shoot_soul:  () => tone({ freq: 660, freq2: 900, type: "triangle", dur: 0.07, vol: 0.16 }),
+      shoot_arcane:  () => tone({ freq: 660, freq2: 900, type: "triangle", dur: 0.07, vol: 0.16 }),
       shoot_frost: () => tone({ freq: 520, freq2: 720, type: "sine",     dur: 0.10, vol: 0.15 }),
       shoot_doom:  () => tone({ freq: 200, freq2: 90,  type: "sawtooth", dur: 0.16, vol: 0.20 }),
       shoot_blast: () => tone({ freq: 300, freq2: 150, type: "square",   dur: 0.12, vol: 0.16 }),
@@ -646,12 +646,12 @@
   function tryBuild(node) {
     const type = state.selectedType;
     if (!type) return;
-    if (state.souls < type.cost) {
-      spawnFloater(node.x, node.y, "Almas insuficientes!", "#ff6b81", 15);
+    if (state.mana < type.cost) {
+      spawnFloater(node.x, node.y, "Mana insuficiente!", "#ff6b81", 15);
       buzz([12, 40, 12]); // padrão de "negado"
       return;
     }
-    state.souls -= type.cost;
+    state.mana -= type.cost;
     node.taken = true;
     const tower = {
       type, node, x: node.x, y: node.y, level: 1,
@@ -675,7 +675,7 @@
 
   function sellTower(tower) {
     const refund = Math.round(tower.invested * 0.6);
-    state.souls += refund;
+    state.mana += refund;
     tower.node.taken = false;
     state.towers = state.towers.filter(t => t !== tower);
     state.selectedTower = null;
@@ -689,11 +689,11 @@
   function upgradeTower(tower) {
     if (tower.level >= CONFIG.maxLevel) return;
     const cost = upgradeCost(tower);
-    if (state.souls < cost) {
-      spawnFloater(tower.x, tower.y, "Almas insuficientes!", "#ff6b81", 15);
+    if (state.mana < cost) {
+      spawnFloater(tower.x, tower.y, "Mana insuficiente!", "#ff6b81", 15);
       return;
     }
-    state.souls -= cost;
+    state.mana -= cost;
     tower.level++;
     tower.invested += cost;
     spawnParticles(tower.x, tower.y, tower.type.color, 16, 120);
@@ -708,10 +708,10 @@
   //  COMBATE
   // ===================================================================
   // Modos de prioridade de alvo. Cada um devolve um "peso": escolhemos o
-  // inimigo no alcance com o MENOR peso. Usar distância ao núcleo trata os
+  // inimigo no alcance com o MENOR peso. Usar distância ao torre trata os
   // voadores (que cortam direto) de forma justa, não pelo progresso no caminho.
   const TARGET_MODES = {
-    core: { label: "Núcleo", weight: (tw, e) => dist(e, CORE) },          // ameaça mais iminente
+    core: { label: "Torre", weight: (tw, e) => dist(e, CORE) },          // ameaça mais iminente
     strong: { label: "Forte", weight: (tw, e) => -e.hp },                 // maior HP
     weak: { label: "Fraco", weight: (tw, e) => e.hp },                    // menor HP (acaba rápido)
     near: { label: "Perto", weight: (tw, e) => dist(tw, e) },            // mais perto da torre
@@ -809,12 +809,12 @@
     if (e.dead) return;
     e.dead = true;
     let reward = Math.round(e.def.reward * diffCfg().rewardMul);
-    state.souls += reward;
+    state.mana += reward;
     state.score += Math.round(reward * 2 + e.maxHP / 10);
 
-    // Bônus de alma (soul bonus effect)
-    if (type && type.soulBonus && Math.random() < type.soulBonus) {
-      state.souls += reward;
+    // Bônus de mana
+    if (type && type.manaBonus && Math.random() < type.manaBonus) {
+      state.mana += reward;
       spawnFloater(e.x, e.y, "+" + reward * 2 + " ✦", "#b388ff", 16);
     } else {
       spawnFloater(e.x, e.y, "+" + reward, "#b388ff", 14);
@@ -926,7 +926,7 @@
       }
 
       const speed = e.baseSpeed * e.slowFactor;
-      // voadores vão direto ao núcleo; os demais seguem o caminho da sua entrada
+      // voadores vão direto ao torre; os demais seguem o caminho da sua entrada
       const P = PATHS[e.path] || PATHS[0];
       const tgt = e.def.flying ? CORE : P[e.wp];
       const d = dist(e, tgt);
@@ -1026,7 +1026,7 @@
   function render() {
     pulse += 0.04;
     const { scale, ox, oy } = camera();
-    // tremor de tela ao tomar dano no núcleo
+    // tremor de tela ao tomar dano no torre
     const sh = state.shake > 0 ? state.shake * 16 : 0;
     const shx = sh ? (Math.random() * 2 - 1) * sh : 0;
     const shy = sh ? (Math.random() * 2 - 1) * sh : 0;
@@ -1277,7 +1277,7 @@
     const node = nodeAt(mouse.world);
     const p = node || mouse.world;
     const t = state.selectedType;
-    const ok = node && state.souls >= t.cost;
+    const ok = node && state.mana >= t.cost;
     ctx.globalAlpha = 0.5;
     ctx.beginPath(); ctx.arc(p.x, p.y, t.range, 0, Math.PI * 2);
     ctx.fillStyle = (ok ? t.color : "#ff6b81") + "12"; ctx.fill();
@@ -1483,7 +1483,7 @@
     if (t.fatal) tags.push("💀 fatal");
     if (t.splash) tags.push("💥 área");
     if (t.burn) tags.push("🔥 queimadura");
-    if (t.soulBonus) tags.push("✦ bônus de almas");
+    if (t.manaBonus) tags.push("✦ bônus de mana");
     const tagEl = panel.querySelector(".tp-tags");
     tagEl.textContent = tags.join("  ·  ");
     tagEl.hidden = tags.length === 0;
@@ -1516,7 +1516,7 @@
       ub.textContent = "Nível máximo";
     } else {
       const c = upgradeCost(tw);
-      ub.disabled = state.souls < c;
+      ub.disabled = state.mana < c;
       ub.textContent = `⬆ Melhorar p/ Nv.${tw.level + 1} (${c} ✦)`;
     }
   }
@@ -1540,7 +1540,7 @@
   //  UI
   // ===================================================================
   function updateHUD() {
-    document.getElementById("souls").textContent = Math.floor(state.souls);
+    document.getElementById("mana").textContent = Math.floor(state.mana);
     document.getElementById("lives").textContent = state.lives;
     const total = state.endless ? null : levelWaves();
     document.getElementById("wave").textContent = total ? state.wave + "/" + total : state.wave;
@@ -1588,7 +1588,7 @@
       const cost = globalCost(kind);
       const icon = kind === "dmg" ? "⚔" : "◎";
       btn.textContent = `${icon} ${g.name} Nv.${state.globals[kind]} — ${cost} ✦`;
-      btn.disabled = state.souls < cost;
+      btn.disabled = state.mana < cost;
       btn.style.borderColor = g.color + "66";
     });
   }
@@ -1600,14 +1600,14 @@
       const card = document.createElement("div");
       card.className = "tower-card";
       if (state.selectedType === t) card.classList.add("selected");
-      if (state.souls < t.cost) card.classList.add("cant");
+      if (state.mana < t.cost) card.classList.add("cant");
 
       const tags = [];
       if (t.slow) tags.push("❄ slow");
       if (t.fatal) tags.push("💀 fatal");
       if (t.splash) tags.push("💥 área");
       if (t.burn) tags.push("🔥 burn");
-      if (t.soulBonus) tags.push("✦ bônus");
+      if (t.manaBonus) tags.push("✦ bônus");
 
       card.innerHTML = `
         <div class="row1">
@@ -1642,14 +1642,14 @@
     Sound.play("lose");
     if (isFree()) {
       lastResult = { stars: 0, level: null, mode: "free" };
-      showOverlay("Derrota", `A Torre Mestra caiu na <b>onda ${state.wave}</b>.`,
+      showOverlay("Derrota", `Sua Torre caiu na <b>onda ${state.wave}</b>.`,
         `★ ${state.score} pontos`, true);
       return;
     }
     const lv = levelById(activeLevel);
     Progress.record(lv.id, state.score, 0);
     lastResult = { stars: 0, level: lv, mode: "campaign" };
-    showOverlay("💀 Derrota", `A Torre Mestra caiu na <b>onda ${state.wave}</b>.`,
+    showOverlay("💀 Derrota", `Sua Torre caiu na <b>onda ${state.wave}</b>.`,
       `★ ${state.score} pontos`, true);
   }
   // Dispara a sequência animada de vitória (brilho no mapa) antes do modal.
@@ -1881,7 +1881,7 @@
     Prefs.set("sound", on);
   });
 
-  // botões de melhorias globais (ralo de almas)
+  // botões de melhorias globais (ralo de mana)
   document.querySelectorAll(".global-btn").forEach((btn) => {
     btn.addEventListener("click", () => { buyGlobal(btn.dataset.kind); });
   });
@@ -2190,7 +2190,7 @@
     ov.classList.remove("result", "win", "lose");
     ov.querySelector("h1").textContent = "OVERHEAD";
     document.getElementById("overlay-msg").innerHTML =
-      "Defenda a Torre Mestra das ondas de almas perdidas.<br />Construa esferas, derrote os inimigos e sobreviva.";
+      "Você é o Bruxo. Defenda sua Torre dos cavaleiros do reino.<br />Erga esferas, derrote os invasores e proteja a princesa.";
     document.getElementById("overlay-btn").textContent = "Jogar";
     document.getElementById("share-btn").hidden = true;
     document.getElementById("next-level-btn").hidden = true;
@@ -2276,7 +2276,7 @@
     startWave: () => startWave(),
     setSpeed: (n) => { state.speed = n; },
     setEndless: (b) => { state.endless = !!b; },
-    addSouls: (n) => { state.souls += n; updateHUD(); },   // só p/ testes
+    addMana: (n) => { state.mana += n; updateHUD(); },   // só p/ testes
     addLives: (n) => { state.lives += n; updateHUD(); },   // só p/ testes
     buyGlobal: (kind) => buyGlobal(kind),
     showCoach: () => showCoach(),
@@ -2376,7 +2376,7 @@
 
     snapshot: () => ({
       time: +state.time.toFixed(2),
-      souls: Math.floor(state.souls), lives: state.lives, wave: state.wave,
+      mana: Math.floor(state.mana), lives: state.lives, wave: state.wave,
       score: state.score, running: state.running, gameOver: state.gameOver,
       won: state.won, betweenTimer: +state.betweenTimer.toFixed(2),
       enemies: state.enemies.length, queued: state.spawnQueue.length,

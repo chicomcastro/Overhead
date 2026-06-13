@@ -3,7 +3,7 @@
 // versão mais nova (evita ficar preso a uma versão antiga em cache); offline
 // cai no cache (app shell), e navegações offline caem no index.html.
 // O nome do cache é versionado: ao mudar, o `activate` apaga os caches antigos.
-const CACHE = "overhead-v2";
+const CACHE = "overhead-v3";
 const ASSETS = [
   "./",
   "./index.html",

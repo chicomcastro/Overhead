@@ -1,7 +1,7 @@
 {
   "name": "Overhead — Tower Defense",
   "short_name": "Overhead",
-  "description": "Defenda a Torre Mestra das ondas de almas perdidas. Tower defense web.",
+  "description": "Você é o Bruxo. Defenda sua Torre dos cavaleiros do reino. Tower defense web.",
   "lang": "pt-BR",
   "start_url": "./index.html",
   "scope": "./",

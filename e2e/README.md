@@ -9,7 +9,7 @@ Servem para três coisas:
    upgradar, vender, disparo/dano, slow, burn, vazamento de vidas, progressão de ondas.
 2. **Gerar dados de balanceamento** (`tests/balance.spec.js`) — joga partidas
    completas com estratégias diferentes e escreve `reports/balance.json` e
-   `reports/balance.md` (tabela por onda: vidas, vazamentos, almas, pontos, torres).
+   `reports/balance.md` (tabela por onda: vidas, vazamentos, mana, pontos, torres).
 3. **Capturar evidência visual** (`tests/screenshots.spec.js`) — screenshots de
    desktop e mobile em momentos-chave, salvos em `reports/screenshots/`.
 

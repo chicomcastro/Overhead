@@ -3,7 +3,7 @@
   --panel: #141b2e;
   --panel-2: #1d2740;
   --accent: #6ee7ff;
-  --souls: #b388ff;
+  --mana: #b388ff;
   --lives: #ff6b81;
   --score: #ffd166;
   --text: #e7ecf5;
@@ -58,7 +58,7 @@ html, body {
 }
 .stat.grow { flex: 1; justify-content: center; color: var(--muted); font-weight: 500; font-size: 15px; }
 .stat-icon { font-size: 20px; }
-.stat-icon.souls { color: var(--souls); }
+.stat-icon.mana { color: var(--mana); }
 .stat-icon.lives { color: var(--lives); }
 .stat-icon.score { color: var(--score); }
 .stat-icon.wave  { color: var(--accent); }
@@ -206,7 +206,7 @@ html, body {
 .tower-card .row1 { display: flex; align-items: center; gap: 8px; }
 .tower-card .dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
 .tower-card .name { font-weight: 700; font-size: 15px; }
-.tower-card .cost { margin-left: auto; color: var(--souls); font-weight: 700; }
+.tower-card .cost { margin-left: auto; color: var(--mana); font-weight: 700; }
 .tower-card .desc { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.35; }
 .tower-card .stats { font-size: 11px; color: #9fb0d0; margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap; }
 
@@ -340,7 +340,7 @@ html, body {
 .panel h1 {
   font-size: 52px;
   letter-spacing: 6px;
-  background: linear-gradient(90deg, var(--accent), var(--souls));
+  background: linear-gradient(90deg, var(--accent), var(--mana));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -814,7 +814,7 @@ html, body {
   min-height: 44px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent), var(--souls));
+  background: linear-gradient(135deg, var(--accent), var(--mana));
   color: #0b0f1a;
   font-weight: 700;
   font-size: 15px;
@@ -875,7 +875,7 @@ html, body {
 }
 .splash-inner { display: flex; flex-direction: column; align-items: center; gap: 8px; animation: splash-pop 0.5s ease both; }
 .splash-logo { width: 92px; height: 92px; filter: drop-shadow(0 0 20px rgba(110,231,255,0.45)); }
-.splash-title { font-size: 32px; font-weight: 800; letter-spacing: 6px; background: linear-gradient(90deg, var(--accent), var(--souls)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.splash-title { font-size: 32px; font-weight: 800; letter-spacing: 6px; background: linear-gradient(90deg, var(--accent), var(--mana)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .splash-sub { color: var(--muted); letter-spacing: 3px; text-transform: uppercase; font-size: 11px; }
 .splash-bar { width: 120px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.12); overflow: hidden; margin-top: 10px; }
 .splash-bar span { display: block; height: 100%; width: 40%; background: var(--accent); border-radius: 2px; animation: splash-load 0.85s ease-in-out infinite; }
@@ -1054,7 +1054,7 @@ html, body {
 .level-card .lv-num {
   flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center; font-weight: 800;
-  background: linear-gradient(135deg, var(--accent), var(--souls)); color: #06121e;
+  background: linear-gradient(135deg, var(--accent), var(--mana)); color: #06121e;
 }
 .level-card.locked .lv-num { background: #2a3550; color: var(--muted); }
 .level-card .lv-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }

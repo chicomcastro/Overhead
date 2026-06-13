@@ -62,8 +62,8 @@ test("menu: sem overflow horizontal", async ({ page }) => {
 test("em jogo: loja, melhorias globais e HUD presentes", async ({ page }) => {
   await boot(page);            // reset, sem overlay
   await expect(page.locator(".tower-card")).toHaveCount(4);    // 4 esferas
-  await expect(page.locator(".global-btn")).toHaveCount(2);    // ralo de almas
-  for (const id of ["souls", "lives", "wave", "score"]) {
+  await expect(page.locator(".global-btn")).toHaveCount(2);    // ralo de mana
+  for (const id of ["mana", "lives", "wave", "score"]) {
     await expect(page.locator(`#${id}`)).toBeVisible();
   }
   await expect(page.locator("#start-btn")).toBeVisible();
@@ -77,9 +77,9 @@ test("em jogo: sem overflow horizontal", async ({ page }) => {
 
 test("torre selecionada: painel com nome/nível/stats substitui as esferas", async ({ page }, ti) => {
   await boot(page);
-  await page.evaluate(() => window.__OVERHEAD.addSouls(500));
+  await page.evaluate(() => window.__OVERHEAD.addMana(500));
   const free = await page.evaluate(() => window.__OVERHEAD.freeNodes()[0]);
-  await page.evaluate((n) => window.__OVERHEAD.build("soul", n), free);
+  await page.evaluate((n) => window.__OVERHEAD.build("arcane", n), free);
   await page.evaluate((n) => window.__OVERHEAD.selectAt(n), free);
 
   const panel = page.locator("#tower-panel");
@@ -104,12 +104,12 @@ test("torre selecionada: painel com nome/nível/stats substitui as esferas", asy
 
 test("torre recém-construída já vem selecionada", async ({ page }) => {
   await boot(page);
-  await page.evaluate(() => window.__OVERHEAD.addSouls(500));
+  await page.evaluate(() => window.__OVERHEAD.addMana(500));
   const free = await page.evaluate(() => window.__OVERHEAD.freeNodes()[0]);
-  await page.evaluate((n) => window.__OVERHEAD.build("soul", n), free);
+  await page.evaluate((n) => window.__OVERHEAD.build("arcane", n), free);
   // sem chamar selectAt: o painel deve aparecer sozinho com a torre construída
   await expect(page.locator("#tower-panel")).toBeVisible();
-  await expect(page.locator("#tower-panel .tp-name")).toContainText("Esfera de Alma");
+  await expect(page.locator("#tower-panel .tp-name")).toContainText("Esfera Arcana");
 });
 
 test("zoom: botões e setZoom alteram a escala e o reset enquadra", async ({ page }) => {

@@ -10,9 +10,9 @@ test.beforeEach(({}, testInfo) => {
 
 // Loadouts de teste: [typeId, nodeIndex][]
 const STRATEGIES = {
-  "soul-rush": [["soul", 0], ["soul", 1], ["soul", 3], ["soul", 4], ["soul", 5]],
+  "arcane-rush": [["arcane", 0], ["arcane", 1], ["arcane", 3], ["arcane", 4], ["arcane", 5]],
   "doom-core": [["doom", 3], ["doom", 4], ["doom", 5], ["frost", 0], ["frost", 1]],
-  "mixed":     [["soul", 0], ["frost", 3], ["doom", 4], ["blast", 5], ["soul", 1]],
+  "mixed":     [["arcane", 0], ["frost", 3], ["doom", 4], ["blast", 5], ["arcane", 1]],
 };
 
 // Toda a partida roda DENTRO do browser (um único evaluate), sem round-trip
@@ -26,7 +26,7 @@ async function playMatch(page, loadout) {
     for (const [type, node] of loadout) O.build(type, node);
     const nodeCount = O.nodeCount();
 
-    // Gasta as almas: primeiro constrói em nós livres, depois sobe níveis.
+    // Gasta as mana: primeiro constrói em nós livres, depois sobe níveis.
     const spend = () => {
       let acted = true;
       while (acted) {
@@ -54,7 +54,7 @@ async function playMatch(page, loadout) {
           wave: a.wave,
           livesLeft: a.lives,
           leaked: Math.max(0, prevLives - a.lives),
-          souls: a.souls,
+          mana: a.mana,
           score: a.score,
           towers: a.towers.length,
           avgTowerLevel: a.towers.length
@@ -91,10 +91,10 @@ test("coleta dados de balanceamento de várias estratégias", async ({ page }, t
     md += `## Estratégia: \`${name}\`\n\n`;
     md += `Resultado: **${r.final.won ? "Vitória 🏆" : "Derrota"}** — chegou à onda **${r.final.wave}**, `;
     md += `vidas **${r.final.lives}**, pontuação **${r.final.score}**\n\n`;
-    md += `| Onda | Vidas | Vazaram | Almas | Pontos | Torres | Nível médio |\n`;
+    md += `| Onda | Vidas | Vazaram | Mana | Pontos | Torres | Nível médio |\n`;
     md += `|---:|---:|---:|---:|---:|---:|---:|\n`;
     for (const w of r.perWave) {
-      md += `| ${w.wave} | ${w.livesLeft} | ${w.leaked} | ${w.souls} | ${w.score} | ${w.towers} | ${w.avgTowerLevel} |\n`;
+      md += `| ${w.wave} | ${w.livesLeft} | ${w.leaked} | ${w.mana} | ${w.score} | ${w.towers} | ${w.avgTowerLevel} |\n`;
     }
     md += `\n`;
   }

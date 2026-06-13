@@ -14,56 +14,56 @@ test.beforeEach(async ({ page }, testInfo) => {
 test("estado inicial bate com a config", async ({ page }) => {
   const cfg = await api(page, "config");
   const s = await snap(page);
-  expect(s.souls).toBe(cfg.initialSouls);
+  expect(s.mana).toBe(cfg.initialMana);
   expect(s.lives).toBe(cfg.initialLives);
   expect(s.wave).toBe(0);
   expect(s.gameOver).toBe(false);
   expect(s.towers).toHaveLength(0);
 });
 
-test("construir torre desconta almas e ocupa o nó", async ({ page }) => {
+test("construir torre desconta mana e ocupa o nó", async ({ page }) => {
   const before = await snap(page);
-  const built = await api(page, "build", "soul", 0);
+  const built = await api(page, "build", "arcane", 0);
   expect(built).toBe(true);
   const after = await snap(page);
-  expect(after.towers).toEqual([{ type: "soul", level: 1 }]);
-  expect(after.souls).toBeLessThan(before.souls); // pagou o custo
+  expect(after.towers).toEqual([{ type: "arcane", level: 1 }]);
+  expect(after.mana).toBeLessThan(before.mana); // pagou o custo
   // não dá pra construir no mesmo nó de novo
   expect(await api(page, "build", "frost", 0)).toBe(false);
 });
 
-test("não constrói sem almas suficientes", async ({ page }) => {
+test("não constrói sem mana suficientes", async ({ page }) => {
   // gasta quase tudo: doom custa 34, sobra 6
   await api(page, "build", "doom", 0);
   const built = await api(page, "build", "doom", 1); // 34 > 6
   expect(built).toBe(false);
 });
 
-test("upgrade sobe o nível e desconta almas", async ({ page }) => {
-  await api(page, "build", "soul", 0); // custa 14, sobra 26
+test("upgrade sobe o nível e desconta mana", async ({ page }) => {
+  await api(page, "build", "arcane", 0); // custa 14, sobra 26
   const before = await snap(page);
   const ok = await api(page, "upgradeAt", 0); // upgrade ~22
   expect(ok).toBe(true);
   const after = await snap(page);
   expect(after.towers[0].level).toBe(2);
-  expect(after.souls).toBeLessThan(before.souls);
+  expect(after.mana).toBeLessThan(before.mana);
 });
 
-test("vender devolve almas e libera o nó", async ({ page }) => {
-  await api(page, "build", "soul", 0);
+test("vender devolve mana e libera o nó", async ({ page }) => {
+  await api(page, "build", "arcane", 0);
   const mid = await snap(page);
   const ok = await api(page, "sellAt", 0);
   expect(ok).toBe(true);
   const after = await snap(page);
   expect(after.towers).toHaveLength(0);
-  expect(after.souls).toBeGreaterThan(mid.souls); // recebeu reembolso
+  expect(after.mana).toBeGreaterThan(mid.mana); // recebeu reembolso
   expect(await api(page, "build", "frost", 0)).toBe(true); // nó livre de novo
 });
 
-test("iniciar onda spawna inimigos e a torre dispara e mata (almas/score sobem)", async ({ page }) => {
-  // duas torres soul perto do caminho
-  await api(page, "build", "soul", 0);
-  await api(page, "build", "soul", 1);
+test("iniciar onda spawna inimigos e a torre dispara e mata (mana/score sobem)", async ({ page }) => {
+  // duas torres arcanas perto do caminho
+  await api(page, "build", "arcane", 0);
+  await api(page, "build", "arcane", 1);
   await api(page, "startWave");
   let s = await snap(page);
   expect(s.wave).toBe(1);
