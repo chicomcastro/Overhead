@@ -262,24 +262,24 @@
         { id: "f-trono", name: "Trono da Mata", paths: [ [{x:-40,y:100}, {x:300,y:100}, {x:300,y:400}, {x:640,y:400}, {x:640,y:650}], [{x:1320,y:100}, {x:980,y:100}, {x:980,y:400}, {x:640,y:400}, {x:640,y:650}], [{x:640,y:-40}, {x:640,y:650}] ], nodes: [ {x:160,y:250}, {x:480,y:250}, {x:480,y:540}, {x:800,y:250}, {x:800,y:540}, {x:1120,y:250}, {x:640,y:250}, {x:300,y:560}, {x:980,y:560}, {x:160,y:500}, {x:1120,y:500}, {x:640,y:540} ] },
       ],
       enemies: {
-        f_grunt:  { name: "Raiz",     icon: "🌿", hpMul: 1.1, speedMul: 0.95, reward: 4, color: "#6b8e23", radius: 14, desc: "Raiz animada da floresta. Mais resistente que um soldado comum." },
-        f_fast:   { name: "Lobo",     icon: "🐺", hpMul: 0.55, speedMul: 1.8, reward: 5, color: "#a0a0a0", radius: 11, desc: "Ataca em matilha e dispara corridas repentinas." },
-        f_tank:   { name: "Ent",      icon: "🌳", hpMul: 3.5, speedMul: 0.5, reward: 10, color: "#556b2f", radius: 22, regen: 3, desc: "Colossal e regenera vida lentamente. Veneno neutraliza a cura." },
-        f_flyer:  { name: "Coruja",   icon: "🦉", hpMul: 0.7, speedMul: 1.2, reward: 6, color: "#d2b48c", radius: 12, flying: true, desc: "Voa invisível até entrar no alcance de uma torre." },
-        f_healer: { name: "Druida",   icon: "🍃", hpMul: 1.8, speedMul: 0.75, reward: 9, color: "#228b22", radius: 16, heal: 18, healRange: 100, healInterval: 1.2, desc: "Cura aliados e aplica escudo temporário." },
-        f_boss:   { name: "Senhor da Mata", icon: "🌲", hpMul: 15, speedMul: 0.45, reward: 45, color: "#2e8b57", radius: 28, desc: "Invoca Raízes extras ao tomar dano. Derrote-o antes que a floresta o engula." },
+        f_grunt:  { name: "Raiz",     icon: "🌿", hpMul: 1.0, speedMul: 0.95, reward: 5, color: "#6b8e23", radius: 14, desc: "Raiz animada da floresta. Mais resistente que um soldado comum." },
+        f_fast:   { name: "Lobo",     icon: "🐺", hpMul: 0.55, speedMul: 1.65, reward: 6, color: "#a0a0a0", radius: 11, desc: "Ataca em matilha e dispara corridas repentinas." },
+        f_tank:   { name: "Ent",      icon: "🌳", hpMul: 2.8, speedMul: 0.5, reward: 11, color: "#556b2f", radius: 22, regen: 2, desc: "Colossal e regenera vida lentamente. Veneno neutraliza a cura." },
+        f_flyer:  { name: "Coruja",   icon: "🦉", hpMul: 0.65, speedMul: 1.15, reward: 6, color: "#d2b48c", radius: 12, flying: true, desc: "Voa invisível até entrar no alcance de uma torre." },
+        f_healer: { name: "Druida",   icon: "🍃", hpMul: 1.6, speedMul: 0.75, reward: 10, color: "#228b22", radius: 16, heal: 15, healRange: 100, healInterval: 1.4, desc: "Cura aliados e aplica escudo temporário." },
+        f_boss:   { name: "Senhor da Mata", icon: "🌲", hpMul: 12, speedMul: 0.45, reward: 50, color: "#2e8b57", radius: 28, desc: "Invoca Raízes extras ao tomar dano. Derrote-o antes que a floresta o engula." },
       },
       levels: [
         { id: 1, name: "Entrada da Mata", mapId: "f-trilha", waves: 5, enemies: [], boss: false, hp: 0.9, par: 120, reqStars: 0, intro: "A floresta escurece ao seu redor. As primeiras raízes animadas se erguem do chão, guardando o caminho." },
         { id: 2, name: "Uivos", mapId: "f-clareira", waves: 6, enemies: ["f_fast"], boss: false, hp: 1.0, par: 135, reqStars: 2, intro: "Lobos selvagens surgem entre as árvores. Velozes e implacáveis — congele-os antes que passem." },
         { id: 3, name: "Raízes Profundas", mapId: "f-raizes", waves: 7, enemies: ["f_fast", "f_tank"], boss: false, hp: 1.0, par: 340, reqStars: 4, intro: "Ents ancestrais despertam. Seus corpos regeneram — o veneno é sua única fraqueza." },
-        { id: 4, name: "Emboscada", mapId: "f-neblina", waves: 8, enemies: ["f_fast", "f_tank"], boss: false, hp: 1.0, par: 230, reqStars: 6, intro: "A neblina cobre dois caminhos. Os druidas preparam uma emboscada — defenda ambos os flancos." },
+        { id: 4, name: "Emboscada", mapId: "f-neblina", waves: 8, enemies: ["f_fast", "f_tank"], boss: false, hp: 0.9, par: 260, reqStars: 6, intro: "A neblina cobre dois caminhos. Os druidas preparam uma emboscada — defenda ambos os flancos." },
         { id: 5, name: "Voo Noturno", mapId: "f-covil", waves: 8, enemies: ["f_fast", "f_tank", "f_flyer"], boss: false, hp: 1.05, par: 250, reqStars: 8, intro: "Corujas cortam o céu em silêncio. Invisíveis até se revelarem — cubra toda a clareira." },
-        { id: 6, name: "Cerco Verde", mapId: "f-pantano", waves: 9, enemies: ["f_fast", "f_tank", "f_flyer"], boss: false, hp: 1.05, par: 290, reqStars: 10, intro: "O pântano fervilha com criaturas vindas de dois lados. Posicione suas esferas com cuidado." },
+        { id: 6, name: "Cerco Verde", mapId: "f-pantano", waves: 9, enemies: ["f_fast", "f_tank", "f_flyer"], boss: false, hp: 0.85, par: 310, reqStars: 10, intro: "O pântano fervilha com criaturas vindas de dois lados. Posicione suas esferas com cuidado." },
         { id: 7, name: "Ritual", mapId: "f-ruinas", waves: 9, enemies: ["f_fast", "f_tank", "f_flyer", "f_healer"], boss: false, hp: 1.1, par: 350, reqStars: 12, intro: "Druidas emergem das ruínas, curando tudo ao redor. Elimine-os primeiro ou a floresta nunca cairá." },
-        { id: 8, name: "Arvoredo", mapId: "f-arvoredo", waves: 10, enemies: ["f_fast", "f_tank", "f_flyer", "f_healer"], boss: false, hp: 1.05, par: 240, reqStars: 14, intro: "O arvoredo forma um labirinto vivo. Ondas convergem em espiral — defesa em camadas é vital." },
-        { id: 9, name: "Gruta Secreta", mapId: "f-gruta", waves: 11, enemies: ["f_fast", "f_tank", "f_flyer", "f_healer"], boss: false, hp: 1.2, par: 620, reqStars: 16, intro: "Duas entradas na gruta despejam hordas. Monte uma defesa sólida no corredor central." },
-        { id: 10, name: "O Senhor da Mata", mapId: "f-trono", waves: 12, enemies: ["f_fast", "f_tank", "f_flyer", "f_healer"], boss: true, hp: 1.1, par: 360, reqStars: 18, intro: "O Senhor da Mata desperta em seu trono. Três caminhos convergem — ele invoca raízes a cada golpe. Esta é a última defesa." },
+        { id: 8, name: "Arvoredo", mapId: "f-arvoredo", waves: 10, enemies: ["f_fast", "f_tank", "f_flyer", "f_healer"], boss: false, hp: 0.9, par: 280, reqStars: 14, intro: "O arvoredo forma um labirinto vivo. Ondas convergem em espiral — defesa em camadas é vital." },
+        { id: 9, name: "Gruta Secreta", mapId: "f-gruta", waves: 11, enemies: ["f_fast", "f_tank", "f_flyer", "f_healer"], boss: false, hp: 1.1, par: 620, reqStars: 16, intro: "Duas entradas na gruta despejam hordas. Monte uma defesa sólida no corredor central." },
+        { id: 10, name: "O Senhor da Mata", mapId: "f-trono", waves: 12, enemies: ["f_fast", "f_tank", "f_flyer", "f_healer"], boss: true, hp: 0.9, par: 400, reqStars: 18, intro: "O Senhor da Mata desperta em seu trono. Três caminhos convergem — ele invoca raízes a cada golpe. Esta é a última defesa." },
       ],
       towerUnlock: { id: "poison", name: "Esfera Venenosa", color: "#50fa7b", cost: 28,
         damage: 14, range: 140, cooldown: 0.9, projSpeed: 480,
@@ -303,12 +303,12 @@
         { id: "v-trono", name: "Trono de Fogo", paths: [ [{x:-40,y:120}, {x:300,y:120}, {x:300,y:400}, {x:640,y:400}, {x:640,y:660}], [{x:1320,y:120}, {x:980,y:120}, {x:980,y:400}, {x:640,y:400}, {x:640,y:660}], [{x:640,y:-40}, {x:640,y:660}] ], nodes: [ {x:160,y:260}, {x:460,y:260}, {x:460,y:540}, {x:820,y:260}, {x:820,y:540}, {x:1120,y:260}, {x:640,y:260}, {x:300,y:560}, {x:980,y:560}, {x:160,y:520}, {x:1120,y:520}, {x:640,y:540} ] },
       ],
       enemies: {
-        v_grunt:  { name: "Imp",       icon: "👹", hpMul: 1.0, speedMul: 1.05, reward: 4, color: "#ff4500", radius: 12, desc: "Pequeno demônio resistente a queimadura. Rápido e numeroso." },
-        v_fast:   { name: "Salamandra", icon: "🦎", hpMul: 0.5, speedMul: 1.9, reward: 5, color: "#ff8c00", radius: 10, desc: "Veloz e deixa rastro de fogo ao passar." },
-        v_tank:   { name: "Golem",     icon: "🗿", hpMul: 3.8, speedMul: 0.45, reward: 11, color: "#8b4513", radius: 24, desc: "Colossal de pedra, imune a slow e freeze." },
-        v_flyer:  { name: "Fênix",     icon: "🔥", hpMul: 0.8, speedMul: 1.1, reward: 7, color: "#ff6347", radius: 13, flying: true, desc: "Ao morrer, renasce com 50% de HP uma vez." },
-        v_healer: { name: "Xamã",      icon: "🔮", hpMul: 1.6, speedMul: 0.8, reward: 9, color: "#dc143c", radius: 15, heal: 20, healRange: 100, healInterval: 1.3, desc: "Cura aliados e dá buff de velocidade temporário." },
-        v_boss:   { name: "Senhor das Chamas", icon: "🌋", hpMul: 16, speedMul: 0.4, reward: 50, color: "#b22222", radius: 30, desc: "Aura de calor reduz alcance de torres próximas. O vulcão treme sob seus passos." },
+        v_grunt:  { name: "Imp",       icon: "👹", hpMul: 1.0, speedMul: 1.0, reward: 5, color: "#ff4500", radius: 12, desc: "Pequeno demônio resistente a queimadura. Rápido e numeroso." },
+        v_fast:   { name: "Salamandra", icon: "🦎", hpMul: 0.5, speedMul: 1.7, reward: 6, color: "#ff8c00", radius: 10, desc: "Veloz e deixa rastro de fogo ao passar." },
+        v_tank:   { name: "Golem",     icon: "🗿", hpMul: 3.0, speedMul: 0.5, reward: 12, color: "#8b4513", radius: 24, desc: "Colossal de pedra, imune a slow e freeze." },
+        v_flyer:  { name: "Fênix",     icon: "🔥", hpMul: 0.7, speedMul: 1.1, reward: 7, color: "#ff6347", radius: 13, flying: true, desc: "Ao morrer, renasce com 50% de HP uma vez." },
+        v_healer: { name: "Xamã",      icon: "🔮", hpMul: 1.5, speedMul: 0.8, reward: 10, color: "#dc143c", radius: 15, heal: 16, healRange: 100, healInterval: 1.4, desc: "Cura aliados e dá buff de velocidade temporário." },
+        v_boss:   { name: "Senhor das Chamas", icon: "🌋", hpMul: 13, speedMul: 0.4, reward: 55, color: "#b22222", radius: 30, desc: "Aura de calor reduz alcance de torres próximas. O vulcão treme sob seus passos." },
       },
       levels: [
         { id: 1, name: "Boca do Vulcão", mapId: "v-cratera", waves: 5, enemies: [], boss: false, hp: 0.9, par: 120, reqStars: 0, intro: "O calor é insuportável. Imps emergem da cratera — pequenos, mas em grande número. Posicione suas defesas." },
@@ -316,11 +316,11 @@
         { id: 3, name: "Pedra Viva", mapId: "v-ponte", waves: 7, enemies: ["v_fast", "v_tank"], boss: false, hp: 1.0, par: 340, reqStars: 4, intro: "Golems de pedra cruzam a ponte. Imunes a slow — só dano bruto os derruba." },
         { id: 4, name: "A Forja", mapId: "v-forja", waves: 8, enemies: ["v_fast", "v_tank"], boss: false, hp: 1.0, par: 230, reqStars: 6, intro: "A forja demônica produz guerreiros sem parar. O caminho serpenteia — use cada curva a seu favor." },
         { id: 5, name: "Asas de Fogo", mapId: "v-caldeira", waves: 8, enemies: ["v_fast", "v_tank", "v_flyer"], boss: false, hp: 1.05, par: 250, reqStars: 8, intro: "Fênix erguem voo sobre a caldeira. Se você derrubar uma, ela renasce das cinzas." },
-        { id: 6, name: "Chaminé Dupla", mapId: "v-chamine", waves: 9, enemies: ["v_fast", "v_tank", "v_flyer"], boss: false, hp: 1.05, par: 290, reqStars: 10, intro: "Duas chaminés vulcânicas despejam ondas simultâneas. Divida suas forças." },
+        { id: 6, name: "Chaminé Dupla", mapId: "v-chamine", waves: 9, enemies: ["v_fast", "v_tank", "v_flyer"], boss: false, hp: 0.85, par: 310, reqStars: 10, intro: "Duas chaminés vulcânicas despejam ondas simultâneas. Divida suas forças." },
         { id: 7, name: "Xamãs do Fogo", mapId: "v-obsidiana", waves: 9, enemies: ["v_fast", "v_tank", "v_flyer", "v_healer"], boss: false, hp: 1.1, par: 350, reqStars: 12, intro: "Xamãs surgem entre a obsidiana, curando e acelerando seus aliados. Priorize-os." },
-        { id: 8, name: "O Abismo", mapId: "v-abismo", waves: 10, enemies: ["v_fast", "v_tank", "v_flyer", "v_healer"], boss: false, hp: 1.05, par: 240, reqStars: 14, intro: "O abismo cuspirá hordas de dois lados. Cada torre conta — sem margem para erros." },
-        { id: 9, name: "Túneis de Magma", mapId: "v-tuneis", waves: 11, enemies: ["v_fast", "v_tank", "v_flyer", "v_healer"], boss: false, hp: 1.2, par: 620, reqStars: 16, intro: "Túneis intermináveis de magma trazem ondas pesadas. Monte defesas em camadas nos corredores." },
-        { id: 10, name: "O Senhor das Chamas", mapId: "v-trono", waves: 12, enemies: ["v_fast", "v_tank", "v_flyer", "v_healer"], boss: true, hp: 1.1, par: 360, reqStars: 18, intro: "O Senhor das Chamas avança por três caminhos. Sua aura reduz o alcance de tudo ao redor. Última defesa no vulcão." },
+        { id: 8, name: "O Abismo", mapId: "v-abismo", waves: 10, enemies: ["v_fast", "v_tank", "v_flyer", "v_healer"], boss: false, hp: 0.85, par: 280, reqStars: 14, intro: "O abismo cuspirá hordas de dois lados. Cada torre conta — sem margem para erros." },
+        { id: 9, name: "Túneis de Magma", mapId: "v-tuneis", waves: 11, enemies: ["v_fast", "v_tank", "v_flyer", "v_healer"], boss: false, hp: 1.1, par: 620, reqStars: 16, intro: "Túneis intermináveis de magma trazem ondas pesadas. Monte defesas em camadas nos corredores." },
+        { id: 10, name: "O Senhor das Chamas", mapId: "v-trono", waves: 12, enemies: ["v_fast", "v_tank", "v_flyer", "v_healer"], boss: true, hp: 0.95, par: 400, reqStars: 18, intro: "O Senhor das Chamas avança por três caminhos. Sua aura reduz o alcance de tudo ao redor. Última defesa no vulcão." },
       ],
       towerUnlock: { id: "deepfrost", name: "Esfera de Gelo Profundo", color: "#9be7ff", cost: 32,
         damage: 10, range: 130, cooldown: 1.4, projSpeed: 440,
@@ -344,24 +344,24 @@
         { id: "o-trono", name: "Trono das Marés", paths: [ [{x:-40,y:120}, {x:300,y:120}, {x:300,y:400}, {x:640,y:400}, {x:640,y:660}], [{x:1320,y:120}, {x:980,y:120}, {x:980,y:400}, {x:640,y:400}, {x:640,y:660}], [{x:640,y:-40}, {x:640,y:660}] ], nodes: [ {x:160,y:260}, {x:460,y:260}, {x:460,y:540}, {x:820,y:260}, {x:820,y:540}, {x:1120,y:260}, {x:640,y:260}, {x:300,y:560}, {x:980,y:560}, {x:160,y:520}, {x:1120,y:520}, {x:640,y:540} ] },
       ],
       enemies: {
-        o_grunt:  { name: "Marinheiro",  icon: "⚓", hpMul: 1.0, speedMul: 1.0, reward: 4, color: "#4169e1", radius: 13, desc: "Marinheiro destemido. Ganha velocidade na chuva." },
-        o_fast:   { name: "Sereia",      icon: "🧜", hpMul: 0.5, speedMul: 1.85, reward: 6, color: "#00ced1", radius: 11, desc: "Veloz e encanta uma torre ao passar, desativando-a brevemente." },
-        o_tank:   { name: "Caranguejo",  icon: "🦀", hpMul: 3.4, speedMul: 0.55, reward: 10, color: "#cd5c5c", radius: 21, desc: "Blindado e reflete parte do dano de volta na torre." },
-        o_flyer:  { name: "Gaivota",     icon: "🐦", hpMul: 0.35, speedMul: 1.3, reward: 3, color: "#87ceeb", radius: 9, flying: true, desc: "Voa em bando — fraca sozinha, perigosa em grupo." },
-        o_healer: { name: "Médica Naval", icon: "💊", hpMul: 1.7, speedMul: 0.8, reward: 9, color: "#3cb371", radius: 15, heal: 20, healRange: 95, healInterval: 1.2, desc: "Cura aliados e remove efeitos negativos." },
-        o_boss:   { name: "Kraken",      icon: "🐙", hpMul: 18, speedMul: 0.35, reward: 55, color: "#191970", radius: 32, desc: "Tentáculos bloqueiam nós temporariamente. O terror das profundezas." },
+        o_grunt:  { name: "Marinheiro",  icon: "⚓", hpMul: 1.0, speedMul: 1.0, reward: 5, color: "#4169e1", radius: 13, desc: "Marinheiro destemido. Ganha velocidade na chuva." },
+        o_fast:   { name: "Sereia",      icon: "🧜", hpMul: 0.5, speedMul: 1.7, reward: 6, color: "#00ced1", radius: 11, desc: "Veloz e encanta uma torre ao passar, desativando-a brevemente." },
+        o_tank:   { name: "Caranguejo",  icon: "🦀", hpMul: 2.8, speedMul: 0.55, reward: 11, color: "#cd5c5c", radius: 21, desc: "Blindado e reflete parte do dano de volta na torre." },
+        o_flyer:  { name: "Gaivota",     icon: "🐦", hpMul: 0.35, speedMul: 1.25, reward: 4, color: "#87ceeb", radius: 9, flying: true, desc: "Voa em bando — fraca sozinha, perigosa em grupo." },
+        o_healer: { name: "Médica Naval", icon: "💊", hpMul: 1.5, speedMul: 0.8, reward: 10, color: "#3cb371", radius: 15, heal: 16, healRange: 95, healInterval: 1.4, desc: "Cura aliados e remove efeitos negativos." },
+        o_boss:   { name: "Kraken",      icon: "🐙", hpMul: 14, speedMul: 0.38, reward: 60, color: "#191970", radius: 32, desc: "Tentáculos bloqueiam nós temporariamente. O terror das profundezas." },
       },
       levels: [
         { id: 1, name: "O Cais", mapId: "o-cais", waves: 5, enemies: [], boss: false, hp: 0.9, par: 120, reqStars: 0, intro: "O sal paira no ar. Marinheiros desembarcam no cais — a perseguição ao Bruxo chegou ao litoral." },
         { id: 2, name: "Canto das Sereias", mapId: "o-maremoto", waves: 6, enemies: ["o_fast"], boss: false, hp: 1.0, par: 135, reqStars: 2, intro: "Sereias deslizam pelas ondas, encantando suas torres ao passar. Cuidado com a velocidade delas." },
-        { id: 3, name: "Recife", mapId: "o-recife", waves: 7, enemies: ["o_fast", "o_tank"], boss: false, hp: 1.0, par: 340, reqStars: 4, intro: "Caranguejos enormes emergem do recife. Sua carapaça reflete dano — ataque com tudo ou recue." },
+        { id: 3, name: "Recife", mapId: "o-recife", waves: 7, enemies: ["o_fast", "o_tank"], boss: false, hp: 0.9, par: 340, reqStars: 4, intro: "Caranguejos enormes emergem do recife. Sua carapaça reflete dano — ataque com tudo ou recue." },
         { id: 4, name: "O Farol", mapId: "o-farol", waves: 8, enemies: ["o_fast", "o_tank"], boss: false, hp: 1.0, par: 230, reqStars: 6, intro: "O farol ilumina um caminho tortuoso. Use cada curva para maximizar o tempo de tiro." },
         { id: 5, name: "Revoada", mapId: "o-naufragio", waves: 8, enemies: ["o_fast", "o_tank", "o_flyer"], boss: false, hp: 1.05, par: 250, reqStars: 8, intro: "Gaivotas em bando cortam os céus do naufrágio. Fracas sozinhas, mortais em grupo." },
-        { id: 6, name: "Porto Duplo", mapId: "o-porto", waves: 9, enemies: ["o_fast", "o_tank", "o_flyer"], boss: false, hp: 1.05, par: 290, reqStars: 10, intro: "Duas frotas atracam simultaneamente no porto. Defenda os dois lados ou será cercado." },
+        { id: 6, name: "Porto Duplo", mapId: "o-porto", waves: 9, enemies: ["o_fast", "o_tank", "o_flyer"], boss: false, hp: 0.85, par: 310, reqStars: 10, intro: "Duas frotas atracam simultaneamente no porto. Defenda os dois lados ou será cercado." },
         { id: 7, name: "Gruta Marinha", mapId: "o-gruta", waves: 9, enemies: ["o_fast", "o_tank", "o_flyer", "o_healer"], boss: false, hp: 1.1, par: 350, reqStars: 12, intro: "A Médica Naval surge nas cavernas, curando e limpando venenos. Elimine-a rápido." },
-        { id: 8, name: "Tempestade", mapId: "o-tempestade", waves: 10, enemies: ["o_fast", "o_tank", "o_flyer", "o_healer"], boss: false, hp: 1.05, par: 240, reqStars: 14, intro: "A tempestade ruge. Ondas convergem em espiral pelo olho do furacão." },
-        { id: 9, name: "Abismo Oceânico", mapId: "o-abismo", waves: 11, enemies: ["o_fast", "o_tank", "o_flyer", "o_healer"], boss: false, hp: 1.2, par: 620, reqStars: 16, intro: "Duas correntes das profundezas trazem hordas imensas. Monte defesas no ponto de convergência." },
-        { id: 10, name: "O Kraken", mapId: "o-trono", waves: 12, enemies: ["o_fast", "o_tank", "o_flyer", "o_healer"], boss: true, hp: 1.1, par: 360, reqStars: 18, intro: "O Kraken emerge. Três tentáculos avançam por caminhos distintos, bloqueando nós ao seu redor. Última batalha." },
+        { id: 8, name: "Tempestade", mapId: "o-tempestade", waves: 10, enemies: ["o_fast", "o_tank", "o_flyer", "o_healer"], boss: false, hp: 0.9, par: 280, reqStars: 14, intro: "A tempestade ruge. Ondas convergem em espiral pelo olho do furacão." },
+        { id: 9, name: "Abismo Oceânico", mapId: "o-abismo", waves: 11, enemies: ["o_fast", "o_tank", "o_flyer", "o_healer"], boss: false, hp: 0.9, par: 620, reqStars: 16, intro: "Duas correntes das profundezas trazem hordas imensas. Monte defesas no ponto de convergência." },
+        { id: 10, name: "O Kraken", mapId: "o-trono", waves: 12, enemies: ["o_fast", "o_tank", "o_flyer", "o_healer"], boss: true, hp: 0.95, par: 400, reqStars: 18, intro: "O Kraken emerge. Três tentáculos avançam por caminhos distintos, bloqueando nós ao seu redor. Última batalha." },
       ],
       towerUnlock: { id: "lightning", name: "Esfera de Raio", color: "#f9e2af", cost: 36,
         damage: 20, range: 155, cooldown: 1.0, projSpeed: 550,
@@ -583,19 +583,19 @@
       modRange(st, tower, baseRange) {
         if (!st.fogNodes) return baseRange;
         const idx = NODES.indexOf(tower.node);
-        return st.fogNodes.has(idx) ? baseRange * 0.5 : baseRange;
+        return st.fogNodes.has(idx) ? baseRange * 0.65 : baseRange;
       },
     },
     eruption: {
-      init(st) { st.eruptionTimer = 18; st.eruptionFlash = []; },
+      init(st) { st.eruptionTimer = 25; st.eruptionFlash = []; },
       update(st, dt) {
         if (!st.running) return;
         st.eruptionTimer -= dt;
         if (st.eruptionTimer <= 0) {
-          st.eruptionTimer = 16 + Math.random() * 6;
-          const targets = st.towers.filter(() => Math.random() < 0.3).slice(0, 2);
+          st.eruptionTimer = 22 + Math.random() * 8;
+          const targets = st.towers.filter(() => Math.random() < 0.2).slice(0, 1);
           for (const tw of targets) {
-            if (!tw.hp) tw.hp = 3;
+            if (!tw.hp) tw.hp = 4;
             tw.hp--;
             spawnParticles(tw.x, tw.y, "#ff4500", 12, 100);
             spawnRing(tw.x, tw.y, "#ff4500", 50, 0.5);
@@ -627,7 +627,7 @@
         st.tideNodes = new Set();
         const nodeCount = NODES.length;
         for (let i = 0; i < nodeCount; i++) {
-          if (i % 4 === 2) st.tideNodes.add(i);
+          if (i % 5 === 2) st.tideNodes.add(i);
         }
       },
       update(st, dt) {
