@@ -8,7 +8,7 @@ Tower defense game — defend the Master Tower from escalating waves of souls, b
 
 ## Play
 
-- **Web (recommended):** play directly at [chicomcastro.github.io/Overhead](https://chicomcastro.github.io/Overhead/) — works on desktop and mobile, installable as PWA, playable offline.
+- **Web demo:** play directly at [chicomcastro.github.io/Overhead](https://chicomcastro.github.io/Overhead/) — works on desktop and mobile, installable as PWA, playable offline.
 - **Download:** available on [itch.io](https://chicomcastro.itch.io/overhead).
 
 ## About
