@@ -48,6 +48,19 @@ sobrando sem ralo. O HP crescia ~4× mais rápido que o teto de dano.
 - [x] **Fase de tutorial** (PR #29 + polish): fase 1 como tutorial, coach passo a passo guiado (reage às ações do jogador).
 - [x] **Polish** do mapa: trilha visual entre fases, estrelas animadas (brilho pulsante), 'Próxima fase' direto no resultado.
 
+## 🗺️ Territórios — expansão de conteúdo
+
+- [x] **Estrutura TERRITORIES** — dados agrupados por território (mapas, fases, inimigos, torre).
+- [x] **Progress v2** — migração automática de v1 → v2 (per-territory), desbloqueio com 25★.
+- [x] **3 novos territórios**: Floresta Sombria (10 fases, 6 inimigos, Esfera Venenosa), Vulcão (10 fases, 6 inimigos, Esfera de Gelo Profundo), Oceano (10 fases, 6 inimigos, Esfera de Raio).
+- [x] **Novas mecânicas de torre**: veneno (DoT stackável), stun (freeze completo), chain lightning (dano em cadeia).
+- [x] **Mecânicas de território**: neblina (Floresta — range reduzido), erupção (Vulcão — dano em torres), maré (Oceano — nós submersos).
+- [x] **UI de território**: tabs no mapa de fases, seletor de território no Modo Livre, tabs no Bestiário.
+- [x] **30 novos mapas** (10 por território) com paths e nós.
+- [x] **30 novas fases** com intros narrativos.
+
+Design completo em [`docs/design-territorios.md`](design-territorios.md).
+
 ## 🔜 Backlog (próximos candidatos)
 
 > ✅ Backlog inicial concluído (PRs #13–#18). Novas ideias entram abaixo.
@@ -56,6 +69,7 @@ sobrando sem ralo. O HP crescia ~4× mais rápido que o teto de dano.
 - [x] ~~Níveis de dificuldade~~ (PR #13).
 - [x] ~~Variedade de mapa~~ (PR #17): 3 mapas selecionáveis.
 - [x] ~~Habilidades ativas com cooldown~~ (PR #16).
+- [x] ~~4 territórios com conteúdo exclusivo~~ (40 fases, 24 inimigos, 7 torres, 40 mapas).
 
 **Áudio / polish**
 - [x] ~~Controle de volume + música de fundo~~ (PR #14).

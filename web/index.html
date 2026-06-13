@@ -156,14 +156,15 @@
       </div>
     </div>
 
-    <!-- Mapa de fases (campanha) -->
-    <div id="levels" class="sheet">
+    <!-- Mapa de fases (campanha) — fullscreen com tabs de território -->
+    <div id="levels" class="sheet levels-fullscreen">
       <div class="panel sheet-panel levels-panel">
         <button type="button" class="sheet-close" data-close aria-label="Fechar">×</button>
         <div class="levels-head">
           <h2 class="sheet-title">Mapa de Fases</h2>
           <span id="levels-total" class="levels-total"></span>
         </div>
+        <div id="territory-tabs" class="territory-tabs"></div>
         <div id="levels-list" class="levels-list"></div>
         <button type="button" class="ghost-btn" data-close>Fechar</button>
       </div>
@@ -174,7 +175,11 @@
       <div class="panel sheet-panel">
         <button type="button" class="sheet-close" data-close aria-label="Fechar">×</button>
         <h2 class="sheet-title">Modo Livre</h2>
-        <p class="sheet-sub">Jogo avulso (sem progresso de estrelas): escolha a dificuldade, o mapa e se quer o modo infinito.</p>
+        <p class="sheet-sub">Jogo avulso (sem progresso de estrelas): escolha o território, a dificuldade, o mapa e se quer o modo infinito.</p>
+        <div id="free-territory-row" class="seg-row">
+          <span class="seg-label">Território</span>
+          <div id="free-territory-modes" class="seg-modes"></div>
+        </div>
         <div id="difficulty-row" class="seg-row">
           <span class="seg-label">Dificuldade</span>
           <div id="difficulty-modes" class="seg-modes"></div>
@@ -224,6 +229,7 @@
       <div class="panel sheet-panel bestiary-panel">
         <button type="button" class="sheet-close" data-close aria-label="Fechar">×</button>
         <h2 class="sheet-title">Bestiário</h2>
+        <div id="bestiary-tabs" class="territory-tabs"></div>
         <div id="bestiary-list"></div>
         <button id="bestiary-close" class="ghost-btn" data-close>Fechar</button>
       </div>

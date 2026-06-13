@@ -10,7 +10,7 @@ Deploy automático no GitHub Pages (branch `master`, workflow `.github/workflows
 
 ```
 web/
-  game.js          # toda a lógica do jogo (~2400 linhas, vanilla JS)
+  game.js          # toda a lógica do jogo (~2900 linhas, vanilla JS)
   index.html       # shell HTML + modais
   style.css        # estilos (~1060 linhas)
   icon.svg         # ícone PWA
@@ -19,6 +19,7 @@ web/
 e2e/               # testes Playwright (desktop + mobile)
 docs/
   BACKLOG.md       # fonte de verdade do backlog (sem issues no GH)
+  design-territorios.md  # design doc dos 4 territórios
   adrs/            # Architecture Decision Records
 unity/             # projeto Unity original (legado, não usado pela versão web)
 ```

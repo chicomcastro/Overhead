@@ -1040,6 +1040,22 @@ html, body {
 }
 
 /* ---------- Mapa de fases (campanha) ---------- */
+.levels-fullscreen .levels-panel { width: min(560px, 96vw); max-height: 90vh; }
+.territory-tabs {
+  display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.territory-tabs::-webkit-scrollbar { display: none; }
+.territory-tab {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  background: var(--panel-2); border: 2px solid transparent; color: var(--text);
+  cursor: pointer; transition: 0.15s; min-width: 100px; text-align: center;
+}
+.territory-tab.active { border-color: var(--t-color, var(--accent)); background: rgba(110,231,255,0.08); }
+.territory-tab.locked { opacity: 0.45; cursor: default; }
+.territory-tab .tt-name { white-space: nowrap; }
+.territory-tab .tt-stars { font-size: 11px; color: var(--score); }
 .levels-panel { width: min(440px, 94vw); max-height: 86vh; }
 .levels-head { display: flex; align-items: baseline; justify-content: center; gap: 10px; margin-bottom: 4px; }
 .levels-total { color: var(--score); font-weight: 700; font-size: 14px; }

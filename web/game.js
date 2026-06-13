@@ -62,143 +62,342 @@
   };
   const ABILITY_ORDER = ["freeze", "storm"];
 
-  // ----- Mapas: cada um tem um caminho (waypoints) e nós de construção -----
-  // O mundo é 1280×720; o último ponto do caminho é a torre (Torre Mestra).
-  const MAPS = [
+  // ===================================================================
+  //  TERRITÓRIOS — cada um agrupa mapas, fases, inimigos e torre nova.
+  //  O Reino é o território inicial; os demais desbloqueiam com 25★.
+  // ===================================================================
+  const TERRITORIES = [
     {
-      id: "serpent", name: "Serpente",
-      paths: [[
-        { x: -40, y: 140 }, { x: 300, y: 140 }, { x: 300, y: 420 },
-        { x: 620, y: 420 }, { x: 620, y: 160 }, { x: 900, y: 160 },
-        { x: 900, y: 560 }, { x: 640, y: 560 },
-      ]],
-      nodes: [
-        { x: 180, y: 280 }, { x: 430, y: 280 }, { x: 460, y: 540 },
-        { x: 470, y: 300 }, { x: 760, y: 300 }, { x: 780, y: 420 },
-        { x: 1040, y: 320 }, { x: 760, y: 660 }, { x: 1050, y: 600 },
-        { x: 180, y: 30 }, { x: 500, y: 60 }, { x: 1050, y: 80 },
+      id: "reino", name: "O Reino", color: "#6ee7ff", unlockStars: 0,
+      maps: [
+        {
+          id: "serpent", name: "Serpente",
+          paths: [[
+            { x: -40, y: 140 }, { x: 300, y: 140 }, { x: 300, y: 420 },
+            { x: 620, y: 420 }, { x: 620, y: 160 }, { x: 900, y: 160 },
+            { x: 900, y: 560 }, { x: 640, y: 560 },
+          ]],
+          nodes: [
+            { x: 180, y: 280 }, { x: 430, y: 280 }, { x: 460, y: 540 },
+            { x: 470, y: 300 }, { x: 760, y: 300 }, { x: 780, y: 420 },
+            { x: 1040, y: 320 }, { x: 760, y: 660 }, { x: 1050, y: 600 },
+            { x: 180, y: 30 }, { x: 500, y: 60 }, { x: 1050, y: 80 },
+          ],
+        },
+        {
+          id: "comb", name: "Pente",
+          paths: [[
+            { x: -40, y: 120 }, { x: 1120, y: 120 }, { x: 1120, y: 330 },
+            { x: 160, y: 330 }, { x: 160, y: 540 }, { x: 1120, y: 540 },
+          ]],
+          nodes: [
+            { x: 160, y: 225 }, { x: 380, y: 225 }, { x: 600, y: 225 }, { x: 820, y: 225 }, { x: 1040, y: 225 },
+            { x: 380, y: 435 }, { x: 600, y: 435 }, { x: 820, y: 435 }, { x: 1040, y: 435 },
+            { x: 380, y: 645 }, { x: 600, y: 645 }, { x: 820, y: 645 },
+          ],
+        },
+        {
+          id: "ziggy", name: "Ziguezague",
+          paths: [[
+            { x: -40, y: 150 }, { x: 280, y: 150 }, { x: 280, y: 470 },
+            { x: 560, y: 470 }, { x: 560, y: 150 }, { x: 840, y: 150 },
+            { x: 840, y: 470 }, { x: 1100, y: 470 }, { x: 1100, y: 250 }, { x: 760, y: 250 },
+          ]],
+          nodes: [
+            { x: 120, y: 310 }, { x: 420, y: 150 }, { x: 420, y: 320 }, { x: 700, y: 320 },
+            { x: 700, y: 470 }, { x: 970, y: 150 }, { x: 970, y: 360 }, { x: 120, y: 480 },
+            { x: 120, y: 630 }, { x: 420, y: 630 }, { x: 700, y: 630 }, { x: 970, y: 630 },
+          ],
+        },
+        {
+          id: "fork", name: "Bifurcação",
+          paths: [
+            [ { x: -40, y: 200 }, { x: 260, y: 200 }, { x: 260, y: 400 }, { x: 660, y: 400 }, { x: 660, y: 580 } ],
+            [ { x: 980, y: -40 }, { x: 980, y: 400 }, { x: 660, y: 400 }, { x: 660, y: 580 } ],
+          ],
+          nodes: [
+            { x: 560, y: 470 }, { x: 760, y: 470 }, { x: 560, y: 580 }, { x: 760, y: 580 },
+            { x: 460, y: 300 }, { x: 800, y: 280 }, { x: 260, y: 300 }, { x: 980, y: 280 },
+            { x: 140, y: 300 }, { x: 1120, y: 300 }, { x: 660, y: 260 }, { x: 900, y: 540 },
+          ],
+        },
+        {
+          id: "cross", name: "Cruzamento",
+          paths: [
+            [ { x: -40, y: 180 }, { x: 440, y: 180 }, { x: 440, y: 360 }, { x: 640, y: 360 }, { x: 640, y: 620 } ],
+            [ { x: 1320, y: 180 }, { x: 840, y: 180 }, { x: 840, y: 360 }, { x: 640, y: 360 }, { x: 640, y: 620 } ],
+          ],
+          nodes: [
+            { x: 540, y: 460 }, { x: 740, y: 460 }, { x: 540, y: 580 }, { x: 740, y: 580 },
+            { x: 300, y: 180 }, { x: 980, y: 180 }, { x: 300, y: 360 }, { x: 980, y: 360 },
+            { x: 440, y: 500 }, { x: 840, y: 500 }, { x: 640, y: 260 }, { x: 1120, y: 360 },
+          ],
+        },
+        {
+          id: "gates", name: "Portões",
+          paths: [
+            [ { x: 500, y: -40 }, { x: 500, y: 360 }, { x: 1120, y: 360 } ],
+            [ { x: 500, y: 760 }, { x: 500, y: 360 }, { x: 1120, y: 360 } ],
+          ],
+          nodes: [
+            { x: 640, y: 280 }, { x: 640, y: 440 }, { x: 820, y: 280 }, { x: 820, y: 440 },
+            { x: 960, y: 280 }, { x: 960, y: 440 }, { x: 360, y: 300 }, { x: 360, y: 440 },
+            { x: 500, y: 180 }, { x: 500, y: 540 }, { x: 180, y: 360 }, { x: 1040, y: 200 },
+          ],
+        },
+        {
+          id: "delta", name: "Delta",
+          paths: [
+            [ { x: 220, y: -40 }, { x: 220, y: 440 }, { x: 640, y: 440 }, { x: 640, y: 640 } ],
+            [ { x: 1060, y: -40 }, { x: 1060, y: 440 }, { x: 640, y: 440 }, { x: 640, y: 640 } ],
+            [ { x: 640, y: -40 }, { x: 640, y: 640 } ],
+          ],
+          nodes: [
+            { x: 540, y: 520 }, { x: 740, y: 520 }, { x: 540, y: 620 }, { x: 740, y: 620 },
+            { x: 420, y: 440 }, { x: 860, y: 440 }, { x: 220, y: 300 }, { x: 1060, y: 300 },
+            { x: 120, y: 500 }, { x: 1160, y: 500 }, { x: 400, y: 640 }, { x: 880, y: 640 },
+          ],
+        },
+        {
+          id: "horseshoe", name: "Ferradura",
+          paths: [[
+            { x: -40, y: 120 }, { x: 1120, y: 120 }, { x: 1120, y: 600 },
+            { x: 160, y: 600 }, { x: 160, y: 360 }, { x: 640, y: 360 },
+          ]],
+          nodes: [
+            { x: 200, y: 240 }, { x: 460, y: 240 }, { x: 720, y: 240 }, { x: 980, y: 240 },
+            { x: 1000, y: 420 }, { x: 460, y: 470 }, { x: 720, y: 470 }, { x: 300, y: 260 },
+            { x: 500, y: 690 }, { x: 780, y: 690 }, { x: 1040, y: 690 }, { x: 640, y: 480 },
+          ],
+        },
+        {
+          id: "chambers", name: "Câmaras",
+          paths: [[
+            { x: -40, y: 100 }, { x: 500, y: 100 }, { x: 500, y: 300 }, { x: 200, y: 300 },
+            { x: 200, y: 500 }, { x: 820, y: 500 }, { x: 820, y: 250 }, { x: 1120, y: 250 },
+            { x: 1120, y: 620 }, { x: 600, y: 620 },
+          ]],
+          nodes: [
+            { x: 180, y: 200 }, { x: 700, y: 200 }, { x: 350, y: 200 }, { x: 350, y: 400 },
+            { x: 1000, y: 150 }, { x: 1000, y: 400 }, { x: 660, y: 400 }, { x: 980, y: 560 },
+            { x: 660, y: 560 }, { x: 400, y: 620 }, { x: 200, y: 620 }, { x: 1180, y: 450 },
+          ],
+        },
+        {
+          id: "spiral", name: "Espiral",
+          paths: [[
+            { x: -40, y: 60 }, { x: 1180, y: 60 }, { x: 1180, y: 660 }, { x: 120, y: 660 },
+            { x: 120, y: 200 }, { x: 900, y: 200 }, { x: 900, y: 520 }, { x: 420, y: 520 },
+            { x: 420, y: 360 }, { x: 620, y: 360 },
+          ]],
+          nodes: [
+            { x: 300, y: 130 }, { x: 600, y: 130 }, { x: 900, y: 130 }, { x: 50, y: 400 },
+            { x: 1060, y: 400 }, { x: 300, y: 590 }, { x: 660, y: 590 }, { x: 1040, y: 590 },
+            { x: 620, y: 260 }, { x: 760, y: 360 }, { x: 300, y: 360 }, { x: 990, y: 300 },
+          ],
+        },
       ],
+      enemies: {
+        grunt: { name: "Soldado", icon: "⚔️", hpMul: 1.0, speedMul: 1.0, reward: 4, color: "#cdd6f4", radius: 13,
+                 desc: "Soldado comum do reino. Aparece desde a 1ª onda." },
+        fast:  { name: "Batedor", icon: "💨", hpMul: 0.6, speedMul: 1.7, reward: 5, color: "#a6e3a1", radius: 11,
+                 desc: "Frágil, mas muito veloz. Bom alvo para torres de lentidão." },
+        tank:  { name: "Cavaleiro", icon: "🛡️", hpMul: 3.2, speedMul: 0.6, reward: 9, color: "#f38ba8", radius: 19,
+                 desc: "Blindado e resistente. Exige dano concentrado para derrubar." },
+        flyer: { name: "Grifo", icon: "🦅", hpMul: 0.85, speedMul: 1.15, reward: 6, color: "#89dceb", radius: 12, flying: true,
+                 desc: "Voa em linha reta até a Torre, ignorando o caminho." },
+        healer:{ name: "Clérigo", icon: "✚", hpMul: 1.7, speedMul: 0.8, reward: 8, color: "#94e2d5", radius: 15, heal: 22, healRange: 95, healInterval: 1.1,
+                 desc: "Cura aliados próximos periodicamente. Elimine-o primeiro." },
+        boss:  { name: "Paladino", icon: "👑", hpMul: 14, speedMul: 0.5, reward: 40, color: "#f9e2af", radius: 26,
+                 desc: "Líder sagrado a cada 5 ondas. Recompensa generosa." },
+      },
+      levels: [
+        { id: 1, name: "Despertar",     mapId: "serpent",   waves: 5,  enemies: [], boss: false, hp: 0.9,
+          par: 120, reqStars: 0, tutorial: true,
+          intro: "O reino descobriu onde a princesa está presa. Os primeiros soldados marcham até sua Torre. Erga esferas nos nós azuis e segure a linha." },
+        { id: 2, name: "Sussurros",     mapId: "comb",      waves: 6,  enemies: ["fast"], boss: false, hp: 1.0,
+          par: 130, reqStars: 2,
+          intro: "Rumores da princesa se espalham. Batedores velozes exploram os arredores — a Esfera Gélida congela quem ousar se aproximar." },
+        { id: 3, name: "Encruzilhada",  mapId: "ziggy",     waves: 7,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
+          par: 330, reqStars: 4,
+          intro: "O rei enviou seus Cavaleiros blindados. Eles sobem o ziguezague lentamente, mas resistem a quase tudo. Concentre fogo." },
+        { id: 4, name: "Duas Frentes",  mapId: "fork",      waves: 8,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
+          par: 225, reqStars: 6,
+          intro: "O general dividiu suas tropas — os invasores vêm por DUAS frentes ao mesmo tempo. Defenda os dois caminhos." },
+        { id: 5, name: "Céus Sombrios", mapId: "horseshoe", waves: 8,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
+          par: 245, reqStars: 8,
+          intro: "A cavalaria aérea chegou. Grifos cortam reto à sua Torre, ignorando o caminho. Cubra o ar ou será tarde demais." },
+        { id: 6, name: "O Cerco",       mapId: "cross",     waves: 9,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
+          par: 285, reqStars: 10,
+          intro: "O exército real cerca a Torre por todos os lados. Cerco total — esquerda e direita avançam juntas." },
+        { id: 7, name: "Procissão",     mapId: "chambers",  waves: 9,  enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.1,
+          par: 345, reqStars: 12,
+          intro: "A Igreja enviou seus Clérigos para curar os feridos em campo. Elimine-os primeiro ou as tropas nunca cairão." },
+        { id: 8, name: "Portões",       mapId: "gates",     waves: 10, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.05,
+          par: 230, reqStars: 14,
+          intro: "Dois portões — um pelo céu, um por terra — despejam ondas de invasores sobre a Torre. Divida sua atenção." },
+        { id: 9, name: "Espiral",       mapId: "spiral",    waves: 11, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.2,
+          par: 615, reqStars: 16,
+          intro: "O exército se reúne para o ataque final. A espiral os traz devagar, mas em peso. Monte sua defesa em camadas." },
+        { id: 10, name: "O Paladino",   mapId: "delta",     waves: 12, enemies: ["fast", "tank", "flyer", "healer"], boss: true, hp: 1.1,
+          par: 355, reqStars: 18,
+          intro: "O Paladino Sagrado lidera o assalto final por TRÊS frentes. Ele ressurge a cada 5 ondas. Se a Torre cair, a princesa será libertada." },
+      ],
+      towerUnlock: null,
+      mechanic: null,
     },
+    // ==================== A FLORESTA SOMBRIA ====================
     {
-      id: "comb", name: "Pente",
-      paths: [[
-        { x: -40, y: 120 }, { x: 1120, y: 120 }, { x: 1120, y: 330 },
-        { x: 160, y: 330 }, { x: 160, y: 540 }, { x: 1120, y: 540 },
-      ]],
-      nodes: [
-        { x: 160, y: 225 }, { x: 380, y: 225 }, { x: 600, y: 225 }, { x: 820, y: 225 }, { x: 1040, y: 225 },
-        { x: 380, y: 435 }, { x: 600, y: 435 }, { x: 820, y: 435 }, { x: 1040, y: 435 },
-        { x: 380, y: 645 }, { x: 600, y: 645 }, { x: 820, y: 645 },
+      id: "floresta", name: "A Floresta Sombria", color: "#a6e3a1", unlockStars: 25,
+      maps: [
+        { id: "f-trilha", name: "Trilha", paths: [[ {x:-40,y:360}, {x:300,y:360}, {x:300,y:160}, {x:640,y:160}, {x:640,y:560}, {x:1000,y:560} ]], nodes: [ {x:160,y:260}, {x:440,y:160}, {x:440,y:360}, {x:480,y:560}, {x:800,y:360}, {x:800,y:560}, {x:160,y:500}, {x:640,y:360}, {x:1040,y:400}, {x:160,y:100}, {x:1040,y:200}, {x:1040,y:660} ] },
+        { id: "f-clareira", name: "Clareira", paths: [[ {x:640,y:-40}, {x:640,y:200}, {x:300,y:200}, {x:300,y:500}, {x:640,y:500}, {x:640,y:700} ]], nodes: [ {x:480,y:200}, {x:480,y:350}, {x:480,y:500}, {x:800,y:200}, {x:800,y:350}, {x:800,y:500}, {x:160,y:350}, {x:1000,y:350}, {x:300,y:350}, {x:640,y:350}, {x:160,y:150}, {x:1000,y:150} ] },
+        { id: "f-raizes", name: "Raízes", paths: [[ {x:-40,y:100}, {x:400,y:100}, {x:400,y:360}, {x:880,y:360}, {x:880,y:600}, {x:600,y:600} ]], nodes: [ {x:200,y:220}, {x:400,y:220}, {x:600,y:220}, {x:600,y:360}, {x:600,y:500}, {x:880,y:200}, {x:740,y:600}, {x:1040,y:460}, {x:200,y:420}, {x:200,y:600}, {x:1040,y:600}, {x:400,y:500} ] },
+        { id: "f-neblina", name: "Neblina", paths: [ [{x:-40,y:200}, {x:400,y:200}, {x:400,y:500}, {x:800,y:500}, {x:800,y:300}], [{x:1320,y:200}, {x:900,y:200}, {x:900,y:500}, {x:800,y:500}, {x:800,y:300}] ], nodes: [ {x:200,y:300}, {x:400,y:350}, {x:600,y:350}, {x:600,y:500}, {x:1060,y:300}, {x:1060,y:500}, {x:200,y:500}, {x:800,y:160}, {x:660,y:200}, {x:200,y:100}, {x:1060,y:100}, {x:960,y:660} ] },
+        { id: "f-covil", name: "Covil", paths: [[ {x:-40,y:600}, {x:300,y:600}, {x:300,y:300}, {x:640,y:300}, {x:640,y:100}, {x:1000,y:100}, {x:1000,y:500}, {x:700,y:500} ]], nodes: [ {x:160,y:450}, {x:450,y:300}, {x:450,y:100}, {x:820,y:100}, {x:820,y:300}, {x:1140,y:300}, {x:850,y:500}, {x:160,y:200}, {x:640,y:500}, {x:300,y:100}, {x:1140,y:100}, {x:1140,y:600} ] },
+        { id: "f-pantano", name: "Pântano", paths: [ [{x:200,y:-40}, {x:200,y:360}, {x:640,y:360}, {x:640,y:660}], [{x:1080,y:-40}, {x:1080,y:360}, {x:640,y:360}, {x:640,y:660}] ], nodes: [ {x:400,y:200}, {x:400,y:500}, {x:880,y:200}, {x:880,y:500}, {x:640,y:200}, {x:640,y:500}, {x:200,y:500}, {x:1080,y:500}, {x:60,y:360}, {x:1200,y:360}, {x:400,y:660}, {x:880,y:660} ] },
+        { id: "f-ruinas", name: "Ruínas", paths: [[ {x:-40,y:360}, {x:200,y:360}, {x:200,y:100}, {x:640,y:100}, {x:640,y:600}, {x:1080,y:600}, {x:1080,y:360} ]], nodes: [ {x:80,y:230}, {x:420,y:100}, {x:420,y:350}, {x:640,y:350}, {x:860,y:350}, {x:860,y:600}, {x:1080,y:480}, {x:200,y:560}, {x:640,y:700}, {x:1200,y:250}, {x:200,y:680}, {x:1080,y:200} ] },
+        { id: "f-arvoredo", name: "Arvoredo", paths: [[ {x:640,y:-40}, {x:640,y:160}, {x:200,y:160}, {x:200,y:500}, {x:1080,y:500}, {x:1080,y:160}, {x:640,y:160}, {x:640,y:360} ]], nodes: [ {x:420,y:160}, {x:420,y:330}, {x:420,y:500}, {x:860,y:160}, {x:860,y:330}, {x:860,y:500}, {x:200,y:330}, {x:1080,y:330}, {x:640,y:500}, {x:60,y:500}, {x:1200,y:500}, {x:640,y:660} ] },
+        { id: "f-gruta", name: "Gruta", paths: [ [{x:-40,y:150}, {x:400,y:150}, {x:400,y:400}, {x:800,y:400}, {x:800,y:650}], [{x:-40,y:550}, {x:400,y:550}, {x:400,y:400}, {x:800,y:400}, {x:800,y:650}] ], nodes: [ {x:200,y:280}, {x:600,y:280}, {x:600,y:520}, {x:200,y:680}, {x:960,y:400}, {x:960,y:560}, {x:400,y:680}, {x:1100,y:280}, {x:1100,y:520}, {x:200,y:50}, {x:600,y:50}, {x:1100,y:680} ] },
+        { id: "f-trono", name: "Trono da Mata", paths: [ [{x:-40,y:100}, {x:300,y:100}, {x:300,y:400}, {x:640,y:400}, {x:640,y:650}], [{x:1320,y:100}, {x:980,y:100}, {x:980,y:400}, {x:640,y:400}, {x:640,y:650}], [{x:640,y:-40}, {x:640,y:650}] ], nodes: [ {x:160,y:250}, {x:480,y:250}, {x:480,y:540}, {x:800,y:250}, {x:800,y:540}, {x:1120,y:250}, {x:640,y:250}, {x:300,y:560}, {x:980,y:560}, {x:160,y:500}, {x:1120,y:500}, {x:640,y:540} ] },
       ],
+      enemies: {
+        f_grunt:  { name: "Raiz",     icon: "🌿", hpMul: 1.1, speedMul: 0.95, reward: 4, color: "#6b8e23", radius: 14, desc: "Raiz animada da floresta. Mais resistente que um soldado comum." },
+        f_fast:   { name: "Lobo",     icon: "🐺", hpMul: 0.55, speedMul: 1.8, reward: 5, color: "#a0a0a0", radius: 11, desc: "Ataca em matilha e dispara corridas repentinas." },
+        f_tank:   { name: "Ent",      icon: "🌳", hpMul: 3.5, speedMul: 0.5, reward: 10, color: "#556b2f", radius: 22, regen: 3, desc: "Colossal e regenera vida lentamente. Veneno neutraliza a cura." },
+        f_flyer:  { name: "Coruja",   icon: "🦉", hpMul: 0.7, speedMul: 1.2, reward: 6, color: "#d2b48c", radius: 12, flying: true, desc: "Voa invisível até entrar no alcance de uma torre." },
+        f_healer: { name: "Druida",   icon: "🍃", hpMul: 1.8, speedMul: 0.75, reward: 9, color: "#228b22", radius: 16, heal: 18, healRange: 100, healInterval: 1.2, desc: "Cura aliados e aplica escudo temporário." },
+        f_boss:   { name: "Senhor da Mata", icon: "🌲", hpMul: 15, speedMul: 0.45, reward: 45, color: "#2e8b57", radius: 28, desc: "Invoca Raízes extras ao tomar dano. Derrote-o antes que a floresta o engula." },
+      },
+      levels: [
+        { id: 1, name: "Entrada da Mata", mapId: "f-trilha", waves: 5, enemies: [], boss: false, hp: 0.9, par: 120, reqStars: 0, intro: "A floresta escurece ao seu redor. As primeiras raízes animadas se erguem do chão, guardando o caminho." },
+        { id: 2, name: "Uivos", mapId: "f-clareira", waves: 6, enemies: ["f_fast"], boss: false, hp: 1.0, par: 135, reqStars: 2, intro: "Lobos selvagens surgem entre as árvores. Velozes e implacáveis — congele-os antes que passem." },
+        { id: 3, name: "Raízes Profundas", mapId: "f-raizes", waves: 7, enemies: ["f_fast", "f_tank"], boss: false, hp: 1.0, par: 340, reqStars: 4, intro: "Ents ancestrais despertam. Seus corpos regeneram — o veneno é sua única fraqueza." },
+        { id: 4, name: "Emboscada", mapId: "f-neblina", waves: 8, enemies: ["f_fast", "f_tank"], boss: false, hp: 1.0, par: 230, reqStars: 6, intro: "A neblina cobre dois caminhos. Os druidas preparam uma emboscada — defenda ambos os flancos." },
+        { id: 5, name: "Voo Noturno", mapId: "f-covil", waves: 8, enemies: ["f_fast", "f_tank", "f_flyer"], boss: false, hp: 1.05, par: 250, reqStars: 8, intro: "Corujas cortam o céu em silêncio. Invisíveis até se revelarem — cubra toda a clareira." },
+        { id: 6, name: "Cerco Verde", mapId: "f-pantano", waves: 9, enemies: ["f_fast", "f_tank", "f_flyer"], boss: false, hp: 1.05, par: 290, reqStars: 10, intro: "O pântano fervilha com criaturas vindas de dois lados. Posicione suas esferas com cuidado." },
+        { id: 7, name: "Ritual", mapId: "f-ruinas", waves: 9, enemies: ["f_fast", "f_tank", "f_flyer", "f_healer"], boss: false, hp: 1.1, par: 350, reqStars: 12, intro: "Druidas emergem das ruínas, curando tudo ao redor. Elimine-os primeiro ou a floresta nunca cairá." },
+        { id: 8, name: "Arvoredo", mapId: "f-arvoredo", waves: 10, enemies: ["f_fast", "f_tank", "f_flyer", "f_healer"], boss: false, hp: 1.05, par: 240, reqStars: 14, intro: "O arvoredo forma um labirinto vivo. Ondas convergem em espiral — defesa em camadas é vital." },
+        { id: 9, name: "Gruta Secreta", mapId: "f-gruta", waves: 11, enemies: ["f_fast", "f_tank", "f_flyer", "f_healer"], boss: false, hp: 1.2, par: 620, reqStars: 16, intro: "Duas entradas na gruta despejam hordas. Monte uma defesa sólida no corredor central." },
+        { id: 10, name: "O Senhor da Mata", mapId: "f-trono", waves: 12, enemies: ["f_fast", "f_tank", "f_flyer", "f_healer"], boss: true, hp: 1.1, par: 360, reqStars: 18, intro: "O Senhor da Mata desperta em seu trono. Três caminhos convergem — ele invoca raízes a cada golpe. Esta é a última defesa." },
+      ],
+      towerUnlock: { id: "poison", name: "Esfera Venenosa", color: "#50fa7b", cost: 28,
+        damage: 14, range: 140, cooldown: 0.9, projSpeed: 480,
+        desc: "Veneno acumulável que corrói a vida do alvo.",
+        poison: 6, poisonDur: 4 },
+      mechanic: "fog",
     },
+    // ==================== O VULCÃO ====================
     {
-      id: "ziggy", name: "Ziguezague",
-      paths: [[
-        { x: -40, y: 150 }, { x: 280, y: 150 }, { x: 280, y: 470 },
-        { x: 560, y: 470 }, { x: 560, y: 150 }, { x: 840, y: 150 },
-        { x: 840, y: 470 }, { x: 1100, y: 470 }, { x: 1100, y: 250 }, { x: 760, y: 250 },
-      ]],
-      nodes: [
-        { x: 120, y: 310 }, { x: 420, y: 150 }, { x: 420, y: 320 }, { x: 700, y: 320 },
-        { x: 700, y: 470 }, { x: 970, y: 150 }, { x: 970, y: 360 }, { x: 120, y: 480 },
-        { x: 120, y: 630 }, { x: 420, y: 630 }, { x: 700, y: 630 }, { x: 970, y: 630 },
+      id: "vulcao", name: "O Vulcão", color: "#ff6b81", unlockStars: 25,
+      maps: [
+        { id: "v-cratera", name: "Cratera", paths: [[ {x:-40,y:360}, {x:300,y:360}, {x:300,y:120}, {x:700,y:120}, {x:700,y:600}, {x:1000,y:600} ]], nodes: [ {x:160,y:240}, {x:500,y:120}, {x:500,y:360}, {x:500,y:600}, {x:860,y:360}, {x:860,y:600}, {x:160,y:500}, {x:700,y:360}, {x:1040,y:360}, {x:160,y:80}, {x:1040,y:120}, {x:1040,y:660} ] },
+        { id: "v-lava", name: "Rio de Lava", paths: [[ {x:640,y:-40}, {x:640,y:200}, {x:200,y:200}, {x:200,y:520}, {x:1080,y:520}, {x:1080,y:200}, {x:640,y:200} ]], nodes: [ {x:420,y:200}, {x:420,y:360}, {x:420,y:520}, {x:860,y:200}, {x:860,y:360}, {x:860,y:520}, {x:200,y:360}, {x:1080,y:360}, {x:640,y:360}, {x:640,y:520}, {x:60,y:520}, {x:1200,y:520} ] },
+        { id: "v-ponte", name: "Ponte de Pedra", paths: [ [{x:-40,y:180}, {x:500,y:180}, {x:500,y:540}, {x:900,y:540}], [{x:1320,y:180}, {x:780,y:180}, {x:780,y:540}, {x:900,y:540}] ], nodes: [ {x:300,y:300}, {x:500,y:360}, {x:700,y:360}, {x:980,y:300}, {x:640,y:180}, {x:640,y:540}, {x:300,y:540}, {x:980,y:540}, {x:160,y:420}, {x:1120,y:420}, {x:640,y:420}, {x:900,y:400} ] },
+        { id: "v-forja", name: "Forja", paths: [[ {x:-40,y:600}, {x:400,y:600}, {x:400,y:300}, {x:880,y:300}, {x:880,y:600}, {x:640,y:600}, {x:640,y:100} ]], nodes: [ {x:200,y:450}, {x:600,y:300}, {x:600,y:450}, {x:600,y:600}, {x:880,y:450}, {x:1040,y:300}, {x:1040,y:600}, {x:200,y:200}, {x:400,y:100}, {x:800,y:100}, {x:200,y:680}, {x:1040,y:100} ] },
+        { id: "v-caldeira", name: "Caldeira", paths: [[ {x:-40,y:100}, {x:1160,y:100}, {x:1160,y:660}, {x:120,y:660}, {x:120,y:360}, {x:640,y:360} ]], nodes: [ {x:300,y:200}, {x:600,y:200}, {x:900,y:200}, {x:1040,y:380}, {x:300,y:520}, {x:600,y:520}, {x:900,y:520}, {x:300,y:380}, {x:640,y:480}, {x:780,y:380}, {x:1040,y:580}, {x:460,y:660} ] },
+        { id: "v-chamine", name: "Chaminé", paths: [ [{x:300,y:-40}, {x:300,y:360}, {x:640,y:360}, {x:640,y:660}], [{x:980,y:-40}, {x:980,y:360}, {x:640,y:360}, {x:640,y:660}] ], nodes: [ {x:480,y:200}, {x:480,y:520}, {x:800,y:200}, {x:800,y:520}, {x:640,y:200}, {x:640,y:520}, {x:300,y:520}, {x:980,y:520}, {x:160,y:360}, {x:1120,y:360}, {x:480,y:360}, {x:800,y:360} ] },
+        { id: "v-obsidiana", name: "Obsidiana", paths: [[ {x:-40,y:360}, {x:300,y:360}, {x:300,y:100}, {x:980,y:100}, {x:980,y:360}, {x:640,y:360}, {x:640,y:660} ]], nodes: [ {x:160,y:230}, {x:640,y:100}, {x:640,y:230}, {x:640,y:500}, {x:980,y:230}, {x:1120,y:360}, {x:300,y:500}, {x:300,y:660}, {x:800,y:660}, {x:160,y:100}, {x:160,y:560}, {x:1120,y:100} ] },
+        { id: "v-abismo", name: "Abismo", paths: [ [{x:-40,y:150}, {x:400,y:150}, {x:400,y:500}, {x:800,y:500}, {x:800,y:250}], [{x:1320,y:600}, {x:900,y:600}, {x:900,y:500}, {x:800,y:500}, {x:800,y:250}] ], nodes: [ {x:200,y:320}, {x:600,y:320}, {x:600,y:500}, {x:1060,y:380}, {x:960,y:500}, {x:200,y:500}, {x:400,y:660}, {x:1060,y:660}, {x:800,y:120}, {x:400,y:50}, {x:1060,y:180}, {x:640,y:660} ] },
+        { id: "v-tuneis", name: "Túneis", paths: [[ {x:-40,y:80}, {x:500,y:80}, {x:500,y:300}, {x:200,y:300}, {x:200,y:560}, {x:800,y:560}, {x:800,y:300}, {x:1100,y:300}, {x:1100,y:600}, {x:640,y:600} ]], nodes: [ {x:250,y:180}, {x:700,y:180}, {x:350,y:430}, {x:500,y:430}, {x:650,y:430}, {x:950,y:180}, {x:950,y:450}, {x:800,y:680}, {x:350,y:680}, {x:200,y:680}, {x:1100,y:450}, {x:1100,y:180} ] },
+        { id: "v-trono", name: "Trono de Fogo", paths: [ [{x:-40,y:120}, {x:300,y:120}, {x:300,y:400}, {x:640,y:400}, {x:640,y:660}], [{x:1320,y:120}, {x:980,y:120}, {x:980,y:400}, {x:640,y:400}, {x:640,y:660}], [{x:640,y:-40}, {x:640,y:660}] ], nodes: [ {x:160,y:260}, {x:460,y:260}, {x:460,y:540}, {x:820,y:260}, {x:820,y:540}, {x:1120,y:260}, {x:640,y:260}, {x:300,y:560}, {x:980,y:560}, {x:160,y:520}, {x:1120,y:520}, {x:640,y:540} ] },
       ],
+      enemies: {
+        v_grunt:  { name: "Imp",       icon: "👹", hpMul: 1.0, speedMul: 1.05, reward: 4, color: "#ff4500", radius: 12, desc: "Pequeno demônio resistente a queimadura. Rápido e numeroso." },
+        v_fast:   { name: "Salamandra", icon: "🦎", hpMul: 0.5, speedMul: 1.9, reward: 5, color: "#ff8c00", radius: 10, desc: "Veloz e deixa rastro de fogo ao passar." },
+        v_tank:   { name: "Golem",     icon: "🗿", hpMul: 3.8, speedMul: 0.45, reward: 11, color: "#8b4513", radius: 24, desc: "Colossal de pedra, imune a slow e freeze." },
+        v_flyer:  { name: "Fênix",     icon: "🔥", hpMul: 0.8, speedMul: 1.1, reward: 7, color: "#ff6347", radius: 13, flying: true, desc: "Ao morrer, renasce com 50% de HP uma vez." },
+        v_healer: { name: "Xamã",      icon: "🔮", hpMul: 1.6, speedMul: 0.8, reward: 9, color: "#dc143c", radius: 15, heal: 20, healRange: 100, healInterval: 1.3, desc: "Cura aliados e dá buff de velocidade temporário." },
+        v_boss:   { name: "Senhor das Chamas", icon: "🌋", hpMul: 16, speedMul: 0.4, reward: 50, color: "#b22222", radius: 30, desc: "Aura de calor reduz alcance de torres próximas. O vulcão treme sob seus passos." },
+      },
+      levels: [
+        { id: 1, name: "Boca do Vulcão", mapId: "v-cratera", waves: 5, enemies: [], boss: false, hp: 0.9, par: 120, reqStars: 0, intro: "O calor é insuportável. Imps emergem da cratera — pequenos, mas em grande número. Posicione suas defesas." },
+        { id: 2, name: "Rastro de Fogo", mapId: "v-lava", waves: 6, enemies: ["v_fast"], boss: false, hp: 1.0, par: 135, reqStars: 2, intro: "Salamandras deslizam pelo rio de lava, mais velozes que qualquer coisa que você já enfrentou." },
+        { id: 3, name: "Pedra Viva", mapId: "v-ponte", waves: 7, enemies: ["v_fast", "v_tank"], boss: false, hp: 1.0, par: 340, reqStars: 4, intro: "Golems de pedra cruzam a ponte. Imunes a slow — só dano bruto os derruba." },
+        { id: 4, name: "A Forja", mapId: "v-forja", waves: 8, enemies: ["v_fast", "v_tank"], boss: false, hp: 1.0, par: 230, reqStars: 6, intro: "A forja demônica produz guerreiros sem parar. O caminho serpenteia — use cada curva a seu favor." },
+        { id: 5, name: "Asas de Fogo", mapId: "v-caldeira", waves: 8, enemies: ["v_fast", "v_tank", "v_flyer"], boss: false, hp: 1.05, par: 250, reqStars: 8, intro: "Fênix erguem voo sobre a caldeira. Se você derrubar uma, ela renasce das cinzas." },
+        { id: 6, name: "Chaminé Dupla", mapId: "v-chamine", waves: 9, enemies: ["v_fast", "v_tank", "v_flyer"], boss: false, hp: 1.05, par: 290, reqStars: 10, intro: "Duas chaminés vulcânicas despejam ondas simultâneas. Divida suas forças." },
+        { id: 7, name: "Xamãs do Fogo", mapId: "v-obsidiana", waves: 9, enemies: ["v_fast", "v_tank", "v_flyer", "v_healer"], boss: false, hp: 1.1, par: 350, reqStars: 12, intro: "Xamãs surgem entre a obsidiana, curando e acelerando seus aliados. Priorize-os." },
+        { id: 8, name: "O Abismo", mapId: "v-abismo", waves: 10, enemies: ["v_fast", "v_tank", "v_flyer", "v_healer"], boss: false, hp: 1.05, par: 240, reqStars: 14, intro: "O abismo cuspirá hordas de dois lados. Cada torre conta — sem margem para erros." },
+        { id: 9, name: "Túneis de Magma", mapId: "v-tuneis", waves: 11, enemies: ["v_fast", "v_tank", "v_flyer", "v_healer"], boss: false, hp: 1.2, par: 620, reqStars: 16, intro: "Túneis intermináveis de magma trazem ondas pesadas. Monte defesas em camadas nos corredores." },
+        { id: 10, name: "O Senhor das Chamas", mapId: "v-trono", waves: 12, enemies: ["v_fast", "v_tank", "v_flyer", "v_healer"], boss: true, hp: 1.1, par: 360, reqStars: 18, intro: "O Senhor das Chamas avança por três caminhos. Sua aura reduz o alcance de tudo ao redor. Última defesa no vulcão." },
+      ],
+      towerUnlock: { id: "deepfrost", name: "Esfera de Gelo Profundo", color: "#9be7ff", cost: 32,
+        damage: 10, range: 130, cooldown: 1.4, projSpeed: 440,
+        desc: "Congela o alvo completamente por um breve instante.",
+        stun: 1.0, stunChance: 0.30 },
+      mechanic: "eruption",
     },
+    // ==================== O OCEANO ====================
     {
-      // DUAS entradas (esquerda + topo) que se fundem num corredor até a Torre.
-      id: "fork", name: "Bifurcação",
-      paths: [
-        [ { x: -40, y: 200 }, { x: 260, y: 200 }, { x: 260, y: 400 }, { x: 660, y: 400 }, { x: 660, y: 580 } ],
-        [ { x: 980, y: -40 }, { x: 980, y: 400 }, { x: 660, y: 400 }, { x: 660, y: 580 } ],
+      id: "oceano", name: "O Oceano", color: "#89b4fa", unlockStars: 25,
+      maps: [
+        { id: "o-cais", name: "Cais", paths: [[ {x:-40,y:360}, {x:400,y:360}, {x:400,y:120}, {x:880,y:120}, {x:880,y:560}, {x:640,y:560} ]], nodes: [ {x:200,y:240}, {x:640,y:120}, {x:640,y:340}, {x:640,y:560}, {x:880,y:340}, {x:1060,y:340}, {x:200,y:500}, {x:400,y:560}, {x:1060,y:120}, {x:200,y:100}, {x:1060,y:560}, {x:400,y:200} ] },
+        { id: "o-maremoto", name: "Maremoto", paths: [[ {x:640,y:-40}, {x:640,y:300}, {x:200,y:300}, {x:200,y:600}, {x:1080,y:600}, {x:1080,y:300}, {x:640,y:300} ]], nodes: [ {x:420,y:300}, {x:420,y:450}, {x:420,y:600}, {x:860,y:300}, {x:860,y:450}, {x:860,y:600}, {x:200,y:450}, {x:1080,y:450}, {x:640,y:450}, {x:640,y:600}, {x:640,y:150}, {x:60,y:600} ] },
+        { id: "o-recife", name: "Recife", paths: [ [{x:-40,y:200}, {x:480,y:200}, {x:480,y:520}, {x:900,y:520}], [{x:1320,y:200}, {x:800,y:200}, {x:800,y:520}, {x:900,y:520}] ], nodes: [ {x:280,y:360}, {x:480,y:360}, {x:640,y:360}, {x:1000,y:360}, {x:640,y:200}, {x:640,y:520}, {x:280,y:520}, {x:1000,y:520}, {x:160,y:360}, {x:1120,y:360}, {x:900,y:380}, {x:280,y:100} ] },
+        { id: "o-farol", name: "Farol", paths: [[ {x:-40,y:600}, {x:300,y:600}, {x:300,y:200}, {x:700,y:200}, {x:700,y:500}, {x:1100,y:500}, {x:1100,y:200}, {x:800,y:200} ]], nodes: [ {x:160,y:400}, {x:500,y:200}, {x:500,y:350}, {x:500,y:500}, {x:900,y:350}, {x:1100,y:350}, {x:900,y:650}, {x:160,y:200}, {x:700,y:350}, {x:300,y:400}, {x:1100,y:650}, {x:160,y:680} ] },
+        { id: "o-naufragio", name: "Naufrágio", paths: [[ {x:-40,y:100}, {x:1140,y:100}, {x:1140,y:660}, {x:140,y:660}, {x:140,y:360}, {x:640,y:360} ]], nodes: [ {x:280,y:200}, {x:560,y:200}, {x:840,y:200}, {x:1020,y:380}, {x:280,y:520}, {x:560,y:520}, {x:840,y:520}, {x:280,y:360}, {x:640,y:480}, {x:780,y:380}, {x:1020,y:580}, {x:440,y:660} ] },
+        { id: "o-porto", name: "Porto", paths: [ [{x:200,y:-40}, {x:200,y:360}, {x:640,y:360}, {x:640,y:660}], [{x:1080,y:-40}, {x:1080,y:360}, {x:640,y:360}, {x:640,y:660}] ], nodes: [ {x:400,y:200}, {x:400,y:520}, {x:880,y:200}, {x:880,y:520}, {x:640,y:200}, {x:640,y:520}, {x:200,y:520}, {x:1080,y:520}, {x:80,y:360}, {x:1200,y:360}, {x:400,y:660}, {x:880,y:660} ] },
+        { id: "o-gruta", name: "Gruta Marinha", paths: [[ {x:-40,y:360}, {x:220,y:360}, {x:220,y:100}, {x:660,y:100}, {x:660,y:600}, {x:1060,y:600}, {x:1060,y:360} ]], nodes: [ {x:100,y:230}, {x:440,y:100}, {x:440,y:350}, {x:660,y:350}, {x:860,y:350}, {x:860,y:600}, {x:1060,y:480}, {x:220,y:560}, {x:660,y:700}, {x:1180,y:250}, {x:220,y:680}, {x:1060,y:200} ] },
+        { id: "o-tempestade", name: "Tempestade", paths: [[ {x:640,y:-40}, {x:640,y:160}, {x:200,y:160}, {x:200,y:560}, {x:1080,y:560}, {x:1080,y:160}, {x:640,y:160}, {x:640,y:360} ]], nodes: [ {x:420,y:160}, {x:420,y:360}, {x:420,y:560}, {x:860,y:160}, {x:860,y:360}, {x:860,y:560}, {x:200,y:360}, {x:1080,y:360}, {x:640,y:560}, {x:80,y:560}, {x:1200,y:560}, {x:640,y:660} ] },
+        { id: "o-abismo", name: "Abismo Oceânico", paths: [ [{x:-40,y:150}, {x:400,y:150}, {x:400,y:500}, {x:800,y:500}, {x:800,y:280}], [{x:-40,y:550}, {x:400,y:550}, {x:400,y:500}] ], nodes: [ {x:200,y:320}, {x:600,y:320}, {x:600,y:500}, {x:200,y:680}, {x:960,y:380}, {x:960,y:560}, {x:400,y:680}, {x:1100,y:280}, {x:1100,y:500}, {x:200,y:50}, {x:600,y:50}, {x:1100,y:680} ] },
+        { id: "o-trono", name: "Trono das Marés", paths: [ [{x:-40,y:120}, {x:300,y:120}, {x:300,y:400}, {x:640,y:400}, {x:640,y:660}], [{x:1320,y:120}, {x:980,y:120}, {x:980,y:400}, {x:640,y:400}, {x:640,y:660}], [{x:640,y:-40}, {x:640,y:660}] ], nodes: [ {x:160,y:260}, {x:460,y:260}, {x:460,y:540}, {x:820,y:260}, {x:820,y:540}, {x:1120,y:260}, {x:640,y:260}, {x:300,y:560}, {x:980,y:560}, {x:160,y:520}, {x:1120,y:520}, {x:640,y:540} ] },
       ],
-      nodes: [
-        { x: 560, y: 470 }, { x: 760, y: 470 }, { x: 560, y: 580 }, { x: 760, y: 580 },
-        { x: 460, y: 300 }, { x: 800, y: 280 }, { x: 260, y: 300 }, { x: 980, y: 280 },
-        { x: 140, y: 300 }, { x: 1120, y: 300 }, { x: 660, y: 260 }, { x: 900, y: 540 },
+      enemies: {
+        o_grunt:  { name: "Marinheiro",  icon: "⚓", hpMul: 1.0, speedMul: 1.0, reward: 4, color: "#4169e1", radius: 13, desc: "Marinheiro destemido. Ganha velocidade na chuva." },
+        o_fast:   { name: "Sereia",      icon: "🧜", hpMul: 0.5, speedMul: 1.85, reward: 6, color: "#00ced1", radius: 11, desc: "Veloz e encanta uma torre ao passar, desativando-a brevemente." },
+        o_tank:   { name: "Caranguejo",  icon: "🦀", hpMul: 3.4, speedMul: 0.55, reward: 10, color: "#cd5c5c", radius: 21, desc: "Blindado e reflete parte do dano de volta na torre." },
+        o_flyer:  { name: "Gaivota",     icon: "🐦", hpMul: 0.35, speedMul: 1.3, reward: 3, color: "#87ceeb", radius: 9, flying: true, desc: "Voa em bando — fraca sozinha, perigosa em grupo." },
+        o_healer: { name: "Médica Naval", icon: "💊", hpMul: 1.7, speedMul: 0.8, reward: 9, color: "#3cb371", radius: 15, heal: 20, healRange: 95, healInterval: 1.2, desc: "Cura aliados e remove efeitos negativos." },
+        o_boss:   { name: "Kraken",      icon: "🐙", hpMul: 18, speedMul: 0.35, reward: 55, color: "#191970", radius: 32, desc: "Tentáculos bloqueiam nós temporariamente. O terror das profundezas." },
+      },
+      levels: [
+        { id: 1, name: "O Cais", mapId: "o-cais", waves: 5, enemies: [], boss: false, hp: 0.9, par: 120, reqStars: 0, intro: "O sal paira no ar. Marinheiros desembarcam no cais — a perseguição ao Bruxo chegou ao litoral." },
+        { id: 2, name: "Canto das Sereias", mapId: "o-maremoto", waves: 6, enemies: ["o_fast"], boss: false, hp: 1.0, par: 135, reqStars: 2, intro: "Sereias deslizam pelas ondas, encantando suas torres ao passar. Cuidado com a velocidade delas." },
+        { id: 3, name: "Recife", mapId: "o-recife", waves: 7, enemies: ["o_fast", "o_tank"], boss: false, hp: 1.0, par: 340, reqStars: 4, intro: "Caranguejos enormes emergem do recife. Sua carapaça reflete dano — ataque com tudo ou recue." },
+        { id: 4, name: "O Farol", mapId: "o-farol", waves: 8, enemies: ["o_fast", "o_tank"], boss: false, hp: 1.0, par: 230, reqStars: 6, intro: "O farol ilumina um caminho tortuoso. Use cada curva para maximizar o tempo de tiro." },
+        { id: 5, name: "Revoada", mapId: "o-naufragio", waves: 8, enemies: ["o_fast", "o_tank", "o_flyer"], boss: false, hp: 1.05, par: 250, reqStars: 8, intro: "Gaivotas em bando cortam os céus do naufrágio. Fracas sozinhas, mortais em grupo." },
+        { id: 6, name: "Porto Duplo", mapId: "o-porto", waves: 9, enemies: ["o_fast", "o_tank", "o_flyer"], boss: false, hp: 1.05, par: 290, reqStars: 10, intro: "Duas frotas atracam simultaneamente no porto. Defenda os dois lados ou será cercado." },
+        { id: 7, name: "Gruta Marinha", mapId: "o-gruta", waves: 9, enemies: ["o_fast", "o_tank", "o_flyer", "o_healer"], boss: false, hp: 1.1, par: 350, reqStars: 12, intro: "A Médica Naval surge nas cavernas, curando e limpando venenos. Elimine-a rápido." },
+        { id: 8, name: "Tempestade", mapId: "o-tempestade", waves: 10, enemies: ["o_fast", "o_tank", "o_flyer", "o_healer"], boss: false, hp: 1.05, par: 240, reqStars: 14, intro: "A tempestade ruge. Ondas convergem em espiral pelo olho do furacão." },
+        { id: 9, name: "Abismo Oceânico", mapId: "o-abismo", waves: 11, enemies: ["o_fast", "o_tank", "o_flyer", "o_healer"], boss: false, hp: 1.2, par: 620, reqStars: 16, intro: "Duas correntes das profundezas trazem hordas imensas. Monte defesas no ponto de convergência." },
+        { id: 10, name: "O Kraken", mapId: "o-trono", waves: 12, enemies: ["o_fast", "o_tank", "o_flyer", "o_healer"], boss: true, hp: 1.1, par: 360, reqStars: 18, intro: "O Kraken emerge. Três tentáculos avançam por caminhos distintos, bloqueando nós ao seu redor. Última batalha." },
       ],
-    },
-    {
-      // DUAS entradas opostas (esquerda + direita) que se fundem e descem à Torre.
-      id: "cross", name: "Cruzamento",
-      paths: [
-        [ { x: -40, y: 180 }, { x: 440, y: 180 }, { x: 440, y: 360 }, { x: 640, y: 360 }, { x: 640, y: 620 } ],
-        [ { x: 1320, y: 180 }, { x: 840, y: 180 }, { x: 840, y: 360 }, { x: 640, y: 360 }, { x: 640, y: 620 } ],
-      ],
-      nodes: [
-        { x: 540, y: 460 }, { x: 740, y: 460 }, { x: 540, y: 580 }, { x: 740, y: 580 },
-        { x: 300, y: 180 }, { x: 980, y: 180 }, { x: 300, y: 360 }, { x: 980, y: 360 },
-        { x: 440, y: 500 }, { x: 840, y: 500 }, { x: 640, y: 260 }, { x: 1120, y: 360 },
-      ],
-    },
-    {
-      // DUAS entradas (topo + base) que se fundem num corredor horizontal até a Torre.
-      id: "gates", name: "Portões",
-      paths: [
-        [ { x: 500, y: -40 }, { x: 500, y: 360 }, { x: 1120, y: 360 } ],
-        [ { x: 500, y: 760 }, { x: 500, y: 360 }, { x: 1120, y: 360 } ],
-      ],
-      nodes: [
-        { x: 640, y: 280 }, { x: 640, y: 440 }, { x: 820, y: 280 }, { x: 820, y: 440 },
-        { x: 960, y: 280 }, { x: 960, y: 440 }, { x: 360, y: 300 }, { x: 360, y: 440 },
-        { x: 500, y: 180 }, { x: 500, y: 540 }, { x: 180, y: 360 }, { x: 1040, y: 200 },
-      ],
-    },
-    {
-      // TRÊS entradas pelo topo (esq, centro, dir) que se fundem e descem à Torre.
-      id: "delta", name: "Delta",
-      paths: [
-        [ { x: 220, y: -40 }, { x: 220, y: 440 }, { x: 640, y: 440 }, { x: 640, y: 640 } ],
-        [ { x: 1060, y: -40 }, { x: 1060, y: 440 }, { x: 640, y: 440 }, { x: 640, y: 640 } ],
-        [ { x: 640, y: -40 }, { x: 640, y: 640 } ],
-      ],
-      nodes: [
-        { x: 540, y: 520 }, { x: 740, y: 520 }, { x: 540, y: 620 }, { x: 740, y: 620 },
-        { x: 420, y: 440 }, { x: 860, y: 440 }, { x: 220, y: 300 }, { x: 1060, y: 300 },
-        { x: 120, y: 500 }, { x: 1160, y: 500 }, { x: 400, y: 640 }, { x: 880, y: 640 },
-      ],
-    },
-    {
-      // UMA entrada, percurso em ferradura ao redor da arena.
-      id: "horseshoe", name: "Ferradura",
-      paths: [[
-        { x: -40, y: 120 }, { x: 1120, y: 120 }, { x: 1120, y: 600 },
-        { x: 160, y: 600 }, { x: 160, y: 360 }, { x: 640, y: 360 },
-      ]],
-      nodes: [
-        { x: 200, y: 240 }, { x: 460, y: 240 }, { x: 720, y: 240 }, { x: 980, y: 240 },
-        { x: 1000, y: 420 }, { x: 460, y: 470 }, { x: 720, y: 470 }, { x: 300, y: 260 },
-        { x: 500, y: 690 }, { x: 780, y: 690 }, { x: 1040, y: 690 }, { x: 640, y: 480 },
-      ],
-    },
-    {
-      // UMA entrada longa e sinuosa, atravessando "câmaras".
-      id: "chambers", name: "Câmaras",
-      paths: [[
-        { x: -40, y: 100 }, { x: 500, y: 100 }, { x: 500, y: 300 }, { x: 200, y: 300 },
-        { x: 200, y: 500 }, { x: 820, y: 500 }, { x: 820, y: 250 }, { x: 1120, y: 250 },
-        { x: 1120, y: 620 }, { x: 600, y: 620 },
-      ]],
-      nodes: [
-        { x: 180, y: 200 }, { x: 700, y: 200 }, { x: 350, y: 200 }, { x: 350, y: 400 },
-        { x: 1000, y: 150 }, { x: 1000, y: 400 }, { x: 660, y: 400 }, { x: 980, y: 560 },
-        { x: 660, y: 560 }, { x: 400, y: 620 }, { x: 200, y: 620 }, { x: 1180, y: 450 },
-      ],
-    },
-    {
-      // UMA entrada em espiral, fechando até a Torre no centro.
-      id: "spiral", name: "Espiral",
-      paths: [[
-        { x: -40, y: 60 }, { x: 1180, y: 60 }, { x: 1180, y: 660 }, { x: 120, y: 660 },
-        { x: 120, y: 200 }, { x: 900, y: 200 }, { x: 900, y: 520 }, { x: 420, y: 520 },
-        { x: 420, y: 360 }, { x: 620, y: 360 },
-      ]],
-      nodes: [
-        { x: 300, y: 130 }, { x: 600, y: 130 }, { x: 900, y: 130 }, { x: 50, y: 400 },
-        { x: 1060, y: 400 }, { x: 300, y: 590 }, { x: 660, y: 590 }, { x: 1040, y: 590 },
-        { x: 620, y: 260 }, { x: 760, y: 360 }, { x: 300, y: 360 }, { x: 990, y: 300 },
-      ],
+      towerUnlock: { id: "lightning", name: "Esfera de Raio", color: "#f9e2af", cost: 36,
+        damage: 20, range: 155, cooldown: 1.0, projSpeed: 550,
+        desc: "Raio em cadeia que salta para inimigos próximos.",
+        chain: 2, chainRange: 90, chainDecay: 0.5 },
+      mechanic: "tide",
     },
   ];
+
+  // ----- Atalhos derivados dos territórios -----
+  const ALL_MAPS = TERRITORIES.flatMap(t => t.maps);
+  const ALL_LEVELS = TERRITORIES.flatMap(t => t.levels.map(l => ({ ...l, territoryId: t.id })));
+  const ALL_ENEMIES = (() => {
+    const merged = {};
+    for (const t of TERRITORIES) Object.assign(merged, t.enemies);
+    return merged;
+  })();
+
+  let activeTerritory = "reino";
+  const territoryById = (tid) => TERRITORIES.find(t => t.id === tid) || TERRITORIES[0];
+  const territoryMaps = (tid) => territoryById(tid).maps;
+  const territoryEnemies = (tid) => territoryById(tid).enemies;
+  const territoryLevels = (tid) => territoryById(tid).levels;
+
+  function getAvailableTowers() {
+    const towers = [...TOWER_TYPES];
+    for (const t of TERRITORIES) {
+      if (t.towerUnlock && Progress.territoryOpen(t.id)) towers.push(t.towerUnlock);
+    }
+    return towers;
+  }
+
+  // Compat: referências legadas
+  const MAPS = ALL_MAPS;
+  const LEVELS = ALL_LEVELS;
+  const ENEMY_TYPES = ALL_ENEMIES;
 
   let PATHS, CORE, NODES, currentMap;
   function applyMap(id) {
@@ -211,61 +410,65 @@
   }
   applyMap("serpent");
 
-  // ----- Campanha: fases com estrelas + introdução progressiva de mecânicas.
-  //  enemies = tipos liberados além do Soldado comum; boss = chefe a cada 5 ondas;
-  //  waves = duração; hp = escala de vida; reqStars = estrelas TOTAIS p/ destravar.
-  const LEVELS = [
-    { id: 1, name: "Despertar",     mapId: "serpent",   waves: 5,  enemies: [], boss: false, hp: 0.9,
-      par: 120, reqStars: 0, tutorial: true,
-      intro: "O reino descobriu onde a princesa está presa. Os primeiros soldados marcham até sua Torre. Erga esferas nos nós azuis e segure a linha." },
-    { id: 2, name: "Sussurros",     mapId: "comb",      waves: 6,  enemies: ["fast"], boss: false, hp: 1.0,
-      par: 130, reqStars: 2,
-      intro: "Rumores da princesa se espalham. Batedores velozes exploram os arredores — a Esfera Gélida congela quem ousar se aproximar." },
-    { id: 3, name: "Encruzilhada",  mapId: "ziggy",     waves: 7,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
-      par: 330, reqStars: 4,
-      intro: "O rei enviou seus Cavaleiros blindados. Eles sobem o ziguezague lentamente, mas resistem a quase tudo. Concentre fogo." },
-    { id: 4, name: "Duas Frentes",  mapId: "fork",      waves: 8,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
-      par: 225, reqStars: 6,
-      intro: "O general dividiu suas tropas — os invasores vêm por DUAS frentes ao mesmo tempo. Defenda os dois caminhos." },
-    { id: 5, name: "Céus Sombrios", mapId: "horseshoe", waves: 8,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
-      par: 245, reqStars: 8,
-      intro: "A cavalaria aérea chegou. Grifos cortam reto à sua Torre, ignorando o caminho. Cubra o ar ou será tarde demais." },
-    { id: 6, name: "O Cerco",       mapId: "cross",     waves: 9,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
-      par: 285, reqStars: 10,
-      intro: "O exército real cerca a Torre por todos os lados. Cerco total — esquerda e direita avançam juntas." },
-    { id: 7, name: "Procissão",     mapId: "chambers",  waves: 9,  enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.1,
-      par: 345, reqStars: 12,
-      intro: "A Igreja enviou seus Clérigos para curar os feridos em campo. Elimine-os primeiro ou as tropas nunca cairão." },
-    { id: 8, name: "Portões",       mapId: "gates",     waves: 10, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.05,
-      par: 230, reqStars: 14,
-      intro: "Dois portões — um pelo céu, um por terra — despejam ondas de invasores sobre a Torre. Divida sua atenção." },
-    { id: 9, name: "Espiral",       mapId: "spiral",    waves: 11, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.2,
-      par: 615, reqStars: 16,
-      intro: "O exército se reúne para o ataque final. A espiral os traz devagar, mas em peso. Monte sua defesa em camadas." },
-    { id: 10, name: "O Paladino",   mapId: "delta",     waves: 12, enemies: ["fast", "tank", "flyer", "healer"], boss: true, hp: 1.1,
-      par: 355, reqStars: 18,
-      intro: "O Paladino Sagrado lidera o assalto final por TRÊS frentes. Ele ressurge a cada 5 ondas. Se a Torre cair, a princesa será libertada." },
-  ];
   let activeLevel = 1;
   let gameMode = "campaign"; // "campaign" (fases, sem dificuldade) | "free" (Modo Livre)
   const Progress = (() => {
-    const KEY = "overhead_campaign_v1";
-    const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+    const KEY = "overhead_campaign_v2";
+    const OLD_KEY = "overhead_campaign_v1";
+    function migrate() {
+      try {
+        const old = JSON.parse(localStorage.getItem(OLD_KEY));
+        if (!old) return;
+        const v2 = { _version: 2, territories: { reino: { levels: {} } } };
+        for (const [id, entry] of Object.entries(old)) {
+          v2.territories.reino.levels[id] = entry;
+        }
+        localStorage.setItem(KEY, JSON.stringify(v2));
+        localStorage.removeItem(OLD_KEY);
+      } catch (e) {}
+    }
+    migrate();
+    const blank = () => ({ _version: 2, territories: {} });
+    const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || blank(); } catch (e) { return blank(); } };
     const save = (o) => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} };
-    const total = () => Object.values(load()).reduce((s, e) => s + (e.stars || 0), 0);
+    function tLevels(data, tid) { return (data.territories[tid] && data.territories[tid].levels) || {}; }
+    function totalStarsFor(tid) { return Object.values(tLevels(load(), tid)).reduce((s, e) => s + (e.stars || 0), 0); }
+    function totalStarsAll() { return TERRITORIES.reduce((s, t) => s + totalStarsFor(t.id), 0); }
     return {
-      get(id) { return load()[id] || { best: 0, stars: 0 }; },
-      record(id, score, stars) {
-        const all = load(), cur = all[id] || { best: 0, stars: 0 };
-        all[id] = { best: Math.max(cur.best, score), stars: Math.max(cur.stars, stars) };
-        save(all); return all[id];
+      get(id, tid) {
+        tid = tid || activeTerritory;
+        return tLevels(load(), tid)[id] || { best: 0, stars: 0 };
       },
-      totalStars: total,
-      // desbloqueio por estrelas acumuladas (estilo Overcooked)
-      unlocked(id) { const lv = LEVELS.find((l) => l.id === id) || { reqStars: 0 }; return total() >= lv.reqStars; },
+      record(id, score, stars, tid) {
+        tid = tid || activeTerritory;
+        const all = load();
+        if (!all.territories[tid]) all.territories[tid] = { levels: {} };
+        const lvs = all.territories[tid].levels;
+        const cur = lvs[id] || { best: 0, stars: 0 };
+        lvs[id] = { best: Math.max(cur.best, score), stars: Math.max(cur.stars, stars) };
+        save(all); return lvs[id];
+      },
+      totalStars: totalStarsFor,
+      totalStarsAll,
+      territoryOpen(tid) {
+        const t = territoryById(tid);
+        if (t.unlockStars === 0) return true;
+        const idx = TERRITORIES.indexOf(t);
+        if (idx <= 0) return true;
+        const prev = TERRITORIES[idx - 1];
+        return totalStarsFor(prev.id) >= t.unlockStars;
+      },
+      unlocked(id, tid) {
+        tid = tid || activeTerritory;
+        const lv = territoryLevels(tid).find((l) => l.id === id) || { reqStars: 0 };
+        return totalStarsFor(tid) >= lv.reqStars;
+      },
     };
   })();
-  const levelById = (id) => LEVELS.find((l) => l.id === id) || LEVELS[0];
+  const levelById = (id, tid) => {
+    const lvs = tid ? territoryLevels(tid) : territoryLevels(activeTerritory);
+    return lvs.find((l) => l.id === id) || lvs[0] || LEVELS[0];
+  };
   const isFree = () => !!state && state.mode === "free";
   const levelWaves = () => isFree() ? CONFIG.totalWaves : (levelById(activeLevel).waves || CONFIG.totalWaves);
   // Estrelas por DESEMPENHO: ★ vencer · ★★ invicto OU rápido · ★★★ invicto E rápido.
@@ -300,55 +503,166 @@
     },
   ];
 
-  // ----- Tipos de inimigo -----
-  const ENEMY_TYPES = {
-    grunt: { name: "Soldado", icon: "⚔️", hpMul: 1.0, speedMul: 1.0, reward: 4, color: "#cdd6f4", radius: 13,
-             desc: "Soldado comum do reino. Aparece desde a 1ª onda." },
-    fast:  { name: "Batedor", icon: "💨", hpMul: 0.6, speedMul: 1.7, reward: 5, color: "#a6e3a1", radius: 11,
-             desc: "Frágil, mas muito veloz. Bom alvo para torres de lentidão." },
-    tank:  { name: "Cavaleiro", icon: "🛡️", hpMul: 3.2, speedMul: 0.6, reward: 9, color: "#f38ba8", radius: 19,
-             desc: "Blindado e resistente. Exige dano concentrado para derrubar." },
-    // Voa em linha reta até a Torre, ignorando o caminho.
-    flyer: { name: "Grifo", icon: "🦅", hpMul: 0.85, speedMul: 1.15, reward: 6, color: "#89dceb", radius: 12, flying: true,
-             desc: "Voa em linha reta até a Torre, ignorando o caminho." },
-    // Cura inimigos próximos periodicamente.
-    healer:{ name: "Clérigo", icon: "✚", hpMul: 1.7, speedMul: 0.8, reward: 8, color: "#94e2d5", radius: 15, heal: 22, healRange: 95, healInterval: 1.1,
-             desc: "Cura aliados próximos periodicamente. Elimine-o primeiro." },
-    boss:  { name: "Paladino", icon: "👑", hpMul: 14, speedMul: 0.5, reward: 40, color: "#f9e2af", radius: 26,
-             desc: "Líder sagrado a cada 5 ondas. Recompensa generosa." },
-  };
-
   // Composição de cada onda (lista de tipos de inimigo)
+  function territoryEnemyKeys(tid) {
+    const keys = Object.keys(territoryEnemies(tid));
+    const roles = {};
+    for (const k of keys) {
+      const suffix = k.includes("_") ? k.split("_").pop() : k;
+      roles[suffix] = k;
+    }
+    return roles;
+  }
+
   function buildWave(n) {
     const list = [];
-    // Modo Livre: progressão clássica (todos os inimigos liberados por onda).
+    const r = territoryEnemyKeys(activeTerritory);
+    const grunt = r.grunt || Object.keys(territoryEnemies(activeTerritory))[0];
+    const fast = r.fast, tank = r.tank, flyer = r.flyer, healer = r.healer, boss = r.boss;
+
     if (isFree()) {
       const count = 6 + Math.floor(n * 1.9);
       for (let i = 0; i < count; i++) {
-        let t = "grunt";
-        if (n >= 2 && i % 4 === 0) t = "fast";
-        if (n >= 4 && i % 6 === 0) t = "tank";
-        if (n >= 4 && i % 7 === 3) t = "flyer";
-        if (n >= 6 && i % 9 === 4) t = "healer";
+        let t = grunt;
+        if (fast   && n >= 2 && i % 4 === 0) t = fast;
+        if (tank   && n >= 4 && i % 6 === 0) t = tank;
+        if (flyer  && n >= 4 && i % 7 === 3) t = flyer;
+        if (healer && n >= 6 && i % 9 === 4) t = healer;
         list.push(t);
       }
-      if (n % 5 === 0) list.push("boss");
+      if (boss && n % 5 === 0) list.push(boss);
       return list;
     }
-    // Campanha: cada fase libera seus inimigos progressivamente (config da fase).
     const cfg = levelById(activeLevel);
     const allow = cfg.enemies || [];
     const count = 5 + Math.floor(n * 1.8);
     for (let i = 0; i < count; i++) {
-      let t = "grunt";
-      if (allow.includes("fast")   && i % 4 === 0) t = "fast";
-      if (allow.includes("tank")   && i % 6 === 0) t = "tank";
-      if (allow.includes("flyer")  && i % 7 === 3) t = "flyer";
-      if (allow.includes("healer") && i % 9 === 4) t = "healer";
+      let t = grunt;
+      for (const a of allow) {
+        const aSuffix = a.includes("_") ? a.split("_").pop() : a;
+        if (aSuffix === "fast"   && i % 4 === 0) t = a;
+        if (aSuffix === "tank"   && i % 6 === 0) t = a;
+        if (aSuffix === "flyer"  && i % 7 === 3) t = a;
+        if (aSuffix === "healer" && i % 9 === 4) t = a;
+      }
       list.push(t);
     }
-    if (cfg.boss && n % 5 === 0) list.push("boss"); // chefe a cada 5 ondas (fases finais)
+    if (cfg.boss && boss && n % 5 === 0) list.push(boss);
     return list;
+  }
+
+  // ===================================================================
+  //  MECÂNICAS DE TERRITÓRIO — fog (floresta), eruption (vulcão), tide (oceano)
+  // ===================================================================
+  const MECHANICS = {
+    fog: {
+      init(st) {
+        st.fogNodes = new Set();
+        const map = MAPS.find(m => m.id === currentMap);
+        if (!map) return;
+        const nodeCount = NODES.length;
+        for (let i = 0; i < nodeCount; i++) {
+          if (i % 3 === 1) st.fogNodes.add(i);
+        }
+      },
+      update(st, dt) {},
+      draw(ctx, cam) {
+        if (!state.fogNodes || !state.fogNodes.size) return;
+        ctx.save();
+        ctx.globalAlpha = 0.18 + 0.04 * Math.sin(state.time * 1.5);
+        ctx.fillStyle = "#228b22";
+        for (const i of state.fogNodes) {
+          const n = NODES[i];
+          if (!n) continue;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, 70, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      },
+      modRange(st, tower, baseRange) {
+        if (!st.fogNodes) return baseRange;
+        const idx = NODES.indexOf(tower.node);
+        return st.fogNodes.has(idx) ? baseRange * 0.5 : baseRange;
+      },
+    },
+    eruption: {
+      init(st) { st.eruptionTimer = 18; st.eruptionFlash = []; },
+      update(st, dt) {
+        if (!st.running) return;
+        st.eruptionTimer -= dt;
+        if (st.eruptionTimer <= 0) {
+          st.eruptionTimer = 16 + Math.random() * 6;
+          const targets = st.towers.filter(() => Math.random() < 0.3).slice(0, 2);
+          for (const tw of targets) {
+            if (!tw.hp) tw.hp = 3;
+            tw.hp--;
+            spawnParticles(tw.x, tw.y, "#ff4500", 12, 100);
+            spawnRing(tw.x, tw.y, "#ff4500", 50, 0.5);
+            spawnFloater(tw.x, tw.y - 30, "Erupção!", "#ff4500", 16);
+            if (tw.hp <= 0) {
+              tw.node.taken = false;
+              st.towers = st.towers.filter(t => t !== tw);
+              if (st.selectedTower === tw) st.selectedTower = null;
+            }
+          }
+          st.shake = Math.max(st.shake, 0.3);
+        }
+        st.eruptionFlash = (st.eruptionFlash || []).filter(f => f.life > 0);
+      },
+      draw(ctx, cam) {
+        if (state.eruptionTimer < 3) {
+          ctx.save();
+          ctx.globalAlpha = 0.06 * (1 + Math.sin(state.time * 8));
+          ctx.fillStyle = "#ff4500";
+          ctx.fillRect(0, 0, W, H);
+          ctx.restore();
+        }
+      },
+    },
+    tide: {
+      init(st) {
+        st.tideCycle = 0;
+        st.tideHigh = false;
+        st.tideNodes = new Set();
+        const nodeCount = NODES.length;
+        for (let i = 0; i < nodeCount; i++) {
+          if (i % 4 === 2) st.tideNodes.add(i);
+        }
+      },
+      update(st, dt) {
+        st.tideCycle += dt;
+        const wasHigh = st.tideHigh;
+        st.tideHigh = Math.sin(st.tideCycle * Math.PI / 15) > 0.3;
+        if (st.tideHigh && !wasHigh) {
+          for (const i of st.tideNodes) {
+            const tw = st.towers.find(t => t.node === NODES[i]);
+            if (tw) { tw.tideDisabled = true; spawnFloater(tw.x, tw.y - 20, "Submersa!", "#89b4fa", 14); }
+          }
+        } else if (!st.tideHigh && wasHigh) {
+          for (const tw of st.towers) tw.tideDisabled = false;
+        }
+      },
+      draw(ctx, cam) {
+        if (!state.tideHigh || !state.tideNodes) return;
+        ctx.save();
+        ctx.globalAlpha = 0.22 + 0.05 * Math.sin(state.time * 2);
+        ctx.fillStyle = "#4169e1";
+        for (const i of state.tideNodes) {
+          const n = NODES[i];
+          if (!n) continue;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, 35, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      },
+    },
+  };
+
+  function activeMechanic() {
+    const t = territoryById(activeTerritory);
+    return t.mechanic ? MECHANICS[t.mechanic] : null;
   }
 
   // ===================================================================
@@ -399,11 +713,16 @@
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   const rand = (a, b) => a + Math.random() * (b - a);
 
-  function towerType(id) { return TOWER_TYPES.find(t => t.id === id); }
+  function towerType(id) { return TOWER_TYPES.find(t => t.id === id) || getAvailableTowers().find(t => t.id === id); }
 
   // ----- Stats efetivos por torre (nível da torre + melhorias globais) -----
   function effDamage(tw)   { return tw.type.damage   * Math.pow(CONFIG.lvlDamageMul, tw.level - 1) * (1 + CONFIG.globalDmgStep * state.globals.dmg); }
-  function effRange(tw)    { return tw.type.range    * Math.pow(CONFIG.lvlRangeMul,  tw.level - 1) * (1 + CONFIG.globalRngStep * state.globals.rng); }
+  function effRange(tw)    {
+    let r = tw.type.range * Math.pow(CONFIG.lvlRangeMul, tw.level - 1) * (1 + CONFIG.globalRngStep * state.globals.rng);
+    const mech = activeMechanic();
+    if (mech && mech.modRange) r = mech.modRange(state, tw, r);
+    return r;
+  }
   function effCooldown(tw) { return tw.type.cooldown * Math.pow(CONFIG.lvlCooldownMul, tw.level - 1); }
   function upgradeCost(tw) { return Math.round(tw.type.cost * Math.pow(CONFIG.upgradeCostMul, tw.level)); }
 
@@ -518,6 +837,9 @@
       shoot_frost: () => tone({ freq: 520, freq2: 720, type: "sine",     dur: 0.10, vol: 0.15 }),
       shoot_doom:  () => tone({ freq: 200, freq2: 90,  type: "sawtooth", dur: 0.16, vol: 0.20 }),
       shoot_blast: () => tone({ freq: 300, freq2: 150, type: "square",   dur: 0.12, vol: 0.16 }),
+      shoot_poison: () => tone({ freq: 180, freq2: 320, type: "sine", dur: 0.14, vol: 0.16 }),
+      shoot_deepfrost: () => tone({ freq: 400, freq2: 800, type: "sine", dur: 0.12, vol: 0.15 }),
+      shoot_lightning: () => { tone({ freq: 800, freq2: 1600, type: "sawtooth", dur: 0.08, vol: 0.18 }); tone({ freq: 1200, freq2: 400, type: "triangle", dur: 0.06, vol: 0.12, delay: 0.04 }); },
       kill:        () => tone({ freq: 880, freq2: 1320, type: "sine",    dur: 0.10, vol: 0.20 }),
       boss_die:    () => { tone({ freq: 120, freq2: 40, type: "sawtooth", dur: 0.5, vol: 0.3 });
                            tone({ freq: 300, freq2: 600, type: "triangle", dur: 0.3, vol: 0.2, delay: 0.05 }); },
@@ -627,8 +949,9 @@
       x: P[0].x, y: P[0].y,
       hp: maxHP, maxHP,
       baseSpeed: waveSpeed() * t.speedMul,
-      slowUntil: 0, slowFactor: 1,
+      slowUntil: 0, slowFactor: 1, stunUntil: 0,
       burn: 0, burnUntil: 0, burnTick: 0,
+      poisons: [],
       healTick: t.healInterval || 0,
       path: pathIx, wp: 1, radius: t.radius, dead: false,
     });
@@ -761,6 +1084,7 @@
   }
 
   function towerFire(tower, dt) {
+    if (tower.tideDisabled) return;
     tower.cooldown -= dt;
 
     const range = effRange(tower);
@@ -804,6 +1128,16 @@
       e.burn = type.burn;
       e.burnUntil = state.time + type.burnDur;
     }
+    // Veneno (DoT stackável)
+    if (type && type.poison) {
+      if (!e.poisons) e.poisons = [];
+      e.poisons.push({ dps: type.poison, until: state.time + type.poisonDur, tick: 0 });
+    }
+    // Stun (congela completamente por breve instante)
+    if (type && type.stun && type.stunChance && Math.random() < type.stunChance) {
+      e.stunUntil = Math.max(e.stunUntil || 0, state.time + type.stun);
+      spawnFloater(e.x, e.y - e.radius, "❄ Stun!", "#9be7ff", 14);
+    }
     if (e.hp <= 0) killEnemy(e, type);
   }
 
@@ -845,6 +1179,22 @@
         if (dist(e, t) <= p.type.splash) damageEnemy(e, p.damage, p.type);
       }
       spawnParticles(t.x, t.y, p.type.color, 16, 160);
+    } else if (p.type.chain) {
+      damageEnemy(t, p.damage, p.type);
+      let prev = t, dmg = p.damage;
+      for (let i = 0; i < p.type.chain; i++) {
+        dmg *= p.type.chainDecay;
+        let best = null, bestD = p.type.chainRange;
+        for (const e of state.enemies) {
+          if (e.dead || e === prev) continue;
+          const d = dist(e, prev);
+          if (d < bestD) { bestD = d; best = e; }
+        }
+        if (!best) break;
+        damageEnemy(best, dmg, null);
+        spawnParticles(best.x, best.y, p.type.color, 4, 40);
+        prev = best;
+      }
     } else {
       damageEnemy(t, p.damage, p.type);
     }
@@ -912,6 +1262,17 @@
           damageEnemy(e, e.burn * 0.4, null);
         }
       }
+      // veneno stackável
+      if (e.poisons && e.poisons.length) {
+        for (const p of e.poisons) {
+          if (p.until <= now) continue;
+          p.tick -= dt;
+          if (p.tick <= 0) { p.tick = 0.4; damageEnemy(e, p.dps * 0.4, null); }
+        }
+        e.poisons = e.poisons.filter(p => p.until > now);
+      }
+      // stun: parado completamente
+      if (e.stunUntil && e.stunUntil > now) continue;
       // curandeiro: restaura HP de inimigos próximos
       if (e.def.heal) {
         e.healTick -= dt;
@@ -971,6 +1332,10 @@
       else { p.x += ((t.x - p.x) / d) * step; p.y += ((t.y - p.y) / d) * step; }
     }
     state.projectiles = state.projectiles.filter(p => !p.dead);
+
+    // --- mecânica de território ---
+    const mech = activeMechanic();
+    if (mech) mech.update(state, dt);
 
     // --- partículas e textos ---
     for (const pt of state.particles) {
@@ -1050,6 +1415,8 @@
     drawParticles();
     drawFloaters();
     drawBuildPreview();
+    const rmech = activeMechanic();
+    if (rmech) rmech.draw(ctx, camera());
     ctx.restore();
 
     // vinheta vermelha de dano (em px de tela, por cima de tudo)
@@ -1598,7 +1965,7 @@
   function refreshShop() {
     const list = document.getElementById("shop-list");
     list.innerHTML = "";
-    for (const t of TOWER_TYPES) {
+    for (const t of getAvailableTowers()) {
       const card = document.createElement("div");
       card.className = "tower-card";
       if (state.selectedType === t) card.classList.add("selected");
@@ -1610,6 +1977,9 @@
       if (t.splash) tags.push("💥 área");
       if (t.burn) tags.push("🔥 burn");
       if (t.manaBonus) tags.push("✦ bônus");
+      if (t.poison) tags.push("☠ veneno");
+      if (t.stun) tags.push("❄ stun");
+      if (t.chain) tags.push("⚡ cadeia");
 
       card.innerHTML = `
         <div class="row1">
@@ -1777,7 +2147,8 @@
     let nextId = null;
     if (isResult && state.won && lastResult.mode === "campaign") {
       const nid = (lastResult.level ? lastResult.level.id : activeLevel) + 1;
-      if (LEVELS.some((l) => l.id === nid) && Progress.unlocked(nid)) nextId = nid;
+      const tLvs = territoryLevels(activeTerritory);
+      if (tLvs.some((l) => l.id === nid) && Progress.unlocked(nid, activeTerritory)) nextId = nid;
     }
     if (nextId) { nextBtn.dataset.next = String(nextId); nextBtn.hidden = false; }
     else nextBtn.hidden = true;
@@ -1805,7 +2176,7 @@
 
   function renderBest() {
     const el = document.getElementById("best");
-    const total = Progress.totalStars(), max = LEVELS.length * 3;
+    const total = Progress.totalStarsAll(), max = ALL_LEVELS.length * 3;
     if (total <= 0) { el.innerHTML = ""; return; }
     el.innerHTML =
       `<button id="best-chip" class="best-chip" aria-expanded="false">⭐ ${total}/${max} <span class="best-i">ⓘ</span></button>` +
@@ -1916,7 +2287,7 @@
     if (!box) return;
     const cur = Prefs.get("map") || "serpent";
     box.innerHTML = "";
-    for (const m of MAPS) {
+    for (const m of territoryMaps(activeTerritory)) {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "seg-btn" + (cur === m.id ? " active" : "");
@@ -1932,19 +2303,43 @@
     [1, 2, 3].map((i) => `<span class="${i <= n ? "on" : ""}">★</span>`).join("") + `</span>`;
   // próxima fase a jogar: 1ª desbloqueada ainda sem 3★ (destaque "atual")
   function currentLevelId() {
-    for (const lv of LEVELS) {
-      if (Progress.unlocked(lv.id) && Progress.get(lv.id).stars < 3) return lv.id;
+    const lvs = territoryLevels(activeTerritory);
+    for (const lv of lvs) {
+      if (Progress.unlocked(lv.id, activeTerritory) && Progress.get(lv.id, activeTerritory).stars < 3) return lv.id;
     }
     return null;
   }
+  function renderTerritoryTabs() {
+    const tabs = document.getElementById("territory-tabs");
+    if (!tabs) return;
+    tabs.innerHTML = "";
+    for (const t of TERRITORIES) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      const open = Progress.territoryOpen(t.id);
+      btn.className = "territory-tab" + (t.id === activeTerritory ? " active" : "") + (open ? "" : " locked");
+      btn.style.setProperty("--t-color", t.color);
+      const stars = Progress.totalStars(t.id);
+      btn.innerHTML = open
+        ? `<span class="tt-name">${t.name}</span><span class="tt-stars">⭐ ${stars}/${t.levels.length * 3}</span>`
+        : `<span class="tt-name">🔒 ${t.name}</span><span class="tt-stars">${t.unlockStars}★</span>`;
+      if (open) btn.addEventListener("click", () => { activeTerritory = t.id; renderLevels(); });
+      tabs.appendChild(btn);
+    }
+  }
   function renderLevels() {
+    renderTerritoryTabs();
     const list = document.getElementById("levels-list");
     list.innerHTML = "";
-    document.getElementById("levels-total").textContent = `⭐ ${Progress.totalStars()}/${LEVELS.length * 3}`;
+    const terr = territoryById(activeTerritory);
+    list.style.setProperty("--t-color", terr.color);
+    const lvs = territoryLevels(activeTerritory);
+    const tStars = Progress.totalStars(activeTerritory);
+    document.getElementById("levels-total").textContent = `⭐ ${tStars}/${lvs.length * 3}`;
     const curId = currentLevelId();
-    for (const lv of LEVELS) {
-      const open = Progress.unlocked(lv.id);
-      const p = Progress.get(lv.id);
+    for (const lv of lvs) {
+      const open = Progress.unlocked(lv.id, activeTerritory);
+      const p = Progress.get(lv.id, activeTerritory);
       const card = document.createElement(open ? "button" : "div");
       card.className = "level-card" + (open ? "" : " locked") + (lv.id === curId ? " current" : "");
       const badge = lv.tutorial ? `<span class="lv-badge">Tutorial</span>` : "";
@@ -1991,9 +2386,10 @@
     document.getElementById("level-intro").classList.remove("show");
     openLevels();
   });
-  function startLevel(id) {
+  function startLevel(id, tid) {
     Sound.init();
     gameMode = "campaign";
+    if (tid) activeTerritory = tid;
     activeLevel = id;
     Prefs.set("map", levelById(id).mapId);
     document.getElementById("levels").classList.remove("show");
@@ -2009,7 +2405,23 @@
     document.getElementById("free-sheet").classList.remove("show");
     beginGame(document.getElementById("endless-check").checked);
   }
+  function renderFreeTerritory() {
+    const box = document.getElementById("free-territory-modes");
+    if (!box) return;
+    box.innerHTML = "";
+    for (const t of TERRITORIES) {
+      const open = Progress.territoryOpen(t.id);
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "seg-btn" + (activeTerritory === t.id ? " active" : "");
+      b.disabled = !open;
+      b.textContent = open ? t.name : "🔒 " + t.name;
+      b.addEventListener("click", () => { activeTerritory = t.id; renderFreeTerritory(); renderMaps(); });
+      box.appendChild(b);
+    }
+  }
   function openFreeSheet() {
+    renderFreeTerritory();
     renderDifficulty();
     renderMaps();
     document.getElementById("endless-check").checked = !!Prefs.get("endless");
@@ -2032,11 +2444,29 @@
   });
 
   // ----- Bestiário -----
+  let bestiaryTerritory = "reino";
+  function renderBestiaryTabs() {
+    const tabs = document.getElementById("bestiary-tabs");
+    if (!tabs) return;
+    tabs.innerHTML = "";
+    for (const t of TERRITORIES) {
+      const open = Progress.territoryOpen(t.id);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "territory-tab" + (t.id === bestiaryTerritory ? " active" : "") + (open ? "" : " locked");
+      btn.style.setProperty("--t-color", t.color);
+      btn.textContent = open ? t.name : "🔒";
+      if (open) btn.addEventListener("click", () => { bestiaryTerritory = t.id; renderBestiary(); });
+      tabs.appendChild(btn);
+    }
+  }
   function renderBestiary() {
+    renderBestiaryTabs();
     const list = document.getElementById("bestiary-list");
     list.innerHTML = "";
-    for (const id of Object.keys(ENEMY_TYPES)) {
-      const e = ENEMY_TYPES[id];
+    const enemies = territoryEnemies(bestiaryTerritory);
+    for (const id of Object.keys(enemies)) {
+      const e = enemies[id];
       const tags = [`HP ×${e.hpMul}`, `Vel ×${e.speedMul}`, `✦ ${e.reward}`];
       if (e.flying) tags.push("voa");
       if (e.heal) tags.push("cura");
@@ -2136,6 +2566,8 @@
     resetView();
     for (const n of NODES) n.taken = false;
     state.endless = endless;
+    const mech = activeMechanic();
+    if (mech) mech.init(state);
     state.speed = Prefs.get("speed") || 1;
     state.paused = false;
     pendingScore = null;
@@ -2271,8 +2703,8 @@
     if (e.key === "p" || e.key === "P") document.getElementById("pause-btn").click();
     if (e.key === "u" || e.key === "U") { if (state.selectedTower) upgradeTower(state.selectedTower); }
     if (e.key === "Escape") { state.selectedType = null; state.selectedTower = null; updateTowerButtons(); refreshShop(); }
-    if (e.key >= "1" && e.key <= "4") {
-      const t = TOWER_TYPES[+e.key - 1];
+    if (e.key >= "1" && e.key <= String(Math.min(9, getAvailableTowers().length))) {
+      const t = getAvailableTowers()[+e.key - 1];
       if (t) { state.selectedType = (state.selectedType === t) ? null : t; state.selectedTower = null; updateTowerButtons(); refreshShop(); }
     }
   });
@@ -2310,7 +2742,7 @@
   window.__OVERHEAD = {
     version: 1,
     config: () => JSON.parse(JSON.stringify(CONFIG)),
-    towerTypes: () => TOWER_TYPES.map(t => ({ id: t.id, name: t.name, cost: t.cost })),
+    towerTypes: () => getAvailableTowers().map(t => ({ id: t.id, name: t.name, cost: t.cost })),
     nodeCount: () => NODES.length,
     nodes: () => NODES.map((n, i) => ({ i, x: n.x, y: n.y, taken: !!n.taken })),
     freeNodes: () => NODES.map((n, i) => (n.taken ? -1 : i)).filter(i => i >= 0),
@@ -2319,6 +2751,7 @@
     reset: () => {
       gameMode = "campaign";
       activeLevel = 1;
+      activeTerritory = "reino";
       newGame();
       for (const n of NODES) n.taken = false;
       document.getElementById("overlay").classList.remove("show");
@@ -2386,22 +2819,26 @@
     mapCount: () => MAPS.length,
     setMap: (id) => { Prefs.set("map", id); applyMap(id); return currentMap; },
     // campanha
-    levelCount: () => LEVELS.length,
+    levelCount: () => territoryLevels(activeTerritory).length,
     levelId: () => state.levelId,
-    startLevel: (id) => startLevel(id),
+    startLevel: (id, tid) => startLevel(id, tid),
     startFree: () => beginFreeGame(),
     setMap: (id) => { Prefs.set("map", id); },
-    mapCount: () => MAPS.length,
+    mapCount: () => territoryMaps(activeTerritory).length,
     pathCount: () => PATHS.length,
     enemyPaths: () => [...new Set(state.enemies.map((e) => e.path))].sort(),
     mode: () => state.mode,
     lastStars: () => lastResult.stars,
     lastResultInfo: () => ({ stars: lastResult.stars, flawless: !!lastResult.flawless, fast: !!lastResult.fast }),
     openLevels: () => openLevels(),
-    levelInfo: (id) => ({ ...Progress.get(id), unlocked: Progress.unlocked(id) }),
-    totalStars: () => Progress.totalStars(),
+    levelInfo: (id) => ({ ...Progress.get(id, activeTerritory), unlocked: Progress.unlocked(id, activeTerritory) }),
+    totalStars: () => Progress.totalStars(activeTerritory),
+    totalStarsAll: () => Progress.totalStarsAll(),
+    activeTerritory: () => activeTerritory,
+    setTerritory: (tid) => { activeTerritory = tid; },
+    territoryOpen: (tid) => Progress.territoryOpen(tid),
     setScore: (n) => { state.score = n; updateHUD(); }, // p/ testar limiares de estrela
-    enemyTypeCount: () => Object.keys(ENEMY_TYPES).length,
+    enemyTypeCount: () => Object.keys(territoryEnemies(activeTerritory)).length,
     useAbility: (k) => activateAbility(k),
     abilityCd: (k) => +(state.abilities[k] || 0).toFixed(1),
     enemyHpTotal: () => state.enemies.filter(e => !e.dead).reduce((s, e) => s + e.hp, 0),
