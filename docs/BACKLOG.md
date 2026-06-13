@@ -11,14 +11,14 @@ remasterização web em [`web/`](web/). Atualize ao concluir cada item.
 
 | PR | Tema | Resumo |
 |----|------|--------|
-| #6 | Profundidade de endgame | Melhorias globais (ralo de almas), inimigos novos (voador + curandeiro), boss a cada 5 ondas, modo infinito, leaderboard local e persistência de preferências. Fix de mira (voadores). |
+| #6 | Profundidade de endgame | Melhorias globais (ralo de mana), inimigos novos (voador + curandeiro), boss a cada 5 ondas, modo infinito, leaderboard local e persistência de preferências. Fix de mira (voadores). |
 | #7 | Toque no mobile | Construir torre por toque (ação no `touchend`, pois `preventDefault` mata o `click`). |
 | #8 | Jogabilidade mobile | Alvos de toque maiores, feedback ao construir (✓ + vibração), tutorial de 1ª jogada. + **layout guard** e2e (regressão de layout determinística por DOM, não pixel-diff). |
 | #9 | UX/UI mobile | HUD compacto numa linha, painel da torre selecionada (nome/nível/stats/tags), auto-seleção ao construir, fim do overlap loja↔ações. |
 | #10 | Câmera | Zoom (1–3×) + pan: pinça/2 dedos no mobile, scroll/arrasto no desktop, botões +/−/⤢. Fix do shop lateral cortando no desktop (Iniciar onda sticky). |
 | #11 | Gameplay + polish | Prioridade de alvo por torre, prévia da próxima onda, telas de vitória/derrota ricas + compartilhar resultado. Atualização do README e deste backlog. |
 | #12 | Refinamento de UI | Fix dos cards da loja cortando no mobile (shop-list não encolhe), prévia da próxima onda compacta (uma linha) e **menu de pausa** (Continuar / Reiniciar fase / Menu principal). |
-| #13 | Dificuldade + game feel | Níveis de dificuldade (Fácil/Normal/Difícil: recursos iniciais, HP, recompensa) e feedback de dano no núcleo (tremor de tela + vinheta vermelha + vibração). |
+| #13 | Dificuldade + game feel | Níveis de dificuldade (Fácil/Normal/Difícil: recursos iniciais, HP, recompensa) e feedback de dano na torre (tremor de tela + vinheta vermelha + vibração). |
 | #14 | Áudio | Controle de volume (slider) e música de fundo sintetizada (pad + arpejo em loop), com toggle. Tudo persistido. |
 | #15 | Bestiário | Painel no menu listando os 6 inimigos: ícone, descrição e stats (HP/velocidade/recompensa + traços). |
 | #16 | Habilidades ativas | Congelar (lentidão geral) e Tempestade (dano em área), com cooldown e anel de progresso, no canto do mapa. |
@@ -36,17 +36,17 @@ Validado com a simulação (`npm run balance`, jogador-robô razoável):
 - **Difícil:** o build genérico perde (~onda 17); exige torres diversas + habilidades + globais.
 
 Antes (1.16 / maxLevel 4): curva "plana e depois despenca" — 0 ameaça até ~onda 10,
-parede exponencial depois, derrota ~onda 18 mesmo com tabuleiro no talo, e almas
+parede exponencial depois, derrota ~onda 18 mesmo com tabuleiro no talo, e mana
 sobrando sem ralo. O HP crescia ~4× mais rápido que o teto de dano.
 
 ## 🗺️ Campanha — roadmap
 
 - [x] **Fundação** (PR #24): mapa de fases, estrelas, best por fase, desbloqueio, save.
 - [x] **Conteúdo** (PR #25): 6 fases com mecânicas/inimigos crescentes + intros; desbloqueio por estrelas acumuladas.
-- [ ] **Conteúdo**: ampliar p/ ~8–10 fases com ondas/mecânicas/inimigos crescentes + textos (história).
-- [ ] **Modo Livre** separado (dificuldade + mapa + infinito), tirando a dificuldade do fluxo da campanha.
-- [ ] **Fase de tutorial** dedicada como fase 1 (onboarding guiado).
-- [ ] **Polish**: visual do mapa (caminho entre fases, estrelas animadas), 'Próxima fase' direto no resultado.
+- [x] **Conteúdo** (PRs #31, #32): 10 fases com mapas multi-entrada, intros narrativos (história do bruxo/princesa) e mecânicas crescentes.
+- [x] **Modo Livre** (PR #28): separado da campanha com dificuldade + mapa + infinito.
+- [x] **Fase de tutorial** (PR #29 + polish): fase 1 como tutorial, coach passo a passo guiado (reage às ações do jogador).
+- [x] **Polish** do mapa: trilha visual entre fases, estrelas animadas (brilho pulsante), 'Próxima fase' direto no resultado.
 
 ## 🔜 Backlog (próximos candidatos)
 
@@ -59,7 +59,7 @@ sobrando sem ralo. O HP crescia ~4× mais rápido que o teto de dano.
 
 **Áudio / polish**
 - [x] ~~Controle de volume + música de fundo~~ (PR #14).
-- [x] ~~Feedback de dano no núcleo (flash/shake)~~ (PR #13).
+- [x] ~~Feedback de dano na torre (flash/shake)~~ (PR #13).
 - [x] ~~Bestiário de inimigos~~ (PR #15).
 
 **Plataforma**
