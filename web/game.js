@@ -217,34 +217,34 @@
   const LEVELS = [
     { id: 1, name: "Despertar",     mapId: "serpent",   waves: 5,  enemies: [], boss: false, hp: 0.9,
       par: 120, reqStars: 0, tutorial: true,
-      intro: "Soldados do reino se aproximam da sua Torre. Erga esferas nos nós azuis e segure a linha." },
+      intro: "O reino descobriu onde a princesa está presa. Os primeiros soldados marcham até sua Torre. Erga esferas nos nós azuis e segure a linha." },
     { id: 2, name: "Sussurros",     mapId: "comb",      waves: 6,  enemies: ["fast"], boss: false, hp: 1.0,
       par: 130, reqStars: 2,
-      intro: "Batedores velozes surgem entre os dentes do Pente. A Esfera Gélida ajuda a contê-los." },
+      intro: "Rumores da princesa se espalham. Batedores velozes exploram os arredores — a Esfera Gélida congela quem ousar se aproximar." },
     { id: 3, name: "Encruzilhada",  mapId: "ziggy",     waves: 7,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
       par: 330, reqStars: 4,
-      intro: "Cavaleiros blindados sobem o ziguezague. Concentre dano para derrubá-los." },
+      intro: "O rei enviou seus Cavaleiros blindados. Eles sobem o ziguezague lentamente, mas resistem a quase tudo. Concentre fogo." },
     { id: 4, name: "Duas Frentes",  mapId: "fork",      waves: 8,  enemies: ["fast", "tank"], boss: false, hp: 1.0,
       par: 225, reqStars: 6,
-      intro: "O caminho se divide: os invasores vêm por DUAS frentes. Não deixe nenhum passar." },
+      intro: "O general dividiu suas tropas — os invasores vêm por DUAS frentes ao mesmo tempo. Defenda os dois caminhos." },
     { id: 5, name: "Céus Sombrios", mapId: "horseshoe", waves: 8,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
       par: 245, reqStars: 8,
-      intro: "Grifos cortam reto à Torre, ignorando a ferradura. Cubra o ar." },
+      intro: "A cavalaria aérea chegou. Grifos cortam reto à sua Torre, ignorando o caminho. Cubra o ar ou será tarde demais." },
     { id: 6, name: "O Cerco",       mapId: "cross",     waves: 9,  enemies: ["fast", "tank", "flyer"], boss: false, hp: 1.05,
       par: 285, reqStars: 10,
-      intro: "Cerco! O exército avança pela esquerda e pela direita ao mesmo tempo." },
+      intro: "O exército real cerca a Torre por todos os lados. Cerco total — esquerda e direita avançam juntas." },
     { id: 7, name: "Procissão",     mapId: "chambers",  waves: 9,  enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.1,
       par: 345, reqStars: 12,
-      intro: "Clérigos curam os feridos pelas câmaras. Elimine-os primeiro." },
+      intro: "A Igreja enviou seus Clérigos para curar os feridos em campo. Elimine-os primeiro ou as tropas nunca cairão." },
     { id: 8, name: "Portões",       mapId: "gates",     waves: 10, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.05,
       par: 230, reqStars: 14,
-      intro: "Dois portões — um pelo céu, um por terra — despejam tudo sobre a Torre." },
+      intro: "Dois portões — um pelo céu, um por terra — despejam ondas de invasores sobre a Torre. Divida sua atenção." },
     { id: 9, name: "Espiral",       mapId: "spiral",    waves: 11, enemies: ["fast", "tank", "flyer", "healer"], boss: false, hp: 1.2,
       par: 615, reqStars: 16,
-      intro: "A espiral os traz devagar — mas em peso. Defenda em camadas." },
+      intro: "O exército se reúne para o ataque final. A espiral os traz devagar, mas em peso. Monte sua defesa em camadas." },
     { id: 10, name: "O Paladino",   mapId: "delta",     waves: 12, enemies: ["fast", "tank", "flyer", "healer"], boss: true, hp: 1.1,
       par: 355, reqStars: 18,
-      intro: "O Paladino comanda TRÊS frentes e ressurge a cada 5 ondas. O teste final." },
+      intro: "O Paladino Sagrado lidera o assalto final por TRÊS frentes. Ele ressurge a cada 5 ondas. Se a Torre cair, a princesa será libertada." },
   ];
   let activeLevel = 1;
   let gameMode = "campaign"; // "campaign" (fases, sem dificuldade) | "free" (Modo Livre)
@@ -599,6 +599,7 @@
     Sound.play("wave");
     showWaveBanner(state.wave);
     updateHUD();
+    advanceCoach(2);
   }
 
   // banner "Onda N" que entra animado (juice)
@@ -671,6 +672,7 @@
     updateTowerButtons();
     updateHUD();
     refreshShop();
+    advanceCoach(1);
   }
 
   function sellTower(tower) {
@@ -1625,6 +1627,7 @@
         state.selectedTower = null;
         updateTowerButtons();
         refreshShop();
+        if (state.selectedType) advanceCoach(0);
       });
       list.appendChild(card);
     }
@@ -2203,10 +2206,60 @@
     ov.classList.add("show");
   }
 
-  // ----- Coach de primeira jogada -----
-  function showCoach() { document.getElementById("coach").hidden = false; }
+  // ----- Coach de primeira jogada (tutorial passo a passo) -----
+  let coachStep = 0;
+  const COACH_STEPS = [
+    { text: "Escolha uma esfera na loja →", highlight: "#shop-list" },
+    { text: "Toque num nó azul do mapa para construí-la", highlight: "#canvas" },
+    { text: "Inicie a onda e defenda sua Torre!", highlight: "#start-btn" },
+  ];
+  function updateCoachStep() {
+    const el = document.getElementById("coach");
+    if (el.hidden) return;
+    if (coachStep >= COACH_STEPS.length) { dismissCoach(); return; }
+    const step = COACH_STEPS[coachStep];
+    const card = el.querySelector(".coach-card");
+    const stepText = card.querySelector(".coach-step");
+    if (stepText) {
+      stepText.textContent = step.text;
+    } else {
+      const p = document.createElement("p");
+      p.className = "coach-step";
+      p.textContent = step.text;
+      const ok = card.querySelector("#coach-ok");
+      card.insertBefore(p, ok);
+    }
+    const counter = card.querySelector(".coach-counter") || (() => {
+      const s = document.createElement("span");
+      s.className = "coach-counter";
+      const ok = card.querySelector("#coach-ok");
+      card.insertBefore(s, ok);
+      return s;
+    })();
+    counter.textContent = `Passo ${coachStep + 1} de ${COACH_STEPS.length}`;
+    document.querySelectorAll(".coach-highlight").forEach((e) => e.classList.remove("coach-highlight"));
+    if (step.highlight) {
+      const target = document.querySelector(step.highlight);
+      if (target) target.classList.add("coach-highlight");
+    }
+  }
+  function advanceCoach(toStep) {
+    if (document.getElementById("coach").hidden) return;
+    if (toStep !== coachStep) return;
+    coachStep++;
+    updateCoachStep();
+  }
+  function showCoach() {
+    coachStep = 0;
+    const el = document.getElementById("coach");
+    el.hidden = false;
+    const ol = el.querySelector("ol");
+    if (ol) ol.hidden = true;
+    updateCoachStep();
+  }
   function dismissCoach() {
     document.getElementById("coach").hidden = true;
+    document.querySelectorAll(".coach-highlight").forEach((e) => e.classList.remove("coach-highlight"));
     Prefs.set("seenTutorial", true);
   }
   document.getElementById("coach-ok").addEventListener("click", dismissCoach);

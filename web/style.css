@@ -820,6 +820,23 @@ html, body {
   font-size: 15px;
   cursor: pointer;
 }
+.coach-step {
+  font-size: 15px; font-weight: 600; color: var(--accent);
+  margin: 0 0 8px; line-height: 1.4;
+}
+.coach-counter {
+  display: block; font-size: 11px; color: var(--muted);
+  margin-bottom: 12px; text-align: center;
+}
+.coach-highlight {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 3px;
+  animation: coach-glow 1.5s ease-in-out infinite;
+}
+@keyframes coach-glow {
+  0%, 100% { outline-color: rgba(110,231,255,0.5); }
+  50%      { outline-color: rgba(110,231,255,1); }
+}
 /* Botão de fechar padronizado (×) — mesmo visual em todos os sheets e no coach */
 .sheet-close {
   position: absolute;
@@ -1040,6 +1057,10 @@ html, body {
   content: ""; position: absolute; left: 30px; bottom: -10px; width: 2px; height: 10px;
   background: rgba(110,231,255,0.22);
 }
+.level-card:not(.locked):not(:last-child)::after {
+  background: linear-gradient(180deg, var(--accent), rgba(110,231,255,0.15));
+  width: 3px; left: 29.5px;
+}
 /* fase atual (próxima a jogar): destaque pulsante */
 .level-card.current { border-color: var(--accent); animation: card-pulse 2.2s ease-in-out infinite; }
 @keyframes card-pulse {
@@ -1062,4 +1083,10 @@ html, body {
 .level-card .lv-meta { font-size: 12px; color: var(--muted); }
 .level-card .lv-lock { font-size: 18px; }
 .lv-stars { letter-spacing: 2px; color: rgba(255,255,255,0.2); font-size: 16px; flex: 0 0 auto; }
-.lv-stars .on { color: var(--score); }
+.lv-stars .on { color: var(--score); animation: star-shimmer 2.5s ease-in-out infinite; }
+.lv-stars .on:nth-child(2) { animation-delay: 0.3s; }
+.lv-stars .on:nth-child(3) { animation-delay: 0.6s; }
+@keyframes star-shimmer {
+  0%, 100% { opacity: 1; text-shadow: 0 0 4px rgba(255,209,102,0.3); }
+  50%      { opacity: 0.75; text-shadow: 0 0 10px rgba(255,209,102,0.7); }
+}
