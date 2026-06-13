@@ -17,8 +17,10 @@ web/
   service-worker.js
   manifest.webmanifest
 e2e/               # testes Playwright (desktop + mobile)
+docs/
+  BACKLOG.md       # fonte de verdade do backlog (sem issues no GH)
+  adrs/            # Architecture Decision Records
 unity/             # projeto Unity original (legado, não usado pela versão web)
-BACKLOG.md         # fonte de verdade do backlog (sem issues no GH)
 ```
 
 ## Convenções

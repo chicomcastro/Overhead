@@ -65,22 +65,9 @@ sobrando sem ralo. O HP crescia ~4× mais rápido que o teto de dano.
 **Plataforma**
 - [x] ~~PWA instalável + offline~~ (PR #18).
 
-## 🧭 Decisões de design (log)
+## 🧭 Decisões de design
 
-- **Regressão visual via DOM, não pixel-diff.** Sem container pinado (Docker),
-  screenshots variam entre o ambiente local e o `ubuntu-latest` do CI (fontes/
-  antialiasing). O *layout guard* (`e2e/tests/layout.spec.js`) valida estrutura
-  (elementos visíveis/escondidos, contagens, sem overflow horizontal no mobile),
-  que é determinístico e estável.
-- **Câmera por transformação, mundo fixo 1280×720.** O canvas preenche o
-  playfield (com `devicePixelRatio`); o "encaixe" do mapa virou escala da
-  câmera. `zoom ∈ [1,3]`; pan limitado para não revelar fora do mapa.
-- **Gestos sem conflito:** 1 dedo = construir/selecionar; 2 dedos = zoom/pan.
-- **Mira por distância ao núcleo** (não por progresso no caminho) — trata os
-  voadores, que cortam direto, de forma justa. A prioridade de alvo
-  (Núcleo/Forte/Fraco/Perto) é um peso por inimigo; escolhe-se o menor no alcance.
-- **API de debug (`window.__OVERHEAD`)** expõe hooks determinísticos (build,
-  step, snapshot, zoom, etc.) usados só pelos testes e2e — não altera o jogo.
+Documentadas como ADRs em [`docs/adrs/`](adrs/).
 
 ## Como rodar os testes
 
