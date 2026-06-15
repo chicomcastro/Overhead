@@ -2742,6 +2742,7 @@
   window.__OVERHEAD = {
     version: 1,
     config: () => JSON.parse(JSON.stringify(CONFIG)),
+    territories: () => TERRITORIES.map(t => ({ id: t.id, name: t.name, color: t.color, towerUnlock: t.towerUnlock ? t.towerUnlock.id : null, mechanic: t.mechanic, levels: t.levels.length })),
     towerTypes: () => getAvailableTowers().map(t => ({ id: t.id, name: t.name, cost: t.cost })),
     nodeCount: () => NODES.length,
     nodes: () => NODES.map((n, i) => ({ i, x: n.x, y: n.y, taken: !!n.taken })),
