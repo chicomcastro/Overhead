@@ -424,6 +424,7 @@ html, body {
   color: var(--score); font-size: 17px; animation: intro-rise 0.4s ease 0.24s both; }
 #overlay-stats .score-total b { font-size: 22px; }
 #overlay-btn {
+  width: 100%;
   background: linear-gradient(90deg, var(--accent), #4ea8ff);
   color: #04222c;
   border: none;
@@ -472,6 +473,9 @@ html, body {
 #overlay.result .menu-only { display: none; }       /* esconde subtítulo/como-jogar/créditos */
 #overlay.result #best { display: none; }             /* progresso global não faz sentido aqui */
 #overlay.result .menu-actions { display: none; }     /* sem Opções/Bestiário no resultado */
+#overlay.result #overlay-btn { margin-top: 8px; }
+#overlay.result #replay-btn { margin-top: 8px; }
+#overlay.result #next-level-btn { margin-bottom: 8px; }
 /* compartilhar = ícone minimalista (ao lado do total / do stat de derrota) */
 .share-mini {
   width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto; padding: 0; line-height: 1;
@@ -991,9 +995,10 @@ html, body {
 
 /* "Próxima fase" no resultado: CTA principal (mesmo destaque do Jogar) */
 #next-level-btn {
+  width: 100%;
   background: linear-gradient(90deg, var(--accent), #4ea8ff); color: #04222c;
   border: none; border-radius: 12px; padding: 14px 40px; font-size: 19px; font-weight: 800;
-  cursor: pointer; transition: 0.15s; margin-bottom: 10px;
+  cursor: pointer; transition: 0.15s;
 }
 #next-level-btn:hover { transform: scale(1.04); }
 /* no resultado, "Mapa de fases" recua a secundário quando há "Próxima fase" */
