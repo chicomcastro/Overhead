@@ -202,3 +202,21 @@ para suportar múltiplos territórios visualmente.
 | Estrelas | **Contador separado** por território (0–30★) |
 | Desbloqueio | **25★** no território atual abre o próximo |
 | Ilustrações | **SVGs custom** por fase e território |
+
+## Divergências da implementação vs proposta
+
+Itens onde a implementação final diferiu do design original:
+
+| Aspecto | Proposta | Implementação | Motivo |
+|---------|----------|---------------|--------|
+| Neblina | Torres não miram inimigos na neblina | Range reduzido a 65% (era 50%, ajustado no balanceamento) | Bloqueio total de mira era frustrante demais |
+| Erupção | A cada X ondas | Timer de 25s, probabilidade 0.2, torres com 4 HP | Timers criam tensão constante, mais divertido que pulsos previsíveis |
+| Maré | Sobe/desce a cada 3 ondas | Nós submersos ciclicamente (`i % 5 === 2`) | Ciclo por onda era muito agressivo |
+| Redesign do mapa | Grid visual fullscreen com SVGs, trilha animada, parallax | Ainda usa lista vertical com tabs de território | Pendente — funcional mas não lúdico |
+| Ilustrações | SVGs custom por fase e território | Sem SVGs — usa ícones/texto | Pendente |
+
+## Pendências
+
+- [ ] Redesign visual do mapa de fases (grid, trilha, animações)
+- [ ] SVGs custom para territórios e fases
+- [ ] Efeitos visuais de território no canvas (overlay de neblina, lava, água)

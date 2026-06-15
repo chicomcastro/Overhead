@@ -61,6 +61,12 @@ sobrando sem ralo. O HP crescia ~4× mais rápido que o teto de dano.
 
 Design completo em [`docs/design-territorios.md`](design-territorios.md).
 
+## 🔧 CI / Qualidade
+
+- [x] **Relatório de balanceamento no CI** (PR #45): bot joga todas as 40 fases, gera tabela por território no job summary.
+- [x] **Sticky comment no PR** (PR #46): screenshots inline de cada território + relatório de balanceamento postados como comment no PR, atualizados a cada run. Screenshots persistidos na branch `ci-assets`.
+- [x] **UI polish** (PR #47): botões padronizados (largura uniforme no resultado, menu e painel da torre; Vender+Fechar lado a lado). Header com número e nome da fase durante gameplay.
+
 ## 🔜 Backlog (próximos candidatos)
 
 > ✅ Backlog inicial concluído (PRs #13–#18). Novas ideias entram abaixo.
