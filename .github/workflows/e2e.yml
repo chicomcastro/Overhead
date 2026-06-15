@@ -3,7 +3,7 @@ name: E2E gameplay tests
 # Roda os testes e2e (Playwright) que jogam o jogo de verdade, em cada PR/push
 # que toque o jogo ou os testes. Publica evidência visual + dados de
 # balanceamento como artifacts, joga o relatório no summary e posta um
-# sticky comment no PR com screenshots + balanceamento.
+# sticky comment no PR com screenshots inline + balanceamento.
 
 on:
   pull_request:
@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
@@ -69,6 +69,49 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
+      - name: Push screenshots to ci-assets branch
+        if: always()
+        working-directory: .
+        run: |
+          SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          SHORT="${SHA:0:7}"
+          SS_DIR="e2e/reports/screenshots"
+          if [ ! -d "$SS_DIR" ] || [ -z "$(ls -A "$SS_DIR" 2>/dev/null)" ]; then
+            echo "No screenshots to push"
+            echo "HAS_SCREENSHOTS=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "HAS_SCREENSHOTS=true" >> "$GITHUB_ENV"
+          echo "SS_SHORT=$SHORT" >> "$GITHUB_ENV"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # save screenshots before switching branches
+          cp -r "$SS_DIR" /tmp/ci-screenshots
+
+          # create orphan ci-assets branch if it doesn't exist
+          git fetch origin ci-assets --depth=1 2>/dev/null || true
+          if git rev-parse --verify origin/ci-assets >/dev/null 2>&1; then
+            git checkout ci-assets
+          else
+            git checkout --orphan ci-assets
+            git rm -rf . 2>/dev/null || true
+            echo "# CI Evidence Assets" > README.md
+            git add README.md
+            git commit -m "init ci-assets branch"
+          fi
+
+          # copy screenshots into sha-named dir
+          mkdir -p "$SHORT"
+          cp /tmp/ci-screenshots/*.png "$SHORT/" 2>/dev/null || true
+          git add "$SHORT"
+          git commit -m "screenshots: $SHORT" --allow-empty
+          git push origin ci-assets
+
+          # back to original ref
+          git checkout - 2>/dev/null || true
+
       - name: Post sticky comment on PR
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
@@ -81,6 +124,10 @@ jobs:
             const { owner, repo } = context.repo;
             const prNumber = context.payload.pull_request.number;
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const sha = context.payload.pull_request.head.sha;
+            const short = sha.slice(0, 7);
+            const hasScreenshots = process.env.HAS_SCREENSHOTS === 'true';
+            const rawBase = `https://raw.githubusercontent.com/${owner}/${repo}/ci-assets/${short}`;
 
             // --- balance report ---
             let balance = '';
@@ -89,21 +136,35 @@ jobs:
               balance = fs.readFileSync(balancePath, 'utf8');
             }
 
-            // --- screenshots (inline as <details>) ---
+            // --- screenshots inline ---
             let screenshots = '';
-            const ssDir = path.join('e2e', 'reports', 'screenshots');
-            if (fs.existsSync(ssDir)) {
-              const files = fs.readdirSync(ssDir).filter(f => f.endsWith('.png')).sort();
-              if (files.length) {
-                screenshots += '\n\n<details><summary>📸 Screenshots (' + files.length + ')</summary>\n\n';
-                for (const f of files) {
+            if (hasScreenshots) {
+              const files = fs.readdirSync('/tmp/ci-screenshots').filter(f => f.endsWith('.png')).sort();
+
+              // territory gameplay screenshots
+              const territoryFiles = files.filter(f => f.includes('territorio-'));
+              const genericFiles = files.filter(f => !f.includes('territorio-'));
+
+              if (territoryFiles.length) {
+                screenshots += '\n\n## Territórios — gameplay\n\n';
+                for (const f of territoryFiles) {
+                  const label = f.replace('.png', '').replace(/desktop-/, '').replace(/-/g, ' ');
+                  screenshots += `**${label}**\n\n`;
+                  screenshots += `![${label}](${rawBase}/${f})\n\n`;
+                }
+              }
+
+              if (genericFiles.length) {
+                screenshots += '<details><summary>Screenshots gerais (' + genericFiles.length + ')</summary>\n\n';
+                for (const f of genericFiles) {
                   const label = f.replace('.png', '').replace(/-/g, ' ');
                   screenshots += `**${label}**\n\n`;
-                  // screenshots are in the artifact, link to the run
-                  screenshots += `> _Ver no artifact [e2e-evidence](${runUrl})_\n\n`;
+                  screenshots += `![${label}](${rawBase}/${f})\n\n`;
                 }
                 screenshots += '</details>\n';
               }
+            } else {
+              screenshots = `\n\n> Screenshots: [ver artifact](${runUrl})\n`;
             }
 
             // --- test result summary ---
@@ -117,10 +178,10 @@ jobs:
               '',
               balance || '_Nenhum relatório de balanceamento gerado._',
               screenshots,
-              `> Atualizado em ${new Date().toISOString()} · commit ${context.sha.slice(0, 7)}`,
+              `> Atualizado em ${new Date().toISOString()} · commit \`${short}\``,
             ].join('\n');
 
-            // find existing bot comment
+            // find existing bot comment (upsert)
             const comments = await github.rest.issues.listComments({
               owner, repo, issue_number: prNumber, per_page: 100,
             });
