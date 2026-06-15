@@ -141,17 +141,24 @@ jobs:
             if (hasScreenshots) {
               const files = fs.readdirSync('/tmp/ci-screenshots').filter(f => f.endsWith('.png')).sort();
 
-              // territory gameplay screenshots
-              const territoryFiles = files.filter(f => f.includes('territorio-'));
+              // territory gameplay screenshots (ordem do jogo, não alfabética)
+              const tidOrder = ['reino', 'floresta', 'vulcao', 'oceano'];
+              const territoryFiles = files.filter(f => f.includes('territorio-'))
+                .sort((a, b) => {
+                  const ta = tidOrder.findIndex(t => a.includes(`territorio-${t}`));
+                  const tb = tidOrder.findIndex(t => b.includes(`territorio-${t}`));
+                  return ta - tb;
+                });
               const genericFiles = files.filter(f => !f.includes('territorio-'));
 
               if (territoryFiles.length) {
-                screenshots += '\n\n## Territórios — gameplay\n\n';
+                screenshots += '\n\n<details><summary><strong>Territórios — gameplay (' + territoryFiles.length + ')</strong></summary>\n\n';
                 for (const f of territoryFiles) {
                   const label = f.replace('.png', '').replace(/desktop-/, '').replace(/-/g, ' ');
                   screenshots += `**${label}**\n\n`;
                   screenshots += `![${label}](${rawBase}/${f})\n\n`;
                 }
+                screenshots += '</details>\n';
               }
 
               if (genericFiles.length) {

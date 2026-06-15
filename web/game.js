@@ -1916,10 +1916,12 @@
     document.getElementById("score").textContent = state.score;
 
     const status = document.getElementById("wave-status");
+    const lv = !isFree() ? levelById(activeLevel) : null;
+    const phaseTag = lv ? `Fase ${lv.id}: ${lv.name} · ` : "";
     if (state.gameOver) status.textContent = state.won ? "Vitória!" : "Fim de jogo";
-    else if (state.running) status.textContent = `Onda ${state.wave} em andamento — inimigos: ${state.enemies.length + state.spawnQueue.length}`;
-    else if (state.betweenTimer > 0) status.textContent = `Próxima onda em ${Math.ceil(state.betweenTimer)}s…`;
-    else status.textContent = state.wave === 0 ? "Prepare suas defesas…" : "Onda concluída! Inicie a próxima.";
+    else if (state.running) status.textContent = `${phaseTag}Onda ${state.wave} em andamento — inimigos: ${state.enemies.length + state.spawnQueue.length}`;
+    else if (state.betweenTimer > 0) status.textContent = `${phaseTag}Próxima onda em ${Math.ceil(state.betweenTimer)}s…`;
+    else status.textContent = state.wave === 0 ? `${phaseTag}Prepare suas defesas…` : `${phaseTag}Onda concluída! Inicie a próxima.`;
 
     const startBtn = document.getElementById("start-btn");
     startBtn.disabled = state.running || state.gameOver || state.victoryPending;
